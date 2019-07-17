@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# cat stretchbang hotkeys
+# cat bucentaur hotkeys
 
 cat <<EOF
 
