@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# cat stretchbang hotkeys
+
+cat <<EOF
+
+    Launchers                       Windows
+    ───────────────────────────── │ ─────────────────────────────────────
+    super +                       │ alt +
+    space   openbox menu          │ y,x     left/right half
+    w       browser (script)      │ c       center window x
+    f       thunar                │ v       maximize
+    t       urxvt                 │ m       move to next monitor
+    e       geany                 │ f2      openbox client menu
+    v       alsamixer             │─────────────────────────────────────
+    m       toggle mute           │ super +
+    x       xkill                 │ f11     fullscreen
+    Tab     openbox combined menu │ f12     toggle compton
+    ───────────────────────────── │ s       toggle show desktop
+    alt +                         │─────────────────────────────────────
+    space   gmrun                 │ super + alt +
+                                  │ c       center window y
+                                  │─────────────────────────────────────
+                                  │ shift + alt +
+                                  │ left    send to desktop left
+                                  │ right   send to desktop right
+EOF
