@@ -9,13 +9,13 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="961.49939"
-   height="1021.0711"
-   viewBox="0 0 254.39672 270.15841"
+   width="700"
+   height="700"
+   viewBox="0 0 185.20834 185.20834"
    version="1.1"
    id="svg8"
    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-   sodipodi:docname="bucentaurLogofinal2.svg"
+   sodipodi:docname="bucentaurLogofinal.svg"
    inkscape:export-filename="/home/ticho/downloads/bucentaurLogofinal.png"
    inkscape:export-xdpi="107"
    inkscape:export-ydpi="107">
@@ -30,9 +30,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.24748738"
-     inkscape:cx="709.96933"
-     inkscape:cy="425.89667"
+     inkscape:zoom="0.49497476"
+     inkscape:cx="458.90575"
+     inkscape:cy="244.16001"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -48,33 +48,33 @@
      inkscape:guide-bbox="true"
      guidecolor="#05157e"
      guideopacity="0.13333333"
-     fit-margin-top="23"
-     fit-margin-left="23"
-     fit-margin-right="23"
-     fit-margin-bottom="23">
+     fit-margin-top="1"
+     fit-margin-left="1"
+     fit-margin-right="1"
+     fit-margin-bottom="1">
     <sodipodi:guide
-       position="-5.6584965,-7.3895126"
+       position="-228.73434,403.47762"
        orientation="1,0"
        id="guide4483"
        inkscape:locked="false"
        inkscape:label=""
        inkscape:color="rgb(4,102,16)" />
     <sodipodi:guide
-       position="451.54152,-7.3895126"
+       position="432.7561,-64.274943"
        orientation="1,0"
        id="guide4485"
        inkscape:locked="false"
        inkscape:label=""
        inkscape:color="rgb(3,73,12)" />
     <sodipodi:guide
-       position="479.58736,6.8979879"
+       position="365.67309,-221.93308"
        orientation="0,1"
        id="guide4487"
        inkscape:locked="false"
        inkscape:label="1920x1080, HDTV 10% title safe"
        inkscape:color="rgb(3,73,12)" />
     <sodipodi:guide
-       position="-31.058498,264.07299"
+       position="372.08756,403.47762"
        orientation="0,1"
        id="guide4489"
        inkscape:locked="false"
@@ -119,10 +119,10 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-31.058497,-19.452053)">
+     transform="translate(-49.843916,-47.516705)">
     <path
-       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:32.76551819;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
-       d="m 81.950837,25.53747 c -44.976663,39.097571 -58.85132,103.87208 -28.920451,155.40522 29.930867,51.53314 166.336304,157.74028 179.357334,67.42586 7.43516,-51.5706 54.65679,-104.60447 45.90462,-163.552897 v 0 C 284.76652,128.4214 236.9394,182.42541 201.2855,192.39915 156.74061,204.86004 114.48782,196.45208 83.127254,160.11189 50.404622,122.19335 49.058384,58.994714 81.950837,25.53747 Z"
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-feature-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:22.57033539;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+       d="M 89.885136,51.264265 C 58.903225,78.196398 49.345749,122.81594 69.963452,158.31423 c 20.617699,35.4983 114.579778,108.65847 123.549238,46.44591 5.12167,-35.5241 37.65001,-72.05617 31.62113,-112.662447 v 0 c 4.4597,30.037567 -28.48573,67.237907 -53.04571,74.108257 -30.68448,8.58361 -59.79007,2.79184 -81.392614,-22.24089 C 68.15471,117.8451 67.227362,74.311091 89.885136,51.264265 Z"
        id="path1431-7-9-6"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cssccssc" />
