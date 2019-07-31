@@ -1,0 +1,296 @@
+#!/bin/bash
+
+# drop (brex 2019)
+
+# Drop stuff to be played in mpv to playlist
+# This is workaround for chrome not supporting shift+drag behavior
+
+# needs: yad, mpv, youtube-dl, socat, awk, mediainfo
+# wishes: jq
+
+# cli switches: -i, -l, -h
+
+# checks
+command -v yad >/dev/null 2>&1 || { echo "I need yad, exiting." >&2; exit 1; }
+command -v mpv >/dev/null 2>&1 || { echo "I need mpv, exiting." >&2; exit 1; }
+command -v youtube-dl >/dev/null 2>&1 || { echo "I need youtube-dl, exiting." >&2; exit 1; }
+command -v socat >/dev/null 2>&1 || { echo "I need socat, exiting." >&2; exit 1; }
+command -v awk >/dev/null 2>&1 || { echo "I need awk, exiting." >&2; exit 1; }
+command -v mediainfo >/dev/null 2>&1 || { echo "I need mediainfo, exiting." >&2; exit 1; }
+command -v jq >/dev/null 2>&1 || { echo "I would like jq for some cli stuff you can do." ; }
+command -v ack >/dev/null 2>&1 || { echo "I would like ack for some cli stuff you can do." ; }
+command -v perc >/dev/null 2>&1 || { echo "I would like perc script for info with graph, that is --ii command." ; }
+
+# vars
+pipe="/tmp/pipe" && touch "$pipe"
+log="$HOME/.watched.m3u"
+
+# logging
+if ! [ -f "$log" ]; then
+    # start fresh
+    printf "#EXTM3U\n\n" > "$log" # If this fails, mpv can still play playlist without the header.
+fi
+touch "$log" || echo "Can't write to $log"
+
+
+# check
+
+check () {
+    
+    # lets query whatever to see if the thing is already running
+    [ ! -f "$pipe" ] && (echo '{ "command": ["get_property", "mpv-version"] }' | socat - "$pipe") &> /dev/null
+    
+    
+}
+
+# mpv and pipe
+isRunning () {
+
+    if check ; then 
+        
+        true
+        
+    else
+        echo "Mpv not running, starting now"
+        
+        mpv --cache-secs=1035 --idle --force-window --video-zoom=0.03 --autofit-larger=50% --geometry 49% --input-ipc-server="$pipe" --ytdl-format='bestvideo[ext=mp4][width<=1920][height<=1200][fps<=60]+bestaudio[ext=m4a]/best[height<=730]' &
+        
+        # https://github.com/ytdl-org/youtube-dl/blob/master/README.md#format-selection
+        # --ytdl-format='bestvideo[ext=mp4][width<=1920][height<=1200][fps<=30]+bestaudio[ext=m4a]'
+        
+        # and re-check if running
+        n="9" # retries
+        for i in $(seq 1 $n); do 
+        
+            #echo $i
+            check && break
+            sleep 1
+            
+        done 
+        (( i == n )) && { echo "mpv or pipe not ready error, exiting..." ; exit 1; }
+        
+    fi
+}
+
+# awk_round
+awk_round () {
+    awk 'BEGIN{printf "%."'$1'"f\n", "'$2'"}'
+}
+
+# do stuff (this was decoupled from gui part to allow cli url/file input as well)
+dostuff () {
+    
+    isRunning
+       
+    echo "$url just droped"
+        
+    # make path absolute if it looks like file
+    if [[ -f "${url//file:\/\/}" ]]; then
+    
+        # make it without file://
+        url="${url//file:\/\/}"
+
+        # make it absolute
+        url=$(realpath "$url")
+        #echo "$url is a file"
+    fi
+    
+    # load stuff to mpv pipe
+    echo "loadfile \"$url\" append-play" | socat - "$pipe"
+    
+    # Geting more info from youtube-dl directly
+    # url or file
+    if [[ $url == http* ]] ; then 
+        
+        # output of command to array
+        # mapfile -t line < <(some command)
+        mapfile -t line < <(youtube-dl -e --get-duration "$url")
+
+        # Array to vars
+        yt="$(echo "${line[0]}" | tr '-' '|')"
+        dur="${line[1]}"
+
+        # inform
+        echo "$yt | $dur"
+            
+        # to seconds for the playlist
+        dursec="$(echo "$dur" | awk -F\: '{ for(k=NF;k>0;k--) sum+=($k*(60^(NF-k))); print sum }')"
+            
+        desc="$yt"
+        
+    else # assume its a file 
+    
+        # Must be file, not a dir
+        if [[ -f "${url//file:\/\/}" ]]; then
+            true
+        else
+            echo "$url is not file"
+            return
+        fi
+        
+        # Just the file.ext part
+        desc="${url##*/}"
+        
+        # For info in HH:MM:SS:FF
+        dur="$(mediainfo "--Inform=General;%Duration/String4%" "$url")"
+        
+        # inform
+        echo "$desc | $dur"
+        
+        # For playlist
+        # miliseconds
+        dursec="$(mediainfo "--Inform=General;%Duration%" "$url")"
+        # to seconds and awk round
+        dursec="$(echo "scale=2;$dursec/1000" | bc)"
+        dursec="$(awk_round 0 "$dursec")"
+            
+
+    fi
+
+    # log
+    echo "#EXTINF:$dursec, $desc | $dur" >> "$log"
+    #echo "log $url"
+    printf "%s\n\n" "$url" >> "$log"
+    
+    # reset vars
+    yt="" ; desc="" ; url=""
+    
+}
+
+# cli option -i or --info
+whatPlaying () {
+    
+    # exit if pipe not working
+    status="$(echo '{ "command": ["get_property", "mpv-version"] }' | socat - "$pipe" 2>/dev/null | jq -r .error)" 
+    
+    if [[  $status != "success" ]]; then
+    
+        #echo "No."
+        exit 1
+    
+    fi
+
+    # get data
+    title="$(echo '{ "command": ["get_property", "media-title"] }' | socat - "$pipe" | jq -r .data )" 
+    percent="$(echo '{ "command": ["get_property", "percent-pos"] }' | socat - "$pipe" | jq -r .data )"
+    percent="$(awk_round 0 "$percent")"
+    #timepos="$(echo '{ "command": ["get_property", "playback-time"] }' | socat - "$pipe" | jq -r .data )"
+    #timerem="$(echo '{ "command": ["get_property", "playtime-remaining"] }' | socat - "$pipe" | jq -r .data )"
+    playlistpos="$(echo '{ "command": ["get_property", "playlist-pos-1"] }' | socat - "$pipe" | jq -r .data )"
+    playlistcount="$(echo '{ "command": ["get_property", "playlist-count"] }' | socat - "$pipe" | jq -r .data )"
+    
+    timepos="$(echo '{ "command": ["get_property", "time-pos"] }' | socat - "$pipe" | jq -r .data )" && timepos="${timepos%.*}"
+    duration="$(echo '{ "command": ["get_property", "duration"] }' | socat - "$pipe" | jq -r .data )" && duration="${duration%.*}"
+    left=$(( playlistcount - playlistpos + 1 ))
+    
+}
+
+# echo stuff
+echoStuff () {
+ 
+    if [[ $title != null ]]; then
+        echo -n "$title $timepos/$duration $percent% ($playlistpos/$playlistcount)"
+        
+        if (( left > 0 && left < 12 )); then
+            #echo " $left"
+            printf "%.s  ∎ " $(seq 1 "$left") ; printf "\n"
+        else
+            printf "\n"
+        fi
+    #░░░
+    fi
+}
+
+# Just show what's playing
+if [ "$1" == "-i" ] || [ "$1" == "--info" ]; then
+
+    whatPlaying && echoStuff
+    exit
+    
+# Just show what's playing with percentage bar (needs 'perc' graph script)
+elif [ "$1" == "-ii" ] || [ "$1" == "--info2" ]; then
+
+    whatPlaying && echoStuff && perc "$percent"
+    exit
+    
+# Just show blocks (for tint2)
+elif [ "$1" == "-b" ] || [ "$1" == "--blocks" ]; then
+
+    whatPlaying && echoStuff | grep -iEo "  ∎ " | tr -d '\n'
+    exit
+
+# toggle pause (for tint2)    
+elif [ "$1" == "--pause" ]; then
+    
+    #echo '{ "command": ["cycle pause"] }' | socat - "$pipe"
+    #echo '{ "command": ["set_property", "pause", true] }' | socat - "$pipe"
+    echo "cycle pause" | socat - "$pipe"
+    exit
+    
+
+
+# log and show what's playing
+elif [ "$1" == "-l" ] || [ "$1" == "--log" ]; then
+
+    whatPlaying
+    if [[ $title != null ]]; then
+        tail -n 22 "$log" | ack --color --passthru --literal "${title}"
+    else
+        tail -n 22 "$log"
+    fi
+    echoStuff
+    exit
+
+# show help
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    echo "drop                  # start droplet gui"
+    echo "drop file url1 url2   # add files and/or urls, don't show gui"
+    echo "drop -i or --info     # show what's playing"
+    echo "drop -ii or --info2   # show what's playing + percentage bar"
+    echo "drop -l or --log      # tail log and show what's playing"
+    echo "drop -h or --help     # this help" 
+    exit
+
+# treat as list of input urls/files    
+elif [[ $# != 0 ]]; then
+
+    for url in "$@"
+    do
+        dostuff "$url"
+    done
+    exit # In this case gui never shows
+    
+fi
+
+# gui action
+yad --window-icon="yad" --on-top --no-buttons --title="drop urls here" --text="\n\n\nDROP" --geometry=200x200+50-50 --text-align=center --dnd | while read -r url
+
+    do
+
+        dostuff
+        
+    done
+    
+## tint2 example
+##-------------------------------------
+## Executor drop -b
+#execp = new
+#execp_command = drop -b
+#execp_interval = 6
+#execp_has_icon = 0
+#execp_cache_icon = 1
+#execp_continuous = 0
+#execp_markup = 0
+#execp_tooltip = drop
+#execp_lclick_command = drop --pause
+#execp_rclick_command = 
+#execp_mclick_command = 
+#execp_uwheel_command = 
+#execp_dwheel_command = 
+#execp_font = cuprum 11
+#execp_font_color = #111111 80
+#execp_padding = 0 0
+#execp_background_id = 0
+#execp_centered = 1
+#execp_icon_w = 0
+#execp_icon_h = 0

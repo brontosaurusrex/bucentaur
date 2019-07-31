@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# print audio ascii waveform to terminal (and play)
+
+# examples: 
+# print waveform and play:    printWaveform *.flac, 
+# just print waveform:        printWaveform np *.flac
+
+# needs: ffmpeg, caca-utils, imagemagick, mpv (for playback), tput, toilet
+# brontosaurusrex 2018
+
+# to play or not to play
+if [ "$1" == "np" ] || [ "$1" == "noplay" ]; then
+    play="false"
+    shift
+else
+    play="true"
+fi
+
+# tmp dir http://mywiki.wooledge.org/BashFAQ/062
+tmpdir="/tmp/$RANDOM-$$"
+trap '[ -n "$tmpdir" ] && rm -fr "$tmpdir"' EXIT
+mkdir -m 700 "$tmpdir" || { echo '!! unable to create a tmpdir' >&2; tmpdir=; exit 1; }
+
+# config
+tmpimg="$tmpdir/wave.png"    # tmp image storage
+th=$(( 24 * 1 ))             # height in terminal chars, should be even number
+hires="400"                  # how many term columns (width) are considered as hires
+
+# center text 
+centertext(){
+    columns=$(tput cols) 
+    string="$1" 
+    printf "%*s\n" $(((${#string}+columns)/2)) "$string"
+}
+
+# main
+while [ $# -gt 0 ]; do
+
+    # benchmark start
+    #START=$(date +%s.%N)
+
+    # get pixels width from terminal char width x 2 (and use something for height)
+    tw="$(tput cols)"   # width in term columns
+    w=$(( tw * 2 ))     # width of tmp image in pixels
+    h=$(( tw * 1 ))     # height of tmp image in pixels
+    
+    ffmpeg -i "$1" -filter_complex \
+    "aformat=channel_layouts=stereo,showwavespic=split_channels=0:scale=lin:s=${w}x${h}:colors=#000000" -y "$tmpimg" &>/dev/null && \
+            
+    # draw two black pixels on left/right as protection for following -trim operation
+    # (https://www.imagemagick.org/discourse-server/viewtopic.php?t=16656)
+    # whalf=$(( w / 2 ))
+    hhalf=$(( h / 2 )) && \
+    mogrify -draw "fill black color 0,${hhalf} point" "$tmpimg" && \
+    wtmp=$(( w - 1 )) # for some reason we need to remove 1 pixel
+    mogrify -draw "fill black color ${wtmp},${hhalf} point" "$tmpimg" && \
+
+    # trim (behaves as audio display normalizer)
+    mogrify -trim "$tmpimg" && \
+    # ^ was bad idea, this would trim left and right as well, those desync. But now we have two black pixels as protection ^. (Triming however will not be identical on top and bottom.)
+    
+    # shave some more
+    mogrify -gravity Center -shave 0x5% "$tmpimg" && \
+    
+    # if hires then increase the height of waveform display
+    if (( tw > hires )); then
+        thfinal=$(( th * 2 ))
+    else 
+        thfinal="$th"
+    fi
+    
+    # print waveform, enable head for half of the waveform
+    img2txt -g 2 -b 2 -y 15 -W "$tw" -H "$thfinal" -f utf8 -d none "$tmpimg" | head -$(( th / 2))
+    
+    # benchmark end
+    #END=$(date +%s.%N) && DIFF=$(echo "$END - $START" | bc) && echo "done in $DIFF seconds"
+
+    # echo file
+    if (( tw > hires )); then
+        toilet "$1" -w "$tw" # enable for very hi-res display
+    else
+        centertext "$1"
+        #echo "$1"
+    fi
+
+    # maybe play
+    "$play" && \
+    mpv --no-resume-playback -af=lavfi=[loudnorm=LRA=10:I=-17] \
+    --msg-level=ao/alsa=error:cplayer=error:statusline=status:display-tags=error:ffmpeg/demuxer=error \
+    --no-video "$1" --term-osd-bar --term-osd-bar-chars="··█ ·"
+    
+    
+shift
+done

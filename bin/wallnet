@@ -1,0 +1,337 @@
+#!/bin/bash
+
+# wallnet
+
+# Internet wallpaper downloader/setter with cache
+# (It does not understand the multihead concept)
+
+# required: wget, md5sum, awk, nitrogen, column, xrandr, imagemagick, internet connection
+
+# config
+cache="$HOME/tmp/wallcache"
+mkdir -p "$cache" || exit
+debug="0"
+permanent="0"  # nitrogen will set wallpapers permanently if 1 (better use -p switch on cli)
+limiter="0"    # will limit image dynamic range if enabled, needs imagemagick convert
+
+# checks
+command -v nitrogen >/dev/null 2>&1 || { echo "I need nitrogen, exiting." >&2; exit 1; }
+command -v xrandr >/dev/null 2>&1 || { echo "I need xrandr, exiting." >&2; exit 1; }
+command -v awk >/dev/null 2>&1 || { echo "I need awk, exiting." >&2; exit 1; }
+command -v wget >/dev/null 2>&1 || { echo "I need wget, exiting." >&2; exit 1; }
+command -v md5sum >/dev/null 2>&1 || { echo "I need md5sum, exiting." >&2; exit 1; }
+command -v column >/dev/null 2>&1 || { echo "I need column, exiting." >&2; exit 1; }
+command -v convert >/dev/null 2>&1 || { echo "I need imagemagick convert, exiting." >&2; exit 1; }
+
+# Array with 'name,url,method'
+configs=(
+noise,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/08/25/noise.png,centered
+tetrisLeft,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/08/27/tetris18_0173.png,centered
+tetrisRight,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/08/27/tetris18_0099.png,centered
+tetrisFull,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/08/27/tetris18_1112.png,centered
+tetrisAngle,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/08/27/tetris18_0133.png,centered
+plasma,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/08/16/noiseAndDirt-16853.png,centered
+saturns,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/05/24/saturns1.png,centered
+comet,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/06/28/kometTestHUD-fs8.png,centered
+bunsen,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/06/30/bunsenMicro6d_mono_3x3_b_hudSmall.png,centered
+bunsenGreen,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/04/15/bunsenBattle2fakeGLowGreenBlue.png,centered
+bunsen2d,https://images.weserv.nl/\?url=//brontosaurusrex.github.io/media/bunsenE3.svg,centered
+bunsenMicroStarwars4k,https://images.weserv.nl/\?url=//cdn.scrot.moe/images/2018/07/06/bunsenMicro8_2x.png,zoom
+bunsenMicroStarwars1920,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2018/07/06/bunsenMicro8_2x.png\&w=1920,centered
+ball,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2018/06/21/microDisp8.png,centered
+city,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2018/04/20/city5e.png,centered
+robot,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2018/02/22/roboto12ao.png,centered
+particles,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/12/15/anim2_gimp6.png,centered
+unknown,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/11/28/unknownsBEast.png,centered
+arrival,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/02/04/arrival12_dof_mistReal_ps7_ps1_1920x1200.png,centered
+grey_tile,https://images.weserv.nl/?url=//raw.githubusercontent.com/brontosaurusrex/retrotiles/master/png/grey_32_01_alpha.png,tiled
+grid,https://images.weserv.nl/?url=//brontosaurusrex.github.io/media/gridAdapta.png,tiled
+crunchDefaultTile,https://images.weserv.nl/?url=//raw.githubusercontent.com/CBPP/cbpp-wallpapers/master/cbpp-wallpapers/data/usr/share/backgrounds/default-tile.png,tiled
+crunchFabricTile,https://images.weserv.nl/?url=//raw.githubusercontent.com/CBPP/cbpp-wallpapers/master/cbpp-wallpapers/data/usr/share/backgrounds/fabric-tile-1.png,tiled
+crunchFabricTile2,https://images.weserv.nl/?url=//raw.githubusercontent.com/CBPP/cbpp-wallpapers/master/cbpp-wallpapers/data/usr/share/backgrounds/fabric-tile-2.png,tiled
+saturnsbw,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2018/05/31/saturns6.png,centered
+shark,https://images.weserv.nl/?url=//brontosaurusrex.github.io/media/scubaSharkAndFish.png,centered
+sailboat,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2018/05/08/sailBoatFx11.png,centered
+sunbomb,https://images.weserv.nl/?url=//brontosaurusrex.github.io/media/a_sort_of_sun-driven_bombC2crop.svg,centered
+rays,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2018/04/08/11comb_1937APR0818.png,centered
+circular,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2018/04/07/2gesticulate_1844APR0218.png,centered
+cube,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/01/10/defaultCube3_ps2.png,zoom-fill
+debian,http://shrani.si/f/2q/10a/11vEdHZ2/swirldali3post28bpc.png,centered
+debianLuxrender,http://shrani.si/f/44/HW/4c0Czz2S/swirllux.png,centered
+planetarium,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/01/25/planetarium8_ps1_1920x1200.png,zoom-fill
+stretch,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/07/07/stretchOnly4post3.png,centered
+paperPlane,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/01/13/plane12_8bit_NR_1920x1200.png,centered
+vintageRocket,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/12/26/vintageRocket11c_sheep_gimp9.png,centered
+pacific,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2016/07/15/worldElevation5pacifikOrtoCam8bpc.png,zoom
+bluepaperboat,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/09/21/boat5filmulatorb.png,centered
+redpaperboat,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/10/15/IMG_2600_dt_mask.png,centered
+rocketVintageAlpha,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/12/26/vintageRocket11d_gimp2flip_alpha.png,centered
+rocketVintageBlue,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/12/31/vintageRocket11d_gimp4.png,zoom-fill
+grass3440,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2016/04/29/3440x1440_xp_v7.png,zoom-fill
+chess3440,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2016/05/15/chess1966_ps1.png,zoom-fill
+chessSilber3440,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2016/05/15/chess1966_5b_ps2.png,zoom-fill
+bronto,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/02/01/bronto17b_oci_3440x1440_ps2.png,zoom-fill
+dragonSubstance,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2016/09/11/asian_dragon_substanceMachine3_ps1.png,zoom
+dragonComp,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2016/09/20/asian_dragon_brontosaurusrex_multiCrack_blenderDeveloped10.png,zoom-fill
+europa,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/03/24/europa_1920x1200.png,centered
+iapetus,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/03/24/iapetus_1920x1200.png,centered
+enceladus,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/03/24/enceladus_1920x1200.png,centered
+)
+
+# Hash
+hash () {
+    echo -n "$1" | md5sum | awk '{print $1}'
+}
+
+# Set wallpaper with nitrogen
+# One of missing option is to handle both heads as one/tiled
+# There should be dynamic limiter (optional), bri, sat, ect (see noise script)
+setwall () {
+    
+    hashurlfinal="$hashurl"
+    
+    if (( limiter )); then
+    
+        # limiter
+        convert "$hashurl" -auto-level +level 12%,70% "${hashurl}_fx"
+        hashurlfinal="${hashurl}_fx"
+        
+    fi
+    
+    # set wallpapers permanently or not
+    
+    (( permanent )) && save="--save"
+    
+    # if monitor number (0 or 1) is not specified
+    if [[ -z "$heads" ]]; then
+        
+        monitors=$(xrandr -d :0 -q | grep ' connected' -c)
+
+        # is monitors a number
+        if ! [[ $monitors =~ ^[1-9]+$ ]]; then
+            >&2 echo "No monitors detected, assuming one."
+            monitors="1"
+        fi
+        
+        cd "$cache" || exit
+        
+        for (( c=1; c<=monitors; c++ ))
+        do
+            nitrogen "${save}" --head="$(( c - 1 ))" --set-"${method}" "$hashurlfinal" --set-color="#263238" >/dev/null 2>&1 || echo "nitrogen failed"
+        done
+        
+    else
+    
+        nitrogen "${save}" --head="$heads" --set-"${method}" "$hashurlfinal" --set-color="#263238" >/dev/null 2>&1 || echo "nitrogen failed"
+        
+    fi
+
+}
+
+# restart stuff
+restart() {
+if pgrep -x "$1" > /dev/null
+then
+    (echo "$1 running, restarting"
+    killall -w "$1"
+    "${1}" &) &
+else
+    echo "$1 wasn't running"
+fi
+}
+
+
+# Heads (may be omited), must be 1st
+
+if [ "$1" == "-m" ] ; then
+
+    shift # next one shall be the number and not empty
+    # is monitors a number
+    if ! [[ $1 =~ ^[0-1]+$ ]]; then
+        >&2 echo "Monitor number must be 0 or 1."
+        exit 1
+    else
+        heads="$1"
+        shift
+    fi
+fi
+
+# Permanent wallpaper or not, must be last
+
+if [ "${!#}" == "-p" ] || [ "$1" == "--perm" ]; then
+    save="--save"
+fi
+
+# Main loop
+
+# List
+if [ "$1" == "-l" ] || [ "$1" == "--list" ]; then
+
+    {   while read -r line; do
+        
+            IFS=, read -r name url method <<< "$line"
+
+            if [[ "$1" == "-l" ]]; then # shorter version
+                echo -n "$name, ${url:0:50},"
+            else
+                echo -n "$name, $url,"
+            fi
+            
+            # Check for cached ones
+            cd "$cache" || exit
+            hashurl="$(hash "$url")" # md5sum of the url
+            if find . "$hashurl" >/dev/null 2>&1; then
+                echo "c, ${hashurl:0:4}, $method"
+            else
+                echo "-, ${hashurl:0:4}, $method"
+            fi
+            
+        done < <(printf '%s\n' "${configs[@]}")
+        
+        echo -n ", , disk used by $cache: " && du -hs "$cache" | awk '{print $1}'
+        
+    } | column -s, -t
+    
+# Wget and set
+elif [ "$1" == "-g" ] || [ "$1" == "--get" ]; then
+
+    shift # next one shall be the name and not empty
+    
+    if [[ -z "$1" ]]; then
+        echo "Which one?, use -l list them all" 
+        exit 1
+    else
+        getname="$1"
+    fi
+
+    # loop over array
+    while read -r line; do
+    
+        IFS=, read -r name url method <<< "$line"
+        
+        (( debug )) && echo "$name $url $method"
+
+        # match
+        if [[ "$name" == *"$getname"* ]]; then
+        
+            hashurl="$(hash "$url")" # md5sum of the url
+                
+            echo "$name, $hashurl"
+            
+            # Check if already here, else download it
+            cd "$cache" || exit
+            
+            if find . "$hashurl" >/dev/null 2>&1; then
+            
+                # already here, just set wall from cache
+                setwall && restart wbar > /dev/null 2>&1
+                exit
+            else
+            
+                # download and set wall
+                wget -nv "$url" -O "$hashurl" && \
+                setwall && restart wbar > /dev/null 2>&1
+                exit
+            
+            fi
+        fi
+        
+    done < <(printf '%s\n' "${configs[@]}")
+    
+    echo "Not found, use -l to list them all."
+    
+    
+elif [ "$1" == "--delete" ] ; then
+
+    # ask user if sure ?
+    
+    read -p "This will delete all cached wallpapers, are you sure? (y/n) " -n 1 -r
+    echo    # (optional) move to a new line
+    if ! [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        exit
+    fi
+    
+    # loop over array
+    while read -r line; do
+    
+        IFS=, read -r name url _ <<< "$line"
+        
+        hashurl="$(hash "$url")" # md5sum of the url
+        
+        (( debug )) && echo "$hashurl ${url:0:60}"
+        
+        cd "$cache" || exit
+        
+        # nuke if found
+        
+        rm "$hashurl"* >/dev/null 2>&1 && echo "$name $hashurl* deleted"
+        
+    done < <(printf '%s\n' "${configs[@]}")
+    
+elif [ "$1" == "--cache-all" ] ; then # download all to cache
+
+    # ask user if sure ?
+    read -p "This will download (overwrite) all defined wallpapers to $cache, are you sure? (y/n) " -n 1 -r
+    echo    # (optional) move to a new line
+    if ! [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        exit
+    fi
+    
+    # loop over array
+    while read -r line; do
+    
+        IFS=, read -r name url _ <<< "$line"
+        
+        hashurl="$(hash "$url")" # md5sum of the url
+        
+        (( debug )) && echo "$hashurl ${url:0:60}"
+        
+        cd "$cache" || exit
+        
+        # download
+        echo -n "$name "
+        wget "$url" -O "$hashurl"
+
+    done < <(printf '%s\n' "${configs[@]}")
+    
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ]; then # help
+
+cat <<EOF
+
+    wallnet (wallpaper downloader/setter with cache)
+
+        -l and --list                                   # list defined (name, url, cached, hash, method)
+        -g or  --get                                    # wget, cache and set wallpaper (only one name)
+        -h or  --help                                   # this help
+               --cache-all                              # download all to cache
+               --delete                                 # nuke the entire cache
+              
+        monitor, this must be 1st parameter, may be omitted.
+        -m 0 or -m 1
+        
+        permanent nitrogen wallpaper or not, must be last parameter, may be omitted
+        -p or --perm
+        
+    Examples:
+    
+        wallnet -g shark                                # set wall on all monitors
+        wallnet -g sha                                  # find first name with *sha*
+        wallnet -m 0 -g noise                           # only first monitor
+        wallnet -m 0 -g nois && wallnet -m 1 -g arr     # noise on 1st, arrival on 2nd
+        wallnet -m 0 -g saturnsbw -p                    # set saturnsbw permanently on 1st monitor       
+        
+    Usage: Edit the script, populate configs array with:
+
+        name,url,method (tiled or centered or... nitrogen --help)
+        
+        # Escape & in urls, like \&
+EOF
+
+else
+
+    echo "-h or --help"
+    
+    
+fi

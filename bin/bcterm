@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# bcterm
+# starts or activates pycalc in urxvt
+
+# check if one is allready active and select and exit
+xdotool search -name 'calculus' windowactivate && { echo "allready running" ; exit; }
+
+# not really using any resolution calculations from above
+urxvt -g 31x12 -bg rgb:0000/1234/0000 -title calculus \
+-icon SomePath/.config/stretchbang/images/wbar/papirus/calc.png \
+-e pycalc 

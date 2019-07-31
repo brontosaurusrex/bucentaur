@@ -1,0 +1,191 @@
+#!/bin/bash
+
+# noise (lite)
+
+# give me some noise for wallpaper
+
+# required: imagemagick, nitrogen
+
+# usage: noise --help
+
+# checks
+command -v convert >/dev/null 2>&1 || { echo "I need imagemagick convert, exiting." >&2; exit 1; }
+command -v nitrogen >/dev/null 2>&1 || { echo "I need nitrogen, exiting." >&2; exit 1; }
+
+# store for single image
+file="$HOME/.noise.png"
+touch "$file" || exit
+
+# resolution
+mx=1920; my=1200
+
+# help
+if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+
+cat <<EOF
+Order of parameters does matter:
+
+    noise color-preset brightnes saturation hue level-dynamics level-start
+    # color-preset may be omited
+
+examples:
+
+    noise                           # default
+    noise ++ -p                     # brighter and make permanent wall
+    noise deep                      # with color preset 'deep'
+    noise deep +                    # with color preset 'deep' and 10% brighter
+    noise - +++                     # default, but 10% darker and 30% more saturated
+    noise deep _ +++++ _ + ---      # preset 'deep' and more saturated,
+                                    # slightly more dynamics and darker level start.
+    noise deep -- ++ -------------- # A lil green
+    noise -- +++++++++++++++++      # darker but more colorful
+    
+alias examples:    
+    
+    alias green='noise deep -- ++ --------------'
+    alias blue='noise deep - ++++++++++ _ + --'
+    alias bluedark='noise -- +++++++++++++++++'
+    alias pink='noise deep _ + ++++++++++++++++++++++++++++ _ +++'
+    alias night='noise - +++ +++++++ +++ ---'
+EOF
+
+exit 
+
+fi
+
+# Permanent wallpaper or not, must be last
+if [ "${!#}" == "-p" ] || [ "$1" == "--perm" ]; then
+    save="--save"
+fi
+
+# fill colors
+tilix="#263945" ; crunch="#222D32" ; deep="#0D314D" ; royal="#2842B3" ; adapta="#222D32" ; deep2="#192F49" ; night="#1C2E7D"
+
+case "$1" in
+     tilix)          
+          color="$tilix"
+          shift
+          ;;
+     crunch)
+          color="$crunch"
+          shift
+          ;;
+     deep)
+          color="$deep"
+          shift
+          ;; 
+     royal)
+          color="$royal"
+          shift
+          ;;
+     adapta)
+          color="$adapta"
+          shift
+          ;;
+     deep2)
+          color="$deep2"
+          shift                    
+          ;; 
+     night)
+          color="$night"
+          shift                    
+          ;; 
+     *)
+          color="$tilix"
+          ;;
+esac
+
+# modulate bright,color,hue
+def="100" ; bri="100" ; col="100" ; hue="100"
+
+# bright
+mul="0"
+if [[ "$1" == +* ]]; then # lighter
+    mul=$(( 10 * ${#1} )) ; bri=$(( def + mul ))    
+    shift    
+elif [[ "$1" == -* ]]; then # darker
+    mul=$(( 10 * ${#1} )) ; bri=$(( def - mul ))
+    shift
+elif [[ "$1" == "_" ]]; then # the same
+    shift
+fi
+
+# saturation
+mul="0"
+if [[ "$1" == +* ]]; then # more saturated
+    mul=$(( 10 * ${#1} )) ; col=$(( def + mul ))    
+    shift    
+elif [[ "$1" == -* ]]; then # less saturated
+    mul=$(( 10 * ${#1} )) ; col=$(( def - mul ))
+    shift
+elif [[ "$1" == "_" ]]; then # the same
+    shift
+fi
+
+# hue
+mul="0"
+if [[ "$1" == +* ]]; then # more saturated
+    mul=$(( 2 * ${#1} )) ; hue=$(( def + mul ))    
+    shift    
+elif [[ "$1" == -* ]]; then # less saturated
+    mul=$(( 2 * ${#1} )) ; hue=$(( def - mul ))
+    shift
+elif [[ "$1" == "_" ]]; then # the same
+    shift
+fi
+
+# level dynamics/range
+low="18" ; high="24"
+mul="0"
+if [[ "$1" == +* ]]; then # higher dynamics
+    mul=${#1} ; low=$(( low - mul )) ; high=$(( high + mul )) 
+    shift    
+elif [[ "$1" == -* ]]; then # less dynamics
+    mul=${#1} ; low=$(( low + mul )) ; high=$(( high - mul ))
+    shift
+elif [[ "$1" == "_" ]]; then # the same
+    shift
+fi
+
+# level start
+mul="0"
+if [[ "$1" == +* ]]; then # higher (low and high)
+    mul=${#1} ; low=$(( low + mul )) ; high=$(( high + mul )) 
+    shift    
+elif [[ "$1" == -* ]]; then # lower (low and high)
+    mul=${#1} ; low=$(( low - mul )) ; high=$(( high - mul ))
+    shift
+elif [[ "$1" == "_" ]]; then # the same
+    shift
+fi
+
+# noise
+noise () {
+convert -size "${mx}x${my}" xc:"gray(50%)" -seed "${RANDOM}" -attenuate 2 +noise poisson -colorspace gray -fill "$color" +level ${low}%,${high}% -tint "100" -sharpen 0x1 -modulate "$bri,$col,$hue" "$file"
+}
+# +level 18%,24%
+# -sharpen 0x1
+# -modulate bright,color,hue
+
+# nitrogen, set wall
+setwall () {
+    nitrogen "${save}" --set-tiled "$file" || echo "nitrogen failed"
+}
+
+# restart wbar
+restart() {
+if pgrep -x "$1" > /dev/null
+then
+    (echo "$1 running, restarting"
+    killall -w "$1"
+    "${1}" &) &
+else
+    echo "$1 wasn't running"
+fi
+}
+
+# action
+set -x
+noise
+setwall
+restart wbar > /dev/null 2>&1

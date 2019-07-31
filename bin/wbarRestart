@@ -1,0 +1,4 @@
+#!/bin/bash
+
+killall -w wbar
+LC_NUMERIC=C wbar & 

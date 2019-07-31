@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# changeres
+
+# reset/restart things if running under virtualbox
+
+old=$(xrandr)
+
+if grep hypervisor /proc/cpuinfo ; then # if cpu flags have hypervisor assume virtualbox
+
+echo "hypervisor detected, running 4ever in loop"
+
+    while true ; do
+
+        if ! diff <(echo "$old") <(xrandr); then
+        
+        echo "res was changed"
+        # wallpaper
+        echo "restore wall"
+        nitrogen --restore # ugly assumption, how to check if wall was set with nitrogen?
+        # wbar
+        pgrep -x wbar
+            if [ $? -eq 0 ]; then
+              echo "kill wbar"
+              killall wbar && LC_NUMERIC=C wbar &
+              echo "start wbar"
+
+            fi
+        # conky
+        pgrep -x conky
+            if [ $? -eq 0 ]; then
+              echo "kill conky"
+              killall conky && conky
+              echo "start conky"
+
+            fi 
+
+        fi
+
+        old=$(xrandr)
+        sleep 5
+    done
+
+else
+
+    exit
+
+fi

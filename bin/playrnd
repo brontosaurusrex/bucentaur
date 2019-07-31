@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# playrnd
+
+# required: seen (script), printWaveform (script, needs lots of stuff) - or change it to mpv.
+
+# usage: playrnd --help
+
+# checks
+command -v mpv >/dev/null 2>&1 || { echo >&2 "I require mpv but it's not installed, exiting."; exit 1; }
+command -v mediainfo >/dev/null 2>&1 || { echo >&2 "I require mediainfo but it's not installed, exiting."; exit 1; }
+command -v seen >/dev/null 2>&1 || { echo >&2 "I require 'seen' script but it's not on path, exiting."; exit 1; }
+command -v printWaveform >/dev/null 2>&1 || { echo >&2 "I require 'printWaveform' script but it's not on path, exiting."; exit 1; }
+
+# seen limit and database
+lm="200"
+db="muzak"
+min="60000" # don't play if shorter than 60 seconds
+bench="1"
+
+# tmp dir http://mywiki.wooledge.org/BashFAQ/062
+tmp="/tmp/$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
+# nuke the seen database
+if [ "$1" == "--nuke" ] ; then
+    seen "0" "$db" "" >/dev/null 2>&1
+    echo "Seen db nuked."
+    exit
+elif [ "$1" == "-h" ] || [ "$1" == "--help" ]; then # help
+
+cat <<EOF
+
+    cd /your/music/root && playrnd .     
+           
+    playrnd "/path/to/album1" "/path/to/album2"
+    
+    playrnd --nuke # nuke the seen database, this should be useful when 'limit > number of songs'.
+
+EOF
+
+exit
+
+fi
+
+# generate list
+find "$@" -type f | grep -E '.mp3$|.mp4$|.m4a$|.flac$|.ogg$|.mpc$|.wav$|.aif$|.opus$' > "$tmp/list"
+
+# stats
+all="$(wc -l < $tmp/list)"
+echo "Found $all songs, 'seen' limit set to $lm."
+    
+# main
+while true; do # forever
+
+    # benchmark start
+    START=$(date +%s.%N)
+
+    # action
+    c="0"
+    unlock="60" # This could depend on limit/members ratio
+    until
+ 
+        muzak="$(seen $lm $db "$(shuf -n 1 "$tmp/list")" 2>/dev/null)"
+    
+    do 
+        # lock prevention
+        (( c++ ))
+        if (( c == unlock )); then 
+             >&2 echo "lock prevented"
+            exit
+        fi
+    done 
+    
+    # benchmark end
+    END=$(date +%s.%N)
+    DIFF=$(echo "$END - $START" | bc)
+    (( bench )) && echo "found in $DIFF seconds" 
+
+    # play or don't
+    if ! [[ -z "$muzak" ]]; then
+    
+        # Don't play if shorter than $min seconds
+        dur="$(mediainfo "--Inform=General;%Duration%" "$muzak")"
+        if (( dur > min )); then
+            #echo "$muzak"
+            printWaveform "$muzak"
+        fi
+        
+    else
+        echo " ##### no muzak for you ##### "
+    fi
+done
