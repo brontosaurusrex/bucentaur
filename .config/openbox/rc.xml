@@ -1,5 +1,4 @@
-<?xml version="1.0"?>
-<openbox_config xmlns="http://openbox.org/3.4/rc">
+<?xml version="1.0" ?><openbox_config xmlns="http://openbox.org/3.4/rc">
   <cornerRadius>4</cornerRadius>
   <resistance>
     <strength>10</strength>
@@ -16,10 +15,10 @@
        under the mouse pointer. when followMouse is enabled -->
     <underMouse>no</underMouse>
     <!-- move focus under the mouse, even when the mouse is not moving -->
-    <focusDelay>200</focusDelay>
+    <focusDelay>120</focusDelay>
     <!-- when followMouse is enabled, the mouse must be inside the window for
        this many milliseconds (1000 = 1 sec) before moving focus to it -->
-    <raiseOnFocus>no</raiseOnFocus>
+    <raiseOnFocus>yes</raiseOnFocus>
     <!-- when followMouse is enabled, and a window is given focus by moving the
        mouse into it, also raise the window -->
   </focus>
@@ -33,8 +32,8 @@
     <primaryMonitor>1</primaryMonitor>
   </placement>
   <theme>
-    <name>Arc-Dark_ob_border_kv</name>
-    <titleLayout>CIML</titleLayout>
+    <name>oomox-tizix_dark</name>
+    <titleLayout>CIMLS</titleLayout>
     <!--
       avaible characters are NDSLIMC, each can occur at most once.
       N: window icon
@@ -67,7 +66,7 @@
     </font>
     <font place="MenuHeader">
       <name>Cuprum</name>
-      <size>12</size>
+      <size>11</size>
       <!-- font size in points -->
       <weight>Normal</weight>
       <!-- 'bold' or 'normal' -->
@@ -76,7 +75,7 @@
     </font>
     <font place="MenuItem">
       <name>Cuprum</name>
-      <size>12</size>
+      <size>11</size>
       <!-- font size in points -->
       <weight>Normal</weight>
       <!-- 'bold' or 'normal' -->
@@ -105,13 +104,13 @@
 
        use obconf if you want to change these without having to log out
        and back in -->
-    <number>2</number>
+    <number>1</number>
     <firstdesk>1</firstdesk>
     <names>
-      <name>1</name>
-      <name>2</name>
-      <name>3</name>
-      <name>4</name>
+      <name>I</name>
+      <name>II</name>
+      <name>III</name>
+      <name>IIII</name>
     </names>
     <popupTime>875</popupTime>
     <!-- The number of milliseconds to show the popup for when switching
@@ -134,16 +133,16 @@
      cases. -->
   <margins>
     <top>0</top>
-    <bottom>36</bottom>
+    <bottom>46</bottom>
     <left>6</left>
     <right>6</right>
   </margins>
   <dock>
-    <position>BottomLeft</position>
+    <position>Left</position>
     <!-- (Top|Bottom)(Left|Right|)|Top|Bottom|Left|Right|Floating -->
     <floatingX>0</floatingX>
     <floatingY>0</floatingY>
-    <noStrut>no</noStrut>
+    <noStrut>yes</noStrut>
     <stacking>Below</stacking>
     <!-- 'Above', 'Normal', or 'Below' -->
     <direction>Vertical</direction>
@@ -207,7 +206,7 @@
         <wrap>no</wrap>
       </action>
     </keybind>
-    <keybind key="W-y">
+    <!--<keybind key="W-y">
       <action name="Desktop">
         <desktop>1</desktop>
       </action>
@@ -216,7 +215,7 @@
       <action name="Desktop">
         <desktop>2</desktop>
       </action>
-    </keybind>
+    </keybind>-->
     <keybind key="W-F3">
       <action name="Desktop">
         <desktop>3</desktop>
@@ -268,6 +267,15 @@
       </action>
     </keybind>
     <!-- Keybindings for running applications -->
+    <keybind key="W-x">
+      <action name="Execute">
+        <startupnotify>
+          <enabled>true</enabled>
+          <name>xkill</name>
+        </startupnotify>
+        <command>xkill</command>
+      </action>
+    </keybind>
     <keybind key="A-space">
       <action name="Execute">
         <startupnotify>
@@ -360,296 +368,60 @@
     <keybind key="W-Up">
       <action name="GrowToEdgeNorth"/>
     </keybind>
+    
+    
     <!-- brontosaurusrex start -->
-    <keybind key="W-a">
-      <!-- Begin the keychains to manage windows -->
-      <!-- aeiah's semi-tiling mode -->
-      <!-- changes by brontosaurusrex, inspired by 
-      http://urukrama.wordpress.com/2011/10/30/manual-tiling-in-openbox/ -->
-      <!-- super + a & numeric keyboard -->
-      <!-- left side -->
-      <keybind key="KP_1">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0%</x>
-          <y>0</y>
-          <width>50%</width>
-          <height>98%</height>
-        </action>
-      </keybind>
-      <!-- right side -->
-      <keybind key="KP_2">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>50%</x>
-          <y>0</y>
-          <width>50%</width>
-          <height>98%</height>
-        </action>
-      </keybind>
-      <!-- top left -->
-      <keybind key="KP_3">a
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo"><x>0</x><y>0</y><width>50%</width><height>45%</height></action>
-      </keybind>
-      <!-- top right -->
-      <keybind key="KP_4">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>50%</x>
-          <y>0</y>
-          <width>50%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- bottom left -->
-      <keybind key="KP_5">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>45%</y>
-          <width>50%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- bottom right -->
-      <keybind key="KP_6">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>50%</x>
-          <y>45%</y>
-          <width>50%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- full width -->
-      <keybind key="KP_7">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>0</y>
-          <width>100%</width>
-          <height>98%</height>
-        </action>
-      </keybind>
-      <!-- golden big left -->
-      <keybind key="KP_8">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>0</y>
-          <width>62%</width>
-          <height>98%</height>
-        </action>
-      </keybind>
-      <!-- golden small right -->
-      <keybind key="KP_9">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>62%</x>
-          <y>0</y>
-          <width>38%</width>
-          <height>98%</height>
-        </action>
-      </keybind>
-      <!-- golden small left -->
-      <keybind key="KP_0">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>0</y>
-          <width>38%</width>
-          <height>98%</height>
-        </action>
-      </keybind>
-      <!-- golden big right -->
-      <keybind key="KP_Separator">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>38%</x>
-          <y>0</y>
-          <width>62%</width>
-          <height>98%</height>
-        </action>
-      </keybind>
-      <!-- enter center -->
-      <keybind key="KP_Enter">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>center</x>
-        </action>
-      </keybind>
-      <!-- 
-   unused numeric:
-   KP_Subtract
-   KP_Add
-   KP_Divide 
-   -->
-      <!-- super + a & normal numerals -->
-      <!-- golden big top left -->
-      <keybind key="1">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>0</y>
-          <width>62%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- golden big bottom left -->
-      <keybind key="3">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>45%</y>
-          <width>62%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- golden small top right -->
-      <keybind key="2">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>62%</x>
-          <y>0</y>
-          <width>38%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- golden small bottom right -->
-      <keybind key="4">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>62%</x>
-          <y>45%</y>
-          <width>38%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- golden small top left -->
-      <keybind key="5">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>0</y>
-          <width>38%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- golden big top right -->
-      <keybind key="6">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>38%</x>
-          <y>0</y>
-          <width>62%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- golden small bottom left -->
-      <keybind key="7">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>45%</y>
-          <width>38%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- golden big bottom right -->
-      <keybind key="8">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>38%</x>
-          <y>45%</y>
-          <width>62%</width>
-          <height>45%</height>
-        </action>
-      </keybind>
-      <!-- golden big top -->
-      <keybind key="9">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>0</y>
-          <width>100%</width>
-          <height>62%</height>
-        </action>
-      </keybind>
-      <!-- just center x -->
-      <keybind key="0">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>center</x>
-        </action>
-      </keybind>
-      <!-- golden small top -->
-      <keybind key="apostrophe">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>0</y>
-          <width>100%</width>
-          <height>38%</height>
-        </action>
-      </keybind>
-      <!-- golden big bottom -->
-      <keybind key="plus">
-        <action name="UnmaximizeFull"/>
-        <action name="MoveResizeTo">
-          <x>0</x>
-          <y>38%</y>
-          <width>100%</width>
-          <height>62%</height>
-        </action>
-      </keybind>
-      <!-- other keychains to manage windows -->
-    </keybind>
-    <!-- and duplicated with different keybindings - ALT + y,x,c,v -->
+    <!-- ALT + y, x, c, v -->
     <!-- left side -->
-    <keybind key="A-y">
+    <keybind key="A-z">
       <action name="UnmaximizeFull"/>
+      <action name="Maximize">
+        <direction>vertical</direction>
+      </action>
       <action name="MoveResizeTo">
         <x>0%</x>
         <y>0</y>
         <width>50%</width>
-        <height>98%</height>
+        <!-- <height>98%</height> -->
       </action>
     </keybind>
     <!-- right side -->
     <keybind key="A-x">
       <action name="UnmaximizeFull"/>
+      <action name="Maximize">
+        <direction>vertical</direction>
+      </action>
       <action name="MoveResizeTo">
         <x>50%</x>
         <y>0</y>
         <width>50%</width>
-        <height>98%</height>
+        <!-- <height>98%</height> -->
       </action>
     </keybind>
     <!-- just center x -->
     <keybind key="A-c">
-      <action name="UnmaximizeFull"/>
+      <!-- <action name="UnmaximizeFull"/> -->
       <action name="MoveResizeTo">
         <x>center</x>
       </action>
     </keybind>
-    <!-- center x and y -->
+    <!-- just center y (alt + win + c) -->
     <keybind key="W-A-c">
-      <action name="UnmaximizeFull"/>
+      <!-- <action name="UnmaximizeFull"/> -->
       <action name="MoveResizeTo">
-        <x>center</x>
         <y>center</y>
       </action>
     </keybind>
     <!-- full width, almost full height in percents -->
     <keybind key="A-v">
-      <action name="UnmaximizeFull"/>
+      <action name="Maximize"/>
+      <!-- <action name="UnmaximizeFull"/>
       <action name="MoveResizeTo">
         <x>0</x>
         <y>0</y>
         <width>100%</width>
-        <height>98%</height>
-      </action>
+        <height>100%</height>
+      </action> -->
     </keybind>
     <!-- fullscreen toggle -->
     <keybind key="W-F11">
@@ -669,34 +441,10 @@
         <monitor>next</monitor>
       </action>
     </keybind>
-    <!-- toggleRadio -->
-    <keybind key="A-r">
-      <action name="Execute">
-        <command>r t</command>
-      </action>
-    </keybind>
-    <!-- Radio next -->
-    <keybind key="A-t">
-      <action name="Execute">
-        <command>r +</command>
-      </action>
-    </keybind>
-    <!-- Radio prev -->
-    <keybind key="A-e">
-      <action name="Execute">
-        <command>r -</command>
-      </action>
-    </keybind>
-    <!-- Radio what song -->
-    <keybind key="A-n">
-      <action name="Execute">
-        <command>r n</command>
-      </action>
-    </keybind>
     <!-- brontosaurusrex end -->
   </keyboard>
   <mouse>
-    <dragThreshold>8</dragThreshold>
+    <dragThreshold>20</dragThreshold>
     <!-- number of pixels the mouse must move before a drag begins -->
     <doubleClickTime>200</doubleClickTime>
     <!-- in milliseconds (1000 = 1 second) -->
@@ -720,14 +468,14 @@
         <action name="Raise"/>
         <action name="Unshade"/>
       </mousebind>
-      <mousebind action="Drag" button="A-Right">
+      <mousebind action="Drag" button="A-Middle">
         <action name="Resize"/>
       </mousebind>
-      <mousebind action="Press" button="A-Middle">
+      <!-- <mousebind action="Press" button="A-Middle">
         <action name="Lower"/>
         <action name="FocusToBottom"/>
         <action name="Unfocus"/>
-      </mousebind>
+      </mousebind> -->
       <mousebind action="Click" button="A-Up">
         <action name="DesktopPrevious"/>
       </mousebind>
@@ -1002,13 +750,7 @@
           <menu>client-list-combined-menu</menu>
         </action>
       </mousebind>
-      <!-- https://urukrama.wordpress.com/2014/12/01/middle-click-the-desktop-to-create-a-new-note/ 
-      <mousebind action="Press" button="Middle">
-      <action name="Execute">
-      <execute>~/bin/xpad-middleclick</execute>
-      </action>
-      </mousebind>
-      -->
+
       <mousebind action="Press" button="Right">
         <action name="ShowMenu">
           <menu>root-menu</menu>
@@ -1114,9 +856,6 @@
 
   # end of the example
 -->
-    <application class="Dwb" name="dwb" type="normal">
-      <decor>no</decor>
-    </application>
     <application class="X-terminal-emulator" name="x-terminal-emulator" type="normal">
       <position force="no">
         <x>50</x>
@@ -1129,15 +868,13 @@
         <y>90</y>
       </position>
     </application>
-    <application class="URxvt" name="urxvt" type="normal">
-      <decor>no</decor>
-    </application>
     <application class="mpv" name="*" type="normal">
       <decor>no</decor>
       <iconic>default</iconic>
       <shade>no</shade>
       <skip_taskbar>default</skip_taskbar>
       <skip_pager>default</skip_pager>
+      <layer>above</layer>
     </application>
     <application class="URxvt" name="transparent" type="normal">
       <decor>no</decor>
@@ -1147,14 +884,57 @@
       <decor>no</decor>
     </application>
     <application class="Gmrun" name="gmrun" type="normal">
-      <decor>no</decor>
+      <skip_pager>yes</skip_pager>
       <skip_taskbar>yes</skip_taskbar>
-      <skip_pager>default</skip_pager>
       <focus>yes</focus>
-      <layer>above</layer>
+      <decor>no</decor>
     </application>
     <application class="Chromium" name="slither.io" role="pop-up" type="normal">
       <decor>no</decor>
     </application>
-  </applications>
+    <application class="URxvt" name="urxvt" type="normal">
+      <decor>no</decor>
+    </application>
+    <application class="Firefox-esr" name="Navigator" role="browser" type="normal">
+      <position force="no">
+        <x>center</x>
+        <y>0</y>
+        <monitor>1</monitor>
+      </position>
+      <decor>no</decor>
+    </application>
+    <application class="Gmrun" name="gmrun" type="normal">
+      <focus>yes</focus>
+      <skip_taskbar>yes</skip_taskbar>
+      <layer>above</layer>
+    </application>
+    <application class="Obconf" name="obconf" type="normal">
+      <size>
+        <width>45%</width>
+      </size>
+      <position force="no">
+        <x>center</x>
+        <y>center</y>
+        <monitor>1</monitor>
+      </position>
+    </application>
+    <application class="Zathura" name="zathura" type="normal">
+      <decor>no</decor>
+      <focus>yes</focus>
+    </application>
+    <application class="Google-chrome" name="google-chrome" role="browser" type="normal">
+      <decor>no</decor>
+    </application>
+    <application class="Chromium" name="chromium" role="browser" type="normal">
+      <decor>no</decor>
+    </application>
+    <application class="Termite" name="termite" type="normal">
+      <decor>no</decor>
+      <position force="no">
+        <x>default</x>
+        <y>default</y>
+      </position>
+    </application>
+  <application class="Google-chrome" name="netflix.com" role="pop-up" type="normal"><decor>no</decor></application>
+</applications>
 </openbox_config>
