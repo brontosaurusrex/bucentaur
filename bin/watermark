@@ -19,8 +19,9 @@ if (($# < 3)) || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
     echo "Must be 3 or 4 arguments, example:"
     echo
     echo "watermark back.png logo.png out.png 20"
-    echo "                                    ^"
-    echo "                             logo size in percents (can be omitted)"
+    echo "                                     ^"
+    echo "                             logo size in percents (can be omitted),"
+    echo "                             set to 0 for no resizing."
 
     exit 1
 
@@ -86,7 +87,14 @@ fi
 method=( overlay plus darken lighten src-over multiply screen pegtop-light pin-light )
 
 # resize and pad-bottom logo
-convert "$logo" -resize "$amt"@ "$tmp/logoresized_.png"
+if [[ "$pct" != "0" ]] ; then
+    # resize
+    convert "$logo" -resize "$amt"@ "$tmp/logoresized_.png"
+else
+    # if pct = 0 is passed by user, we assume no resizing is to be done
+    cp "$logo" "$tmp/logoresized_.png"
+
+fi
 # pad bottom for some% so that the final composition will have logo a bit higher than geometric center
 convert "$tmp/logoresized_.png" -gravity north -background transparent -extent \
 "$(identify -format '%Wx%[fx:H*1.1]' "$tmp/logoresized_.png")" \
@@ -163,7 +171,7 @@ lines () {
 
 
     # action
-    for ((i=1;i<=150;i++)); 
+    for ((i=1;i<=100;i++)); 
     do
         echo -n "$i "
         random
@@ -174,7 +182,29 @@ lines () {
     echo
     
     # bw
-    mogrify -blur 0x3 -scale "${alphasize}"\! -auto-level -evaluate Min 30% -colorspace gray "$tmp/lines.png"
+    #mogrify -blur 0x3 -scale "${alphasize}"\! -auto-level -evaluate Min 30% -colorspace gray "$tmp/lines.png"
+    
+    rotateMaybe () {
+    if (( RANDOM %2 )) ; then
+        mogrify -rotate 90 "$tmp/lines.png"
+        echo "rotating lines 90"
+    else
+        echo "not rotating lines"
+    fi
+    }
+    
+    rotateMaybe
+    
+    mogrify -scale "${alphasize}"\! -auto-level -evaluate Min 130% -colorspace gray "$tmp/lines.png"
+    
+    # some additional destruction
+    convert "$tmp/lines.png" -spread 5 "$tmp/lines_spread.png"
+    
+    # tone down
+    convert "$tmp/lines_spread.png" "$tmp/lines.png" -define compose:args=90 -compose blend -depth 8 +repage -composite "$tmp/lines_comp.png" 
+    
+    
+    mv "$tmp/lines_comp.png" "$tmp/lines.png"
     
 }
 
@@ -189,7 +219,7 @@ extractalpha () {
         fi
 }
 
-
+# mostly lines
 destroyedmask () {
     
         extractalpha # and get size 
@@ -198,6 +228,20 @@ destroyedmask () {
         width="$(convert -ping "$tmp/alpha.png" -format "%w" info:)"
         lines # must know the size ^ (alphasize and width)
         #cp "$tmp/lines.png" "${dir}/lines.png"
+        
+        echo "noise"
+        noiseheadless
+    
+        # digi effect
+        convert "$tmp/lines.png" -virtual-pixel tile \
+        -auto-level -scale 10% -statistic Mode 40 \
+        -colorspace gray -auto-level -scale 1000% "$tmp/stats.png"
+        
+        # tone down
+        convert "$tmp/lines.png" "$tmp/stats.png" -define compose:args=35 -compose blend -depth 8 +repage -composite "$tmp/lines_comp.png"
+        mv "$tmp/lines_comp.png" "$tmp/lines.png"
+        
+        cp "$tmp/lines.png" "${dir}/lines.png"
         
         #set -x
         # mix with some other mask, but clip/limit somehow
@@ -265,11 +309,6 @@ noiseheadless () {
 
 digimask () {
     
-    if ( ! command -v noise >/dev/null 2>&1 ); then 
-        echo "digimask method requires noise script"
-        return
-    fi
-    
     echo "digi mask"
     
     extractalpha
@@ -279,8 +318,8 @@ digimask () {
     
     # digi effect
     convert "$tmp/noise.png" -virtual-pixel tile \
-    -auto-level -statistic Mode 120 \
-    -colorspace gray -auto-level -scale 100% "$tmp/stats.png"
+    -auto-level -scale 10% -statistic Mode 40 \
+    -colorspace gray -auto-level -scale 1000% "$tmp/stats.png"
 
     # mix masks
     convert "$tmp/stats.png" "$tmp/alpha.png" -gravity center -compose minus \
@@ -293,9 +332,9 @@ digimask () {
     convert "$back" "$tmp/logonewalphastats.png" -gravity center -compose src-over -depth 8 +repage -composite "$tmp/logonewalphastatscomp.png" 
     
     # tone down
-    convert "$back" "$tmp/logonewalphastatscomp.png" -define compose:args=85 -compose blend -depth 8 +repage -composite "${dir}/${base}-digi.${ext}" 
+    convert "$back" "$tmp/logonewalphastatscomp.png" -define compose:args=85 -compose blend -depth 8 +repage -composite "${dir}/${base}-digiDefault.${ext}" 
         
-    echo "${base}-digi.${ext}"
+    echo "${base}-digiDefault.${ext}"
     
     # replace mask and rgb to black
     convert -size "${alphasize}" xc:black "$tmp/alphacomp2.png" -alpha off -compose CopyOpacity -auto-level -composite "$tmp/logonewalphaBlack.png" 

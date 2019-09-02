@@ -5,14 +5,14 @@
 # atom.list
 while read -r p; do
     echo "$p"
-    apt-get install -y "$p" 
+    apt-get install -y --no-install-recommends "$p" 
     echo
 done <atom.list
 
 # base.list
 while read -r p; do
     echo "$p"
-    apt-get install -y "$p" 
+    apt-get install -y --no-install-recommends "$p" 
     echo
 done <base.list
 
