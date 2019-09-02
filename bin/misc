@@ -13,7 +13,7 @@ libreoffice writter,    libreoffice --writer
 ---
 tty-clock, urxvt -bl -g 36x7 -e tty-clock -cD
 scrotX -d 9
----
+#---
 #audiotool,        google-chrome --app="https://audiotool.com/app"
 ---
 Window size copy/paste,     clickyClicky
