@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -x
+
+# fix paths
+
+# .wbar path
+sed -i "s=SomePath=$HOME/.config/bucentaur=" ~/.wbar
+
+# .Xresources urxvt icon path
+sed -i "s=SomePath=$HOME=" ~/.Xresources
+
+# nitrogen paths
+sed -i "s=SomePath=$HOME=" ~/.config/nitrogen/nitrogen.cfg
+sed -i "s=SomePath=$HOME=" ~/.config/nitrogen/bg-saved.cfg
+
+# py calc in urxt custom icon
+sed -i "s=SomePath=$HOME=" ~/bin/bcterm

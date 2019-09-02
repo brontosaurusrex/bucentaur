@@ -1,9 +1,8 @@
 
-# Note: You need to close this geany session for menu to rebuild automagically,
-# or launch pipeMisc manually
-# pipeMisc will generate ~/bin/pipeMisc.xml based on this template
+# Note: You need to close this geany session for menu to rebuild automagically, or launch pipeMisc manually.
+# pipeMisc will generate ~/bin/misc.xml based on this template
 
-Blender,     ~/apps/blender28/blender
+blender28,     ~/apps/blender28/blender
 gimp
 inkscape
 krita
@@ -12,7 +11,7 @@ slither.io,       slitherRun
 viber,            /opt/viber/Viber
 libreoffice writter,    libreoffice --writer
 ---
-tty-clock, urxvt -depth 32 -bg rgba:2000/2000/2000/0000 -sh 0 -bl -g 36x7 -e tty-clock -cD
+tty-clock, urxvt -bl -g 36x7 -e tty-clock -cD
 scrotX -d 9
 ---
 #audiotool,        google-chrome --app="https://audiotool.com/app"

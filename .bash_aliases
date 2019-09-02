@@ -14,7 +14,6 @@ alias ans='cat ~/.pans.txt'
 alias asciize='img2txt -W "$( tput cols )" -f utf8 -d random'
 alias space='gdmap -f . &'
 alias rndPlay='mpv --no-config --no-video --no-resume-playback --no-ytdl --af=lavfi=[loudnorm=LRA=10:I=-17] --shuffle *'
-#alias bman='BROWSER=firefox-esr man --html'
 alias dice='echo $(( RANDOM % 6 + 1 ))'
 alias cpu='ps -e -o pcpu,args --sort pcpu | tail'
 alias space2u="rename 's/ /_/g'"

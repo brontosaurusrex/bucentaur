@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# make some user dirs
+
+set -e
+
+cd
+mkdir documents downloads images music tmp videos apps
+cp ~/source/bucentaur/.config/user-dirs.dirs ~/.config
+echo "logout of openbox, login back and it should happen."
