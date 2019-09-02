@@ -16,13 +16,7 @@ if [ -n "$BASH_VERSION" ]; then
     fi
 fi
 
-
 # set PATH so it includes user's private bin if it exists
 if [ -d "$HOME/bin" ] ; then
     PATH="$HOME/bin:$PATH"
 fi
-
-export PATH="$HOME/.cargo/bin:$PATH"
-
-
-. /home/b/source/torch/install/bin/torch-activate
