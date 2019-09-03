@@ -1,4 +1,5 @@
-<?xml version="1.0" ?><openbox_config xmlns="http://openbox.org/3.4/rc">
+<?xml version="1.0"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc">
   <cornerRadius>4</cornerRadius>
   <resistance>
     <strength>10</strength>
@@ -368,8 +369,6 @@
     <keybind key="W-Up">
       <action name="GrowToEdgeNorth"/>
     </keybind>
-    
-    
     <!-- brontosaurusrex start -->
     <!-- ALT + y, x, c, v -->
     <!-- left side -->
@@ -382,7 +381,20 @@
         <x>0%</x>
         <y>0</y>
         <width>50%</width>
-        <!-- <height>98%</height> -->
+      </action>
+    </keybind>
+        
+    <!-- left side, also for y, in case of quertz keyboard -->
+    <keybind key="A-y">
+      <action name="UnmaximizeFull"/>
+      <action name="Maximize">
+        <direction>vertical</direction>
+      </action>
+      <action name="MoveResizeTo">
+        <x>0%</x>
+        <y>0</y>
+        <width>50%</width>
+        
       </action>
     </keybind>
     <!-- right side -->
@@ -395,7 +407,7 @@
         <x>50%</x>
         <y>0</y>
         <width>50%</width>
-        <!-- <height>98%</height> -->
+       
       </action>
     </keybind>
     <!-- just center x -->
@@ -750,7 +762,6 @@
           <menu>client-list-combined-menu</menu>
         </action>
       </mousebind>
-
       <mousebind action="Press" button="Right">
         <action name="ShowMenu">
           <menu>root-menu</menu>
@@ -935,6 +946,8 @@
         <y>default</y>
       </position>
     </application>
-  <application class="Google-chrome" name="netflix.com" role="pop-up" type="normal"><decor>no</decor></application>
-</applications>
+    <application class="Google-chrome" name="netflix.com" role="pop-up" type="normal">
+      <decor>no</decor>
+    </application>
+  </applications>
 </openbox_config>
