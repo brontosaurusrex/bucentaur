@@ -54,7 +54,10 @@ xset s noblank &    # don't blank the video device
 middleMice &
 
 # In case of virtualbox 
-~/bin/changeres
+~/bin/changeres &
+
+# nm-applet (sudo rm /etc/xdg/autostart/nm-applet.desktop)
+nm-applet &
 
 # mountpi
 # sshfs pi@192.168.1.6:/home/pi/usbman/filmi ~/pi
