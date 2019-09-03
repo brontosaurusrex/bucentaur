@@ -4,8 +4,8 @@
 
 apt install -y $(cat atom.list) || exit
 apt install -y $(cat base.list)
-apt install -y $(cat baseNoInstallRec.list)
-apt install -y --no-install-recommends $(cat extra.list)
+apt install -y --no-install-recommends $(cat baseNoInstallRec.list)
+apt install -y $(cat extra.list)
 
 # wbar
 rm /etc/xdg/autostart/wbar.desktop # start wbar in ob autostart

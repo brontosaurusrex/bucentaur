@@ -53,5 +53,8 @@ xset s noblank &    # don't blank the video device
 # enable middle mice system-wide scrolling
 middleMice &
 
+# In case of virtualbox 
+~/bin/changeres
+
 # mountpi
 # sshfs pi@192.168.1.6:/home/pi/usbman/filmi ~/pi
