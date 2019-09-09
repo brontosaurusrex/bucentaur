@@ -14,7 +14,7 @@ cat <<EOF
     e       geany                 │ f2      openbox client menu
     v       alsamixer             │─────────────────────────────────────
     m       toggle mute           │ super +
-    x       xkill                 │ f11     fullscreen
+    x       xkill                 │ f11     toggle fullscreen
     Tab     openbox combined menu │ f12     toggle compton
     ───────────────────────────── │ s       toggle show desktop
     alt +                         │─────────────────────────────────────
