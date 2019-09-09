@@ -14,8 +14,8 @@ i: SomePath/images/wbar/black/thunar.png
 c: (launchee thunar || thunar)
 t: thunar
 
-i: SomePath/images/wbar/black/firefox.png
-c: (launchee firefox || firefox)
+i: SomePath/images/wbar/black/chrome.png
+c: (launchee google-chrome || google-chrome)
 t: firefox
 
 i: SomePath/images/wbar/black/calc.png
