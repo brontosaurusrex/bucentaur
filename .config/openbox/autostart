@@ -26,10 +26,10 @@ udiskie -2 &
 # check if nitrogen is even there before any logic
 if hash nitrogen 2>/dev/null; then
     # wbar should wait for nitrogen
-    (sleep 12 && nitrogen --restore && wbar) &
+    (sleep 12 && nitrogen --restore && LC_NUMERIC=C wbar) &
     
 else
-    wbar &
+    LC_NUMERIC=C wbar &
 fi
 
 ## tint2
