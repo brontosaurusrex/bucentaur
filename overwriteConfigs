@@ -40,13 +40,14 @@ cp -vurb .fonts/* ~/.fonts/
 # depends, either vrb or vurb OR vb or vub (so its either vu or only v)
 mkdir ~/.config/ ~/.urxvt/ ~/bin/ 2>/dev/null
 cp -"$switch"rb .config/* ~/.config/
-cp -"$switch"rb .gconf/* ~/.gconf/ # gksu settings ?
-cp -"$switch"rb .urxvt/* ~/.urxvt/
+#cp -"$switch"rb .gconf/* ~/.gconf/ # gksu settings ?
+#cp -"$switch"rb .urxvt/* ~/.urxvt/
 cp -"$switch"rb bin/* ~/bin/
 
 cp -"$switch"b .bashrc ~
 cp -"$switch"b .bash_aliases ~
-cp -"$switch"b .conkyrc ~
+cp -"$switch"b .zshrc ~
+#cp -"$switch"b .conkyrc ~
 #cp -"$switch"b .conkyrcdwm ~
 cp -"$switch"b .gtkrc-2.0* ~
 cp -"$switch"b .Xresources ~
@@ -56,7 +57,7 @@ cp -"$switch"b .tmux* ~
 cp -"$switch"b .wbar ~
 cp -"$switch"b .inputrc ~
 cp -"$switch"b .gmrunrc ~
-cp -"$switch"b .asoundrcEq ~
+#cp -"$switch"b .asoundrcEq ~
 
 # sudo here
 # set +x # verbosity off

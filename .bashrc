@@ -119,3 +119,9 @@ READLINE_LINE="${READLINE_LINE:0:READLINE_POINT}$files${READLINE_LINE:READLINE_P
 READLINE_POINT=$((READLINE_POINT + ${#files}))
 }
 bind -x '"\C-g":select_files'
+
+# fzf /usr/share/doc/fzf/README.Debian (ctrl+R and ctrl+T)
+file="/usr/share/doc/fzf/examples/key-bindings.bash"
+if [ -f "$file" ]; then 
+    source "$file"
+fi
