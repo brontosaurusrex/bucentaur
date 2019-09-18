@@ -178,7 +178,7 @@ if pgrep -x "$1" > /dev/null
 then
     (echo "$1 running, restarting"
     killall -w "$1"
-    "${1}" &) &
+    LC_NUMERIC=C "${1}" &) &
 else
     echo "$1 wasn't running"
 fi
