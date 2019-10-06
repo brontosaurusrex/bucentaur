@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# all512
+
+# print all 3x3 matrices from 9 bit decimal number
+
+main () {
+    a="$( echo "obase=2;$i" | bc )"
+    printf "%09d" "$a" | fold -w3
+    echo
+}
+
+loop () {
+    for i in {0..511}; do
+        
+        echo "$i"
+        main | sed -r 's/1/█/g'
+        echo 
+        
+    done
+
+}
+
+
+# 65, 130 and 260 are all fine.
+c="260"
+loop | column -e -c "$c"
