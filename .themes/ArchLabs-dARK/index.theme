@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=X-GNOME-Metatheme
+Name=ArchLabs-dARK
+Comment=A Material Design theme
+Encoding=UTF-8
+
+[X-GNOME-Metatheme]
+GtkTheme=ArchLabs-dARK
+MetacityTheme=ArchLabs-dARK
+IconTheme=Adwaita
+CursorTheme=Adwaita
+CursorSize=24
