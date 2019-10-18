@@ -19,6 +19,10 @@ cat << FOOT
 FOOT
 }
 
+xmlescape () {
+    echo "$@" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g; s/^[ \t]*//;s/[ \t]*$//'
+}
+
 # checks critical
 command -v screenfetch >/dev/null 2>&1 || { header; echo "<item label=\"Horrible error, I need screenfetch installed.\" />"; footer ; exit 1; }
 
@@ -27,6 +31,7 @@ header
 screenfetch -nN | while read -r line 
 do 
 
+    #line=$(xmlescape "$line")
     echo "<item label=\"$line\" />"
 
 done
