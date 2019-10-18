@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# pipeScreenfetch
+
+# call from .config/openbox/menu.xml like
+#        <menu id="screenfetch" label="screenfetch" execute="pipeScreenfetch" />
+
+# header
+header () {
+cat << HEAD
+<openbox_pipe_menu>
+HEAD
+}
+
+# footer
+footer () {
+cat << FOOT
+</openbox_pipe_menu>
+FOOT
+}
+
+# checks critical
+command -v screenfetch >/dev/null 2>&1 || { header; echo "<item label=\"Horrible error, I need screenfetch installed.\" />"; footer ; exit 1; }
+
+header
+# items loop over lines
+screenfetch -nN | while read -r line 
+do 
+
+    echo "<item label=\"$line\" />"
+
+done
+footer
