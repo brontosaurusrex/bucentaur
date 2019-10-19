@@ -32,8 +32,9 @@ neofetch --off --stdout --disable title | while read -r line
 do 
 
     #line=$(xmlescape "$line")
+    #sed replacement https://github.com/koalaman/shellcheck/wiki/SC2001
     if (( ${#line} > 2 )); then
-        line="$(echo "$line" | tr '_' '.')"
+        line="echo ${line//_/__}"
         echo "<item label=\"$line\" />"
     fi
 
