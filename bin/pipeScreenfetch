@@ -28,11 +28,13 @@ command -v screenfetch >/dev/null 2>&1 || { header; echo "<item label=\"Horrible
 
 header
 # items loop over lines
-screenfetch -nN -d "-host;-shell" | while read -r line 
+screenfetch-dev -nNE -d "-host;-shell" | while read -r line 
 do 
 
     #line=$(xmlescape "$line")
+    line="$(echo "$line" | tr '_' '.')"
     echo "<item label=\"$line\" />"
 
 done
+
 footer
