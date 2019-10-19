@@ -28,11 +28,11 @@ command -v neofetch >/dev/null 2>&1 || { header; echo "<item label=\"Horrible er
 
 header
 # items loop over lines
-neofetch --off --stdout | while read -r line
+neofetch --off --stdout --disable title | while read -r line
 do 
 
     #line=$(xmlescape "$line")
-    if (( ${#line} > 8 )); then
+    if (( ${#line} > 2 )); then
         line="$(echo "$line" | tr '_' '.')"
         echo "<item label=\"$line\" />"
     fi
