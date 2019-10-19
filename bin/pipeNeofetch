@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# pipeNeofetch (similar to pipeScreenfetch)
+
+# call from .config/openbox/menu.xml like
+#        <menu id="neofetch" label="neofetch" execute="pipeNeofetch" />
+
+# header
+header () {
+cat << HEAD
+<openbox_pipe_menu>
+HEAD
+}
+
+# footer
+footer () {
+cat << FOOT
+</openbox_pipe_menu>
+FOOT
+}
+
+xmlescape () {
+    echo "$@" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g; s/^[ \t]*//;s/[ \t]*$//'
+}
+
+# checks critical
+command -v neofetch >/dev/null 2>&1 || { header; echo "<item label=\"Horrible error, I need neofetch installed.\" />"; footer ; exit 1; }
+
+header
+# items loop over lines
+neofetch --off --stdout | while read -r line
+do 
+
+    #line=$(xmlescape "$line")
+    if (( ${#line} > 8 )); then
+        #line="$(echo "$line" | tr '_' '.')"
+        echo "<item label=\"$line\" />"
+    fi
+
+done
+footer
