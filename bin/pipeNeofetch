@@ -33,7 +33,7 @@ do
 
     #line=$(xmlescape "$line")
     if (( ${#line} > 8 )); then
-        #line="$(echo "$line" | tr '_' '.')"
+        line="$(echo "$line" | tr '_' '.')"
         echo "<item label=\"$line\" />"
     fi
 
