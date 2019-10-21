@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# pipeInxi (similar to pipeNeofetch)
+
+# call from .config/openbox/menu.xml like
+#        <menu id="inxi" label="inxi" execute="pipeInxi" />
+
+# header
+header () {
+cat << HEAD
+<openbox_pipe_menu>
+HEAD
+}
+
+# footer
+footer () {
+cat << FOOT
+</openbox_pipe_menu>
+FOOT
+}
+
+xmlescape () {
+    echo "$@" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g; s/^[ \t]*//;s/[ \t]*$//'
+}
+
+# checks critical
+command -v inxi >/dev/null 2>&1 || { header; echo "<item label=\"Horrible error, I need neofetch installed.\" />"; footer ; exit 1; }
+
+inxido () {
+    
+    array=( -S -M -C -G -A -N -D -P -s -I )
+    for i in "${array[@]}"
+    do
+
+        (inxi "$i" -c 0 & wait) &
+
+    done
+    wait
+    
+}
+
+header
+# items loop over lines
+inxido | while read -r line
+do 
+
+    line=$(xmlescape "$line")
+    line="${line//_/__}"
+    echo "<item label=\"$line\" />"
+    
+done
+footer
