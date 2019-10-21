@@ -32,7 +32,7 @@ inxido () {
     for i in "${array[@]}"
     do
 
-        (inxi "$i" -c 0 & wait) &
+        (inxi "$i" -c 0 -y 200 & wait) &
 
     done
     wait
