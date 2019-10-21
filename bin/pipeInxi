@@ -35,12 +35,14 @@ command -v inxi >/dev/null 2>&1 || { header; echo "<item label=\"Horrible error,
 inxido () {
     
     c="0"
-    array=( -S -M -C -G -A -N -D -P -s -I )
+    array=( -S -M -C -G -A -N no-D no-P -s -I ) # ignore option by adding 'no'
     for i in "${array[@]}"
     do
 
+        if ! [[ "$i" =~ ^no.*  ]]; then
         ( (inxi "$i" -c 0 | tr -s ' ' & wait) > "$tmp/$c" ) &
         ((c=c+1))
+        fi
         
     done
     wait
