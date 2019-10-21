@@ -39,7 +39,7 @@ inxido () {
     for i in "${array[@]}"
     do
 
-        ( (inxi "$i" -c 0 -y 200 | tr -s ' ' & wait) > "$tmp/$c" ) &
+        ( (inxi "$i" -c 0 | tr -s ' ' & wait) > "$tmp/$c" ) &
         ((c=c+1))
         
     done
