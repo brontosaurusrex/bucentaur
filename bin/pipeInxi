@@ -35,7 +35,7 @@ command -v inxi >/dev/null 2>&1 || { header; echo "<item label=\"Horrible error,
 inxido () {
     
     c="0"
-    array=( -S -M -C -G -A -N no-D no-P -s -I ) # ignore option by adding 'no'
+    array=( -S -M -C -G -A -N -D no-P -s -I ) # ignore option by adding 'no'
     for i in "${array[@]}"
     do
 
@@ -48,24 +48,45 @@ inxido () {
     wait
     
 }
-inxido
+inxido || exit
+
+pretty () {
+    
+    for file in "$tmp"/*
+    do
+        cut -d ' ' -f1 "$file" > "$tmp/tmp"
+        cut -d ' ' -f2- "$file" >> "$tmp/tmp"
+        mv "$tmp/tmp" "$file" || exit
+        
+    done
+}   
+pretty || exit
+
+# count files for '<separator/>' purposes
+count="$(ls -1q "$tmp" | wc -l)"
 
 # main
 header
 # items loop over files and over lines in those files
+c="0"
 for file in "$tmp"/*
 do
+    ((c=c+1))
     while read -r line
     do 
 
-        line=$(xmlescape "$line")
-        line="${line//_/__}"
-        echo "<item label=\"$line\" />"
+        if (( ${#line} > 2 )); then
+            line=$(xmlescape "$line")
+            line="${line//_/__}"
+            echo "<item label=\"$line\" />"
+        fi
         
     done <"$file"
 
     #echo "<item label=\" \" />"
-    echo "<separator/>"
+    (( c < count )) && echo "<separator/>"
 
 done
 footer
+
+
