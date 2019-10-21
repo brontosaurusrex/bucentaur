@@ -5,6 +5,11 @@
 # call from .config/openbox/menu.xml like
 #        <menu id="inxi" label="inxi" execute="pipeInxi" />
 
+# mk rnd tmp
+tmp="/tmp/$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
 # header
 header () {
 cat << HEAD
@@ -24,29 +29,41 @@ xmlescape () {
 }
 
 # checks critical
-command -v inxi >/dev/null 2>&1 || { header; echo "<item label=\"Horrible error, I need neofetch installed.\" />"; footer ; exit 1; }
+command -v inxi >/dev/null 2>&1 || { header; echo "<item label=\"Horrible error, I need inxi installed.\" />"; footer ; exit 1; }
 
+# make some tmp files, how about all at once
 inxido () {
     
+    c="0"
     array=( -S -M -C -G -A -N -D -P -s -I )
     for i in "${array[@]}"
     do
 
-        (inxi "$i" -c 0 -y 200 & wait) &
-
+        ( (inxi "$i" -c 0 -y 200 | tr -s ' ' & wait) > "$tmp/$c" ) &
+        ((c=c+1))
+        
     done
     wait
     
 }
+inxido
 
+# main
 header
-# items loop over lines
-inxido | while read -r line
-do 
+# items loop over files and over lines in those files
+for file in "$tmp"/*
+do
+    while read -r line
+    do 
 
-    line=$(xmlescape "$line")
-    line="${line//_/__}"
-    echo "<item label=\"$line\" />"
-    
+        line=$(xmlescape "$line")
+        line="${line//_/__}"
+        echo "<item label=\"$line\" />"
+        
+    done <"$file"
+
+    #echo "<item label=\" \" />"
+    echo "<separator/>"
+
 done
 footer
