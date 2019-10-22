@@ -5,6 +5,9 @@
 # call from .config/openbox/menu.xml like
 #        <menu id="neofetch" label="neofetch" execute="pipeNeofetch" />
 
+# License=YYCPL0
+# Yes You Can Permissive License 0
+
 # header
 header () {
 cat << HEAD
@@ -34,7 +37,7 @@ do
     #line=$(xmlescape "$line")
     #sed replacement https://github.com/koalaman/shellcheck/wiki/SC2001
     if (( ${#line} > 2 )); then
-        line="${line//_/.}" # Dot i. nstead of __ should make this 'jgmenu ob' compatible
+        line="${line//_/.}" # Dot . instead of __ should make this 'jgmenu ob' compatible
         echo "<item label=\"$line\" />"
     fi
 
