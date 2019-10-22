@@ -28,15 +28,20 @@ command -v neofetch >/dev/null 2>&1 || { header; echo "<item label=\"Horrible er
 
 header
 # items loop over lines
-neofetch --off --stdout --disable title term model | while read -r line
+neofetch --off --stdout --disable title term model --memory_percent on | while read -r line
 do 
 
     #line=$(xmlescape "$line")
     #sed replacement https://github.com/koalaman/shellcheck/wiki/SC2001
     if (( ${#line} > 2 )); then
-        line="${line//_/__}"
+        line="${line//_/.}" # Dot i. nstead of __ should make this 'jgmenu ob' compatible
         echo "<item label=\"$line\" />"
     fi
 
 done
+
+# debug
+#parent="$(ps $PPID | tail -n 1 | awk "{print \$5}")"
+#echo "<item label=\"$parent\" />"
+
 footer
