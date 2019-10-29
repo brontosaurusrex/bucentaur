@@ -1,0 +1,3 @@
+{command:neofetch --off --stdout --disable title term model --memory_percent on}
+{command:echo}
+{command:dfascii}
