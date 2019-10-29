@@ -21,12 +21,12 @@ bar () {
 
     #printf "\r%-${barlength}s" "${bar:0:n}"
     printf "%-${barlength}s" "${bar:0:n}"
-    printf "%s\t %s\n"  "$2" "$3"
+    printf "%s\t %s\n" "$2" "$3"
 
 }
 
 # header
-printf "%-${barlength}s" " " 
+printf "%-${barlength}s" "%" 
 printf "free\t mount\n"
 
 # disk free action
