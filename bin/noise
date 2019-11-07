@@ -161,7 +161,7 @@ fi
 
 # noise
 noise () {
-convert -size "${mx}x${my}" xc:"gray(50%)" -seed "${RANDOM}" -attenuate 2 +noise poisson -colorspace gray -fill "$color" +level ${low}%,${high}% -tint "100" -sharpen 0x1 -modulate "$bri,$col,$hue" "$file"
+convert -size "${mx}x${my}" xc:"gray(50%)" -seed "${RANDOM}" -attenuate 2 +noise poisson -colorspace gray -fill "$color" +level ${low}%,${high}% -tint "100" -sharpen 0x1 -modulate "$bri,$col,$hue" -depth 8 "$file"
 }
 # +level 18%,24%
 # -sharpen 0x1
@@ -169,7 +169,8 @@ convert -size "${mx}x${my}" xc:"gray(50%)" -seed "${RANDOM}" -attenuate 2 +noise
 
 # nitrogen, set wall
 setwall () {
-    nitrogen "${save}" --set-tiled "$file" || echo "nitrogen failed"
+    #nitrogen "${save}" --set-tiled "$file" || echo "nitrogen failed"
+    nitrogen "${save}" --set-centered "$file" --set-color="#394A55" --head=0 || echo "nitrogen failed"
 }
 
 # restart wbar
@@ -178,7 +179,7 @@ if pgrep -x "$1" > /dev/null
 then
     (echo "$1 running, restarting"
     killall -w "$1"
-    LC_NUMERIC=C "${1}" &) &
+    "${1}" &) &
 else
     echo "$1 wasn't running"
 fi
