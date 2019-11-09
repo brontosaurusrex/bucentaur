@@ -8,7 +8,7 @@
 # required: wget, md5sum, awk, nitrogen, column, xrandr, imagemagick, internet connection
 
 # config
-cache="$HOME/tmp/wallcache"
+cache="$HOME/.cache/wallnet"
 mkdir -p "$cache" || exit
 debug="0"
 permanent="0"  # nitrogen will set wallpapers permanently if 1 (better use -p switch on cli)
@@ -76,6 +76,10 @@ dragonComp,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2016/09/20/asian
 europa,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/03/24/europa_1920x1200.png,centered
 iapetus,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/03/24/iapetus_1920x1200.png,centered
 enceladus,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2017/03/24/enceladus_1920x1200.png,centered
+gravity,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2019/11/03/grav2-back.png,centered
+t55,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2019/10/31/t55_oid_15min_200samples.png,centered
+ditheredt55,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2019/11/07/t55_oid_underAminute-fs8_4colors.png,centered
+bunsenRed,https://images.weserv.nl/?url=//cdn.scrot.moe/images/2019/07/25/bunsennew-destroyedDefault.png,centered
 )
 
 # Hash
