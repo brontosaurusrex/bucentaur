@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# urxlx
+
+# .Xresources to lxterminal colors
+
+# ffffff to rgb(255,255,255)
+2rgb() {
+    hex="$1"
+    #printf "rgb(%d,%d,%d)\n" 0x${hex:0:2} 0x${hex:2:2} 0x${hex:4:2}
+    printf "rgb(%d,%d,%d)\n" 0x"${hex:0:2}" 0x"${hex:2:2}" 0x"${hex:4:2}"
+
+}
+
+# *background: *foreground: *color:
+grep -E --color=never 'color[0-9]|background:|foreground:' "$1" | while read -r color hex; do
+
+    if [[ $color =~ [!0-9] ]]; then 
+        #echo "$color has number"
+        color="palette_color_${color//[!0-9]}"
+    else
+        [[ $color == *"background"* ]] && color="bgcolor"
+        [[ $color == *"foreground"* ]] && color="fgcolor"
+    fi
+
+    hex="${hex//#}" # remove #
+    
+    echo "$color=$(2rgb "$hex")"
+
+done
