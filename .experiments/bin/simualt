@@ -4,6 +4,8 @@
 
 # simulate alt hold down until left mice is clicked
 
+set -e
+
 # hold alt
 xdotool keydown alt
 notify-send -t 1500 "alt is on"
@@ -20,8 +22,8 @@ while :; do
     if [[ "$state" == *"=down"* ]]; then
     
         # depress alt
-        notify-send -t 1500 "alt is off"
         xdotool keyup alt  
+        (sleep 0.5 && notify-send -t 1500 "alt is off") & 
         exit
         
     fi
