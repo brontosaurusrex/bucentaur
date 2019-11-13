@@ -6,9 +6,12 @@
 
 set -e
 
+superecho () {
+    (sleep "$1" && notify-send -t 1500 "$2" & echo "$2") &
+}
+
 # hold alt
-xdotool keydown alt
-notify-send -t 1500 "alt is on"
+xdotool keydown alt && superecho "0" "alt is on"
 
 # wait for mouse left click before releasing
 mouse="$(xinput --list | awk -F 'id=|\\[' '/mouse|Mouse/ {print $2}')"
@@ -22,8 +25,7 @@ while :; do
     if [[ "$state" == *"=down"* ]]; then
     
         # depress alt
-        xdotool keyup alt  
-        (sleep 0.5 && notify-send -t 1500 "alt is off") & 
+        xdotool keyup alt && superecho "0.5" "alt is off"
         exit
         
     fi
