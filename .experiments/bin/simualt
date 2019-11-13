@@ -4,7 +4,10 @@
 
 # simulate alt hold down until left mice is clicked
 
-set -e
+# required
+command -v xdotool >/dev/null 2>&1 || { >&2 echo "I need xdotool." ; exit 1; }
+command -v xinput >/dev/null 2>&1 || { >&2 echo "I need xinput." ; exit 1; }
+command -v awk >/dev/null 2>&1 || { >&2 echo "I need awk." ; exit 1; }
 
 superecho () {
     (sleep "$1" && notify-send -t 1500 "$2" & echo "$2") &
@@ -32,3 +35,13 @@ while :; do
 
 sleep .1s
 done
+
+# Tint2 simple button (P) example
+#---simualt-button--------------------
+#button = new
+#button_font = cuprum 12
+#button_font_color = #111111 70
+#button_text = simualt
+#button_lclick_command = simualt
+#button_centered = 1
+
