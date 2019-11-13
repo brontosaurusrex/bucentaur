@@ -6,6 +6,7 @@
 
 # hold alt
 xdotool keydown alt
+notify-send -t 1500 "alt is on"
 
 # wait for mouse left click before releasing
 mouse="$(xinput --list | awk -F 'id=|\\[' '/mouse|Mouse/ {print $2}')"
@@ -14,11 +15,12 @@ mouse="${mouse//[[:space:]]}"
 # https://stackoverflow.com/questions/44133590/how-to-detect-when-mouse-1-button-is-pressed-then-run-a-bash-script
 while :; do
     state="$(xinput --query-state "$mouse")"
-    echo "$state"
+    #echo "$state" # debug
     # If any button is pressed, abort holding alt
     if [[ "$state" == *"=down"* ]]; then
     
         # depress alt
+        notify-send -t 1500 "alt is off"
         xdotool keyup alt  
         exit
         
@@ -26,5 +28,3 @@ while :; do
 
 sleep .1s
 done
-
-
