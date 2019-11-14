@@ -17,7 +17,7 @@ superecho () {
 xdotool keydown alt && superecho "0" "alt is on"
 
 # wait for mouse left click before releasing
-mouse="$(xinput --list | awk -F 'id=|\\[' '/mouse|Mouse/ {print $2}')"
+mouse="$(xinput --list | awk -F 'id=|\\[' '/mouse|Mouse/ {print $2}' | head -n 1)"
 mouse="${mouse//[[:space:]]}"
 
 # https://stackoverflow.com/questions/44133590/how-to-detect-when-mouse-1-button-is-pressed-then-run-a-bash-script
