@@ -16,7 +16,7 @@ superecho () {
 # hold alt
 xdotool keydown alt && superecho "0" "alt is on"
 
-# wait for mouse left click before releasing
+# wait for any mouse button down event before releasing
 mouse="$(xinput --list | awk -F 'id=|\\[' '/mouse|Mouse/ {print $2}' | head -n 1)"
 mouse="${mouse//[[:space:]]}"
 
