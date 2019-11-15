@@ -48,13 +48,16 @@ beep () {
 
 test () {
     echo "notify test"
-    notify-send "notify test" 
-    echo "mpv sample test"
-    mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1
-    echo "internal beep test"
-    beep "3"
+    notify-send "notify test" || echo "failed"
+    echo
     echo "flite test"
-    flite -voice awb -t "beep beep beep ..."
+    flite -voice awb -t "beep beep beep ..." || echo "failed"
+    echo
+    echo "mpv sample test"
+    mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1 || echo "failed"
+    echo
+    echo "internal beep test"
+    beep "3" || echo "failed"
 }
 
 # help or test
