@@ -53,6 +53,8 @@ test () {
     mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1
     echo "internal beep test"
     beep "3"
+    echo "flite test"
+    flite -voice awb -t "beep beep beep ..."
 }
 
 # help or test
@@ -78,6 +80,7 @@ if [ "$1" != "reaction" ] ; then
     at "$attime" <<< "$(echo "beepmein reaction '${reason}'")" > /dev/null 2>&1
 else
     # reaction
-    (mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1 || beep "3") &
-    reason="$2" && notify-send "$reason"
+    reason="$2"
+    (flite -voice awb -t "$reason ..." || mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1 || beep "3") &
+    notify-send "$reason"
 fi
