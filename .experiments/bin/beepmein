@@ -46,19 +46,20 @@ beep () {
     done
 }
 
-# help or test
-if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ $# -eq 0 ]; then
-
-    help && exit
-
-elif [ "$1" == "--test" ]; then
+test () {
+    echo "notify test"
+    notify-send "notify test" 
     echo "mpv sample test"
     mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1
     echo "internal beep test"
     beep "3"
-    echo "notify test"
-    notify-send "test, test, 1,2,3" 
-    exit
+}
+
+# help or test
+if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ $# -eq 0 ]; then
+    help; exit
+elif [ "$1" == "--test" ]; then
+    test; exit
 fi
 
 # main
