@@ -51,7 +51,7 @@ test () {
     notify-send "notify test" || echo "failed"
     echo
     echo "flite test"
-    flite -voice awb -t "beep beep beep ..." || echo "failed"
+    flite -voice slt -t "beep beep beep ..." || echo "failed"
     echo
     echo "mpv sample test"
     mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1 || echo "failed"
@@ -84,6 +84,6 @@ if [ "$1" != "reaction" ] ; then
 else
     # reaction
     reason="$2"
-    (flite -voice awb -t "$reason ..." || mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1 || beep "3") &
+    (flite -voice slt -t "$reason ..." || mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1 || beep "3") &
     notify-send "$reason"
 fi
