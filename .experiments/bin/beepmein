@@ -24,9 +24,14 @@ cat << EOF
        beepmein 3
                 ^                
                 in 3 minutes (beepmein shortcut)
+    
+       beepmein --test # test beep and notification
+       
+       beepmein --help # this help
                 
        # Notes:
-       at -l # will list pending jobs       
+       at -l      # will list pending jobs
+       atrm <num> # will remove job <num>      
 EOF
 }
 
@@ -41,9 +46,19 @@ beep () {
     done
 }
 
-# help?
+# help or test
 if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ $# -eq 0 ]; then
+
     help && exit
+
+elif [ "$1" == "--test" ]; then
+    echo "mpv sample test"
+    mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1
+    echo "internal beep test"
+    beep "3"
+    echo "notify test"
+    notify-send "test, test, 1,2,3" 
+    exit
 fi
 
 # main
@@ -60,9 +75,8 @@ if [ "$1" != "reaction" ] ; then
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason"
     at "$attime" <<< "$(echo "beepmein reaction '${reason}'")" > /dev/null 2>&1
-else 
+else
     # reaction
-    (mpv --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga || beep "3") &
+    (mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1 || beep "3") &
     reason="$2" && notify-send "$reason"
-
 fi
