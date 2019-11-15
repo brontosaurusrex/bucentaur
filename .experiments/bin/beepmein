@@ -62,7 +62,7 @@ if [ "$1" != "reaction" ] ; then
     at "$attime" <<< "$(echo "beepmein reaction '${reason}'")" > /dev/null 2>&1
 else 
     # reaction
-    beep "3" #times
+    (mpv --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga || beep "3") &
     reason="$2" && notify-send "$reason"
 
 fi
