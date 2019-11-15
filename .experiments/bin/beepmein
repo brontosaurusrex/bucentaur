@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# beepmein
+
+# a little wrapper around linux 'at' command, that will beep you at specific time, see --help.
+
+# required
+command -v at >/dev/null 2>&1 || { >&2 echo "I need at." ; exit 1; }
+command -v speaker-test >/dev/null 2>&1 || { >&2 echo "I need speaker-test (alsa-utils)." ; exit 1; }
+command -v notify-send >/dev/null 2>&1 || { >&2 echo "I need notify-send." ; exit 1; }
+
+# help
+help () { 
+cat << EOF
+
+       beepmein now + 3 minutes 
+                ^                
+                'at' time format
+                
+       beepmein 22:10
+                ^
+                also 'at' time format
+                
+       beepmein 3
+                ^                
+                in 3 minutes (beepmein shortcut)
+                
+       # Notes:
+       at -l # will list pending jobs       
+EOF
+}
+
+beep () {
+    [ -z "$1" ] && loops="1" || loops="$1"
+    for ((i=1; i<=loops; i++))
+    do
+        ( speaker-test -t sine -f 1000 ) > /dev/null 2>&1 & pid=$! 
+        sleep 0.1s
+        { kill -9 $pid;wait $pid; } > /dev/null 2>&1
+        sleep 0.1s
+    done
+}
+
+# help?
+if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ $# -eq 0 ]; then
+    help && exit
+fi
+
+# main
+if [ "$1" != "reaction" ] ; then
+    # input
+    attime="$*" #concat
+    # special case for minutes
+    if [[ $attime == ?(-)+([0-9]) ]] ; then
+        #echo "$attime is an integer"
+        attime="now + $attime minutes"
+    fi
+    echo -n "reason? "
+    read -r reason 
+    [[ -z "$reason" ]] && reason="beep beep beep"
+    echo "beepmein: $attime, reason: $reason"
+    at "$attime" <<< "$(echo "beepmein reaction '${reason}'")" > /dev/null 2>&1
+else 
+    # reaction
+    beep "3" #times
+    reason="$2" && notify-send "$reason"
+
+fi
