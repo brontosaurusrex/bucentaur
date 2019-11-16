@@ -6,7 +6,7 @@
 # On Debian systems make sure 'at' is installed with --no-install-recommends.
 
 # config
-alarmSample="$HOME/.cache/beepmein/thunder.mp3" # change me
+alarmSample="$HOME/.cache/beepmein/fly.mp3" # change me
 
 # required
 command -v at >/dev/null 2>&1 || { >&2 echo "I need at: sudo apt install --no-install-recommends at" ; exit 1; }
@@ -106,6 +106,7 @@ else
         shift
         beep 3 &
         mpv --no-resume-playback --no-video "$alarmSample" &
+        #radioClicky -p &
         notify-send "$1"
     else
         beep "3" &
