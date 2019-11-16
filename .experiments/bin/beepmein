@@ -33,20 +33,24 @@ cat << EOF
        beepmein --alarm 8:00 
                   ^
                   Will play (longer) audio sample,
-                  that you defined by setting alarmSample, 
+                  that you defined by setting alarmSample.
+                  
+                  You may want to define a song with some video/coverart,
+                  so that some gui will be provided for easier kill or
                   stop with killall mpv
     
        beepmein --test # test beep and notification
+       
+       # More testing
+       beepmein --reaction reminder_text
+       beepmein --reaction --alarm alarm_text
        
        beepmein --help # this help
                 
        # Notes:
        at -l      # will list pending jobs
        atrm <num> # will remove job <num>
-       
-       # More testing
-       beepmein --reaction reminder
-       beepmein --reaction --alarm alarm
+
 EOF
 }
 
