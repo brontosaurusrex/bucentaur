@@ -46,7 +46,7 @@ cat << EOF
        
        # More testing
        beepmein --reaction reminder
-       beepmein --reaction -alarm alarm
+       beepmein --reaction --alarm alarm
 EOF
 }
 
@@ -100,7 +100,7 @@ else
     # reaction
     shift
     if [ "$1" == "--alarm" ]; then
-        notify-send "$1" &
+        notify-send "$2" &
         mpv --no-resume-playback "$alarmSample" # alarm
     else
         beep "3" & notify-send "$1"        # reminder
