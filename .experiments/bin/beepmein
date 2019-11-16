@@ -5,7 +5,7 @@
 # a little wrapper around linux 'at' command, that will beep you at specific time, see --help.
 
 # config
-alarmSample="$HOME/data/music/AC-DC/CD 1/01. Thunderstruck.mp3"
+alarmSample="$HOME/.cache/beepmein/thunder.mp3" # change me
 # mpv --no-resume-playback "$alarmSample" && exit # debug
 
 # required
@@ -34,10 +34,7 @@ cat << EOF
                   ^
                   Will play (longer) audio sample,
                   that you defined by setting alarmSample.
-                  
-                  You may want to define a song with some video/coverart,
-                  so that some gui will be provided for easier kill or
-                  stop with killall mpv
+                  Stop with 'killall mpv'.
     
        beepmein --test # test beep and notification
        
@@ -99,14 +96,17 @@ if [ "$1" != "--reaction" ] ; then
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason"
     # set 'at'
-    at "$attime" <<< "$(echo "beepmein --reaction '${alarm}' '${reason}'")" > /dev/null 2>&1
+    at "$attime" <<< "$(echo "beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1
 else
     # reaction
     shift
     if [ "$1" == "--alarm" ]; then
-        notify-send "$2" &
-        mpv --no-resume-playback "$alarmSample" # alarm
+        shift
+        beep 3 &
+        mpv --no-resume-playback --no-video "$alarmSample" &
+        notify-send "$1"
     else
-        beep "3" & notify-send "$1"             # reminder
+        beep "3" &
+        notify-send "$1"
     fi
 fi
