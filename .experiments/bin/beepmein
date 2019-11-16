@@ -2,13 +2,14 @@
 
 # beepmein
 
-# a little wrapper around linux 'at' command, that will beep you at specific time, see --help.
+# A little wrapper around linux 'at' command, that will beep you at specific time, see --help.
+# On Debian systems make sure 'at' is installed with --no-install-recommends.
 
 # config
 alarmSample="$HOME/.cache/beepmein/thunder.mp3" # change me
 
 # required
-command -v at >/dev/null 2>&1 || { >&2 echo "I need at." ; exit 1; }
+command -v at >/dev/null 2>&1 || { >&2 echo "I need at: sudo apt install --no-install-recommends at" ; exit 1; }
 command -v speaker-test >/dev/null 2>&1 || { >&2 echo "I need speaker-test from alsa-utils (for reminder sound)." ; exit 1; }
 command -v notify-send >/dev/null 2>&1 || { >&2 echo "I need notify-send." ; exit 1; }
 command -v mpv >/dev/null 2>&1 || { >&2 echo "I need mpv (for alarm sounds)." ; exit 1; }
