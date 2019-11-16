@@ -4,10 +4,15 @@
 
 # a little wrapper around linux 'at' command, that will beep you at specific time, see --help.
 
+# config
+alarmSample="$HOME/data/music/AC-DC/CD 1/01. Thunderstruck.mp3"
+# mpv --no-resume-playback "$alarmSample" && exit # debug
+
 # required
 command -v at >/dev/null 2>&1 || { >&2 echo "I need at." ; exit 1; }
-command -v speaker-test >/dev/null 2>&1 || { >&2 echo "I need speaker-test (alsa-utils)." ; exit 1; }
+command -v speaker-test >/dev/null 2>&1 || { >&2 echo "I need speaker-test from alsa-utils (for reminder sound)." ; exit 1; }
 command -v notify-send >/dev/null 2>&1 || { >&2 echo "I need notify-send." ; exit 1; }
+command -v mpv >/dev/null 2>&1 || { >&2 echo "I need mpv (for alarm sounds)." ; exit 1; }
 
 # help
 help () { 
@@ -24,6 +29,12 @@ cat << EOF
        beepmein 3
                 ^                
                 in 3 minutes (beepmein shortcut)
+                
+       beepmein --alarm 8:00 
+                  ^
+                  Will play (longer) audio sample,
+                  that you defined by setting alarmSample, 
+                  stop with killall mpv
     
        beepmein --test # test beep and notification
        
@@ -31,33 +42,34 @@ cat << EOF
                 
        # Notes:
        at -l      # will list pending jobs
-       atrm <num> # will remove job <num>      
+       atrm <num> # will remove job <num>
+       
+       # More testing
+       beepmein --reaction reminder
+       beepmein --reaction -alarm alarm
 EOF
 }
 
+# reminder sound
 beep () {
     [ -z "$1" ] && loops="1" || loops="$1"
     for ((i=1; i<=loops; i++))
     do
-        ( speaker-test -t sine -f 1000 ) > /dev/null 2>&1 & pid=$! 
-        sleep 0.1s
-        { kill -9 $pid;wait $pid; } > /dev/null 2>&1
-        sleep 0.1s
+        timeout -s HUP 0.1 speaker-test -t sine -f 1000  > /dev/null 2>&1
+        sleep 0.1
     done
 }
 
+# test audio and notifications
 test () {
     echo "notify test"
     notify-send "notify test" || echo "failed"
     echo
-    echo "flite test"
-    flite -voice slt -t "beep beep beep ..." || echo "failed"
-    echo
-    echo "mpv sample test"
-    mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1 || echo "failed"
-    echo
-    echo "internal beep test"
+    echo "internal beep test used for reminders"
     beep "3" || echo "failed"
+    echo
+    echo "mpv sample test used for alarms"
+    mpv --no-resume-playback "$alarmSample" || echo "failed"
 }
 
 # help or test
@@ -68,22 +80,29 @@ elif [ "$1" == "--test" ]; then
 fi
 
 # main
-if [ "$1" != "reaction" ] ; then
+if [ "$1" != "--reaction" ] ; then
+    if [ "$1" == "--alarm" ] ; then 
+        alarm="--alarm" && shift
+    fi
     # input
     attime="$*" #concat
     # special case for minutes
-    if [[ $attime == ?(-)+([0-9]) ]] ; then
-        #echo "$attime is an integer"
+    if [[ $attime == ?(-)+([0-9]) ]] ; then # is integer
         attime="now + $attime minutes"
     fi
-    echo -n "reason? "
-    read -r reason 
+    read -rp "reason? " reason
+    #reason="$(printf "$(yad --separator="" --form --field 'reason?':TXT)\n")"
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason"
-    at "$attime" <<< "$(echo "beepmein reaction '${reason}'")" > /dev/null 2>&1
+    # set 'at'
+    at "$attime" <<< "$(echo "beepmein --reaction '${alarm}' '${reason}'")" > /dev/null 2>&1
 else
     # reaction
-    reason="$2"
-    (flite -voice slt -t "$reason ..." || mpv --no-resume-playback --loop=2 /usr/share/sounds/freedesktop/stereo/message-new-instant.oga > /dev/null 2>&1 || beep "3") &
-    notify-send "$reason"
+    shift
+    if [ "$1" == "--alarm" ]; then
+        notify-send "$1" &
+        mpv --no-resume-playback "$alarmSample" # alarm
+    else
+        beep "3" & notify-send "$1"        # reminder
+    fi
 fi
