@@ -6,7 +6,6 @@
 
 # config
 alarmSample="$HOME/.cache/beepmein/thunder.mp3" # change me
-# mpv --no-resume-playback "$alarmSample" && exit # debug
 
 # required
 command -v at >/dev/null 2>&1 || { >&2 echo "I need at." ; exit 1; }
@@ -83,7 +82,8 @@ fi
 
 # main
 if [ "$1" != "--reaction" ] ; then
-    if [ "$1" == "--alarm" ] ; then 
+    if [ "$1" == "--alarm" ] ; then
+        [[ -f "$alarmSample" ]] || { >&2 echo "Note: alarmSample $alarmSample not found, you may want to configure the script."; exit 1; }
         alarm="--alarm" && shift
     fi
     # input
