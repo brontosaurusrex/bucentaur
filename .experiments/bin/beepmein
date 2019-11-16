@@ -107,6 +107,6 @@ else
         notify-send "$2" &
         mpv --no-resume-playback "$alarmSample" # alarm
     else
-        beep "3" & notify-send "$1"        # reminder
+        beep "3" & notify-send "$1"             # reminder
     fi
 fi
