@@ -35,6 +35,7 @@ cat << EOF
                   Will play (longer) audio sample,
                   that you defined by setting alarmSample.
                   Stop with 'killall mpv'.
+                  --alarm must be first parameter.
     
        beepmein --test # test beep and notification
        
