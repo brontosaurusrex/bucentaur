@@ -129,7 +129,7 @@ if [ "$1" != "--reaction" ] ; then
     if [[ $attime == ?(-)+([0-9]) ]] ; then # is integer
         attime="now + $attime minutes"
     fi
-    read -rp "reason? " reason || reason="$(yad --center --title="beepmein" --width=300 --separator="" --form --field="reason?")"
+    read -rp "reason? " reason || reason="$(yad --title="beepmein" --width=300 --separator="" --form --field="reason?")"
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason"
     # set 'at'
