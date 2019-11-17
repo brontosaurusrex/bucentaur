@@ -87,10 +87,16 @@ test () {
     notify-send "notify test" || echo "failed"
     echo
     echo "internal beep test used for reminders"
+    soxchord || echo "failed"
+    echo
+    echo "failsafe internal beep test used for reminders"
     beep "3" || echo "failed"
     echo
     echo "mpv sample test used for alarms"
-    mpv --no-resume-playback "$alarmSample" || echo "failed"
+    mpv --no-resume-playback --no-video --length=10 "$alarmSample" || echo "failed"
+    echo "failsafe internal beep test used for alarms"
+    alarmfailsafe || echo "failed"
+    echo
 }
 
 # help or test
