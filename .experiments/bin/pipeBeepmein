@@ -19,6 +19,6 @@ echo "killall beepmein noises, killall beepmein"
 lines="$(atq | wc -l)"
 if (( lines > 0 )) ; then
     echo "^sep()"
-    echo "queue at -l:,"
-    atq | awk '{print $5","}'
+    echo "queue (click to remove),"
+    atq | awk '{print $5", atrm "$1}'
 fi
