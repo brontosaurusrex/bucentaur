@@ -7,20 +7,20 @@
 
 future="$(date -d "+5 minutes" +%R)"
 
-echo "beepmein ~ 1, beepmein 1"
-echo "beepmein ~ 5, beepmein 5" 
-echo "beepmein ~ 15, beepmein 15"
-echo "beepmein ~ 30, beepmein 30"
-echo "beepmein ~ 60, beepmein 60"
-echo "beepmein $future, gmrun '"beepmein $future"'"
-echo "beepmein $future --alarm, gmrun '"beepmein $future --alarm"'"
+echo "＋ beepmein ~ 1, beepmein 1"
+echo "＋ beepmein ~ 5, beepmein 5" 
+echo "＋ beepmein ~ 15, beepmein 15"
+echo "＋ beepmein ~ 30, beepmein 30"
+echo "＋ beepmein ~ 60, beepmein 60"
+echo "＋ beepmein $future, gmrun '"beepmein $future"'"
+echo "＋ beepmein $future --alarm, gmrun '"beepmein $future --alarm"'"
 echo "killall beepmein noises, killall beepmein"
 
 lines="$(atq | wc -l)"
 if (( lines > 0 )) ; then
-    echo "^sep()"
-    echo "queue (click to remove),"
+    echo "^sep(queue ( click to rm ):)"
+    #echo "queue (click to remove),"
     #atq | sort -r | awk '{print $5", atrm "$1}'
-    atq | sort -r | awk '{print $5" ("$3"-"$4"), atrm "$1}'
+    atq | sort -r | awk '{print"✕ "$5" ("$3"-"$4"), atrm "$1}'
     
 fi
