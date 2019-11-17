@@ -6,7 +6,7 @@
 # On Debian systems make sure 'at' is installed with --no-install-recommends.
 
 # config
-alarmSample="$HOME/.cache/beepmein/stacyy.mp3" # change me
+alarmSample="$HOME/.cache/beepmein/stacy.mp3" # change me
 
 # Will kill all children with 'killall beepmein'
 trap 'kill $(jobs -p) >/dev/null 2>&1' EXIT
