@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# simple countup
+
+echo "Press return to keep line."
+
+date1="$(date +%s)"; while true; do 
+
+    echo -ne "\r$(date -u --date @$(("$(date +%s)" - date1)) +%H:%M:%S) "
+    sleep 1
+
+done
