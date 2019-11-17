@@ -122,7 +122,7 @@ if [ "$1" != "--reaction" ] ; then
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason"
     # set 'at'
-    at "$attime" <<< "$(echo "beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1
+    at "$attime" <<< "$(echo "beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1 || { beep "2"; exit 1; } # beep two times for error
 else
     # reaction
     shift
