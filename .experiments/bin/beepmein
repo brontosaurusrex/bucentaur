@@ -6,7 +6,7 @@
 # On Debian systems make sure 'at' is installed with --no-install-recommends.
 
 # config
-alarmSample="$HOME/.cache/beepmein/fly.mp3" # change me
+alarmSample="$HOME/.cache/beepmein/stacy.mp3" # change me
 
 # required
 command -v at >/dev/null 2>&1 || { >&2 echo "I need at: sudo apt install --no-install-recommends at" ; exit 1; }
@@ -46,8 +46,8 @@ cat << EOF
        beepmein --help # this help
                 
        # Notes:
-       at -l      # will list pending jobs
-       atrm <num> # will remove job <num>
+       at -l       # will list pending jobs (or atq)
+       at -r <num> # will remove job <num>  (or atrm)
 
 EOF
 }
@@ -60,6 +60,17 @@ beep () {
         timeout -s HUP 0.1 speaker-test -t sine -f 1000  > /dev/null 2>&1
         sleep 0.1
     done
+}
+
+# alarm failsafe (by misko), this will be used if 'alarmSample' is not found.
+alarmfailsafe () {
+for ((i=1; i<=10; i++)); do
+      for ((c=1;c<=3;c++)); do
+          timeout -s HUP  0.2 speaker-test -t sine -f 3000  > /dev/null 2>&1
+          sleep 0.2
+       done
+       sleep 1
+done
 }
 
 # test audio and notifications
@@ -84,7 +95,7 @@ fi
 # main
 if [ "$1" != "--reaction" ] ; then
     if [ "$1" == "--alarm" ] ; then
-        [[ -f "$alarmSample" ]] || { >&2 echo "Note: alarmSample $alarmSample not found, you may want to configure the script."; exit 1; }
+        [[ -f "$alarmSample" ]] || { >&2 printf "Note: alarmSample %s not found, \nyou may want to configure the script. \nInternal fail-safe beep will be used instead.\n" "$alarmSample"; }
         alarm="--alarm" && shift
     fi
     # input
@@ -104,12 +115,13 @@ else
     shift
     if [ "$1" == "--alarm" ]; then
         shift
-        beep 3 &
-        mpv --no-resume-playback --no-video "$alarmSample" &
-        #radioClicky -p &
-        notify-send "$1"
+        notify-send "$1" &
+        if [[ -f "$alarmSample" ]] && command -v mpv >/dev/null 2>&1 ; then
+            mpv --no-resume-playback --no-video "$alarmSample"
+        else    
+            alarmfailsafe
+        fi
     else
-        beep "3" &
-        notify-send "$1"
+        beep "3" & notify-send "$1"
     fi
 fi
