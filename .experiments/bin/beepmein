@@ -37,7 +37,7 @@ cat << EOF
                   ^
                   Will play audio sample,
                   that you defined by setting alarmSample.
-                  Must be first parameter.
+                  Must be first or last parameter.
     
        beepmein --test # test beep and notification
        
@@ -82,6 +82,11 @@ for ((i=1; i<=10; i++)); do
 done
 }
 
+# test alarm sample path
+testAlarmPath () {
+    [[ -f "$alarmSample" ]] || { >&2 printf "Note: alarmSample %s not found, \nyou may want to configure the script. \nInternal fail-safe beep will be used instead.\n" "$alarmSample"; }
+}
+
 # test audio and notifications
 test () {
     echo "notify test"
@@ -109,9 +114,14 @@ fi
 
 # main
 if [ "$1" != "--reaction" ] ; then
-    if [ "$1" == "--alarm" ] ; then
-        [[ -f "$alarmSample" ]] || { >&2 printf "Note: alarmSample %s not found, \nyou may want to configure the script. \nInternal fail-safe beep will be used instead.\n" "$alarmSample"; }
+    if [ "$1" == "--alarm" ] ; then      # if first
+        # chop off first argument
         alarm="--alarm" && shift
+        testAlarmPath
+    elif [ "${!#}" == "--alarm" ] ; then # or last
+        # chop off last argument
+        alarm="--alarm" && set -- "${@:1:$(($#-1))}"
+        testAlarmPath
     fi
     # input
     attime="$*" #concat
