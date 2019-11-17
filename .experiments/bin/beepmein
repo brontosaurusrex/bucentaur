@@ -35,10 +35,9 @@ cat << EOF
                 
        beepmein --alarm 8:00 
                   ^
-                  Will play (longer) audio sample,
+                  Will play audio sample,
                   that you defined by setting alarmSample.
-                  Stop with 'killall mpv'.
-                  --alarm must be first parameter.
+                  Must be first parameter.
     
        beepmein --test # test beep and notification
        
@@ -46,8 +45,7 @@ cat << EOF
        beepmein --reaction reminder_text
        beepmein --reaction --alarm alarm_text
        
-       killall beepmein # kill all running playback,
-                          will not remove set 'at' timers.
+       killall beepmein # kill all running playback/beeping
                 
        # Notes:
        at -l       # will list pending jobs (or atq)
