@@ -54,7 +54,7 @@ cat << EOF
 EOF
 }
 
-# reminder sound
+# reminder sound, needs speaker-test (alsa-utils)
 beep () {
     [ -z "$1" ] && loops="1" || loops="$1"
     for ((i=1; i<=loops; i++))
@@ -62,6 +62,12 @@ beep () {
         timeout -s HUP 0.1 speaker-test -t sine -f 1000  > /dev/null 2>&1
         sleep 0.1
     done
+}
+
+# reminder sound 2, needs sox
+soxchord () {
+    /usr/bin/play -n synth pl G2 pl B2 pl D3 pl G3 pl D4 pl G4 \
+    delay 0 .05 .1 .15 .2 .25 remix - fade 0 4 .1 norm -1 > /dev/null 2>&1
 }
 
 # alarm failsafe (by misko), this will be used if 'alarmSample' is not found.
@@ -120,6 +126,7 @@ else
         notify-send "$1" &
         mpv --no-resume-playback --no-video "$alarmSample" || alarmfailsafe
     else
-        notify-send "$1" & beep "3"
+        notify-send "$1" &
+        soxchord || beep "3"
     fi
 fi
