@@ -6,7 +6,10 @@
 # On Debian systems make sure 'at' is installed with --no-install-recommends.
 
 # config
-alarmSample="$HOME/.cache/beepmein/stacy.mp3" # change me
+alarmSample="$HOME/.cache/beepmein/stacyy.mp3" # change me
+
+# Will kill all children with 'killall beepmein'
+trap 'kill $(jobs -p) >/dev/null 2>&1' EXIT
 
 # required
 command -v at >/dev/null 2>&1 || { >&2 echo "I need at: sudo apt install --no-install-recommends at" ; exit 1; }
@@ -43,7 +46,8 @@ cat << EOF
        beepmein --reaction reminder_text
        beepmein --reaction --alarm alarm_text
        
-       beepmein --help # this help
+       killall beepmein # kill all running playback,
+                          will not remove set 'at' timers.
                 
        # Notes:
        at -l       # will list pending jobs (or atq)
@@ -116,12 +120,8 @@ else
     if [ "$1" == "--alarm" ]; then
         shift
         notify-send "$1" &
-        if [[ -f "$alarmSample" ]] && command -v mpv >/dev/null 2>&1 ; then
-            mpv --no-resume-playback --no-video "$alarmSample"
-        else    
-            alarmfailsafe
-        fi
+        mpv --no-resume-playback --no-video "$alarmSample" || alarmfailsafe
     else
-        beep "3" & notify-send "$1"
+        notify-send "$1" & beep "3"
     fi
 fi
