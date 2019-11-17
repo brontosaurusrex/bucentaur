@@ -20,5 +20,5 @@ lines="$(atq | wc -l)"
 if (( lines > 0 )) ; then
     echo "^sep()"
     echo "queue (click to remove),"
-    atq | awk '{print $5", atrm "$1}'
+    atq | sort -r | awk '{print $5", atrm "$1}'
 fi
