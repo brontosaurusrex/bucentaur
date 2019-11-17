@@ -19,10 +19,9 @@ echo "＋ beepmein $future --alarm, gmrun '"beepmein $future --alarm"'"
 lines="$(atq | wc -l)"
 if (( lines > 0 )) ; then
     echo "^sep(queue ( click to rm ):)"
-    #echo "queue (click to remove),"
     #atq | sort -r | awk '{print $5", atrm "$1}'
-    atq | sort -r | awk '{print"✕ "$5" ("$3"-"$4"), atrm "$1}'
-    
+    #atq | sort -r | awk '{print"✕ "$5" ("$3"-"$4"), atrm "$1}'
+    atq | sort -r | awk '{printf"✕ "$5" ("$3"-"$4") "}{ if($7 == "\=") printf " ▶"; print ", atrm " $1}' 2> /dev/null
 fi
 
 echo "^sep(test-s:)"
