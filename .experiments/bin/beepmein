@@ -5,6 +5,9 @@
 # A little wrapper around linux 'at' command, that will beep you at specific time, see --help.
 # On Debian systems make sure 'at' is installed with --no-install-recommends.
 
+# Copyright (C) 2019 brontosaurusrex
+# License: GPLv3 or later.
+
 # config
 alarmSample="$HOME/.cache/beepmein/stacy.mp3" # change me
 

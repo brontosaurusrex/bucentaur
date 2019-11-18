@@ -1,9 +1,13 @@
 #!/bin/bash
 
 # pipeBeepmein
+
 # beepmein pipe menu for jgmenu
 
 # usage: pipeBeepmein | jgmenu --simple --icon-size=0
+
+# Copyright (C) 2019 brontosaurusrex
+# License: GPLv3 or later.
 
 future="$(date -d "+5 minutes" +%R)"
 

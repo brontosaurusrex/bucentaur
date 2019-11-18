@@ -1,9 +1,11 @@
 #!/bin/bash
 
-#    bl-urxlx: is naive Xresources to Lxterminal color config converter  
-#    Copyright (C) 2019 brontosaurusrex
-#
-#    License: GPLv3 or later.
+# bl-urxlx
+
+# Naive Xresources to Lxterminal color config converter  
+
+# Copyright (C) 2019 brontosaurusrex
+# License: GPLv3 or later.
 
 # help
 help () { 
