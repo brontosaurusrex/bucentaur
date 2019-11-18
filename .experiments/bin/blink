@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# blink
+
+blink () {
+    now=$(xrandr --verbose | grep -i brightness | cut -f2 -d ' ') # no primary selector here, some luck needed.
+    monitor=$(xrandr | grep -E " connected (primary )?[1-9]+" | sed -e "s/\([A-Z0-9]\+\) connected.*/\1/")
+
+    # up
+    for i in $(seq "$now" 0.2 3.0); do     
+        xrandr --output "$monitor" --brightness "$i"
+    done
+    # down
+    for i in $(seq 3.0 -0.2 "$now"); do     
+        xrandr --output "$monitor" --brightness "$i"
+    done
+    sleep 0.3
+}
+blink && blink && blink
