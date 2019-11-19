@@ -9,7 +9,8 @@
 # License: GPLv3 or later.
 
 # config
-alarmSample="$HOME/.cache/beepmein/stacy.mp3" # change me
+alarmSample="$HOME/.cache/beepmein/AXELF.MOD" # longer sample, change me
+reminderSample="$HOME/.cache/beepmein/closeEnc.opus" # shorter sample, change me
 
 # Will kill all children with 'killall beepmein'
 trap 'kill $(jobs -p) >/dev/null 2>&1' EXIT
@@ -191,11 +192,11 @@ else
     if [ "$1" == "--alarm" ]; then
         shift
         notify-send "$1" &
-        blink 3 0.8 >/dev/null 2>&1 &
+        blink 1 0 >/dev/null 2>&1 &
         mpv --no-resume-playback --no-video "$alarmSample" || alarmfailsafe
     else
         notify-send "$1" &
         blink 1 0 >/dev/null 2>&1 &
-        beep "3" # removed sox from the game
+        mpv --no-resume-playback --no-video "$reminderSample" || beep "3" # removed sox from the game
     fi
 fi
