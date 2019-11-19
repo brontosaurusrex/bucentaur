@@ -139,6 +139,18 @@ test () {
     echo
 }
 
+# validate 'at' time syntax by generating fake job
+validate () {
+tmpjob="$(at "$1" <<< "$(echo "test")" 2>&1 | grep ^job | cut -f2 -d ' ')"
+if [ -n "$tmpjob" ]; then
+    # job was generated ok
+    atrm "$tmpjob"
+else
+    # error
+    return 1
+fi
+}
+
 # help or test
 if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ $# -eq 0 ]; then
     help; exit
@@ -163,11 +175,16 @@ if [ "$1" != "--reaction" ] ; then
     if [[ $attime == ?(-)+([0-9]) ]] ; then # is integer
         attime="now + $attime minutes"
     fi
+    
+    # validate at time format, exit if fails
+    validate "$attime" || { >&2 echo "at time format error." ; beep "2"; exit 1; } # beep two times for error
+    
     read -rp "reason? " reason || reason="$(yad --title="beepmein" --width=300 --separator="" --form --field="reason?")"
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason"
     # set 'at'
-    at "$attime" <<< "$(echo "DISPLAY=${DISPLAY} beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1 || { beep "2"; exit 1; } # beep two times for error
+    at "$attime" <<< "$(echo "DISPLAY=${DISPLAY} beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1 || { echo "at input error." ; beep "2"; exit 1; } # beep two times for error
+    
 else
     # reaction
     shift
