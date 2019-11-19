@@ -62,8 +62,8 @@ beep () {
     [ -z "$1" ] && loops="1" || loops="$1"
     for ((i=1; i<=loops; i++))
     do
-        timeout -s HUP 0.1 speaker-test -t sine -f 1000  > /dev/null 2>&1
-        sleep 0.1
+        timeout -s HUP 0.2 speaker-test -t sine -f 1000  > /dev/null 2>&1
+        sleep 0.2
     done
 }
 
@@ -196,6 +196,6 @@ else
     else
         notify-send "$1" &
         blink 1 0 >/dev/null 2>&1 &
-        soxchord || beep "5"
+        beep "3" # removed sox from the game
     fi
 fi
