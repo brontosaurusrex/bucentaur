@@ -69,24 +69,34 @@ beep () {
 
 # $1 = how many times to blink, $2 = pause between each blink
 blink () {
-    # find primary monitor
-    monitor=$(xrandr -q | grep "connected" | grep "primary" | cut -f1 -d ' ')
-    # find current brightness of primary monitor
-    now="$(xrandr --verbose | grep -A 15 "primary" | grep -i brightness | cut -f2 -d ' ')"
+    # find primary connected or else 1st connected monitor
+    monitor="$(xrandr -q | grep -w "connected" | grep "primary" | cut -f1 -d ' ')"
+    if [ -z "$monitor" ]; then # no primary AND connected found, lets try 1st connected
+        monitor="$(xrandr -q | grep -w "connected" | cut -f1 -d ' ')"
+    fi 
+    [ -z "$monitor" ] && { >&2 echo "No monitors found error" ; exit 1; }
+    
+    # find current brightness of that monitor
+    now="$(xrandr --verbose | grep -A 15 "$monitor" | grep -i brightness | cut -f2 -d ' ')"
+    [ -z "$now" ] && { >&2 echo "Could not get current brightness error" ;  exit 1; }
+    
     
     [ -z "$1" ] && loops="1" || loops="$1"
     for ((c=1; c<=loops; c++))
     do
         # blink up
-        for i in $(seq "$now" 0.1 3.0); do     
+        for i in $(seq "$now" 0.2 3.0); do     
             xrandr --output "$monitor" --brightness "$i"
+            sleep 0.01
         done
         
         # blink down
-        for i in $(seq 3.0 -0.1 "$now"); do     
+        for i in $(seq 3.0 -0.2 "$now"); do     
             xrandr --output "$monitor" --brightness "$i"
+            sleep 0.01
         done
     sleep "$2"
+    xrandr --output "$monitor" --brightness "$now"
     done
 }
 
