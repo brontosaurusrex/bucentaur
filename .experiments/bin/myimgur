@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# imgur uploader, markdown && bbcode generator
+
+# PNG files over 5MB will be converted to JPEGs. https://0x0.st/sGED
+
+# imgurl id
+id=""
+[ -z $id ] && { echo "Provide imgur id, https://apidocs.imgur.com/?version=latest" ; exit 1; }
+
+# required
+command -v jq >/dev/null 2>&1 || { >&2 echo "I need jq" ; exit 1; }
+command -v curl >/dev/null 2>&1 || { >&2 echo "I need curl" ; exit 1; }
+
+# tmpdir
+tmp="/tmp/$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
+# check input file
+[[ -f "$1" ]] || exit 1
+
+# basename
+name="$(basename "$1")"
+
+# upload (-sS to reduce verbosity)
+curl --request POST --url https://api.imgur.com/3/image \
+--header "authorization: Client-ID $id" \
+--header 'content-type: multipart/form-data;' \
+-F "image=@$1" -F "name=$name" -F "title=$name" > "$tmp/return.json"
+
+# get some bash variables from json, requires jq
+link="$( jq -r '.data | .link' < "$tmp/return.json" )"
+deletehash="$( jq -r '.data | .deletehash' < "$tmp/return.json" )"
+#echo "$name $link $deletehash"
+
+# b=160x160 thumb, l=640x480 medium
+linknoext="${link%.*}"                      # get the filename
+extension="${link##*.}"                     # get the extension
+thumb="${linknoext}b.${extension}"
+medium="${linknoext}l.${extension}"
+
+# markdown medium and thumb
+echo "Markdown"
+echo "[![$name $deletehash th]($thumb)̉]($link)"
+echo "[![$name $deletehash md]($medium)̉]($link)"
+echo "bb"
+#echo "[url=$link][img alt="\"$name $deletehash th\"" title="\"$name\""]${thumb}[/img][/url]"
+#echo "[url=$link][img alt="\"$name $deletehash md\"" title="\"$name\""]${medium}[/img][/url]"
+echo "[url=$link][img]${thumb}[/img][/url]"
+echo "[url=$link][img]${medium}[/img][/url]"
