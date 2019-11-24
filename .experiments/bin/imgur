@@ -42,7 +42,7 @@ upload () {
     curl --request POST --url https://api.imgur.com/3/image \
     --header "authorization: Client-ID $id" \
     --header 'content-type: multipart/form-data;' \
-    -F "image=@$1" -F "name=$2" -F "title=$2" > "$tmp/return.json" || cat "$tmp/return.json"
+    -F "image=@$1" -F "name=$2" -F "title=$2" > "$tmp/return.json"
 
 }
 
@@ -70,6 +70,7 @@ while [ $# -gt 0 ]; do
     medium="${linknoext}l.${extension}"
     
     echo "$extension"
+    [[ "$extension" == "null" ]] && cat "$tmp/return.json"
     
     # If image has alpha, lets make custom thumb and medium image
     # filled with checkers
