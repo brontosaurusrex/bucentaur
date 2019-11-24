@@ -63,7 +63,10 @@ while [ $# -gt 0 ]; do
     link="${prefix}${link}"
     thumb="${prefix}${thumb}"
     medium="${prefix}${medium}"
-
+    
+    # full link in clipboard
+    xclip -sel clip <<< "$(printf '%s' "$link")"
+    
     # markdown medium and thumb
     echo "Markdown"
     echo "[![$name-$deletehash-th]($thumb)]($link)"
