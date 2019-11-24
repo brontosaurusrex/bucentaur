@@ -68,10 +68,10 @@ while [ $# -gt 0 ]; do
     xclip -sel clip <<< "$(printf '%s' "$link")"
     
     # markdown medium and thumb
-    echo "Markdown"
+    echo "Markdown ${name%.*}"
     echo "[![$name-$deletehash-th]($thumb)]($link)"
     echo "[![$name-$deletehash-md]($medium)]($link)"
-    echo "bbcode"
+    echo "bbcode ${name%.*}"
     echo "[url=$link#$deletehash][img]${thumb}[/img][/url]"
     echo "[url=$link#$deletehash][img]${medium}[/img][/url]"
     
