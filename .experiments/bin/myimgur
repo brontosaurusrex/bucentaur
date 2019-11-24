@@ -50,7 +50,7 @@ while [ $# -gt 0 ]; do
     #echo "$name $link $deletehash"
     
     # debug
-    cp "$tmp/return.json" .
+    #cp "$tmp/return.json" .
 
     # b=160x160 thumb, l=640x480 medium
     linknoext="${link%.*}"                      # get the filename
