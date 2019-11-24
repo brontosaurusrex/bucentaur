@@ -2,7 +2,7 @@
 
 # imgur uploader, markdown && bbcode generator
 
-# PNG files over 5MB will be converted to JPEGs. https://0x0.st/sGED
+# PNG files over X MB will be converted to JPEGs. https://0x0.st/sGED
 
 # imgurl id
 
@@ -43,6 +43,9 @@ while [ $# -gt 0 ]; do
     link="$( jq -r '.data | .link' < "$tmp/return.json" )"
     deletehash="$( jq -r '.data | .deletehash' < "$tmp/return.json" )"
     #echo "$name $link $deletehash"
+    
+    # debug
+    cp "$tmp/return.json" .
 
     # b=160x160 thumb, l=640x480 medium
     linknoext="${link%.*}"                      # get the filename
@@ -52,17 +55,15 @@ while [ $# -gt 0 ]; do
     
     # weserv proxy https://images.weserv.nl/docs
     prefix="https://images.weserv.nl/?url="
-    link="$prefix$link"
-    thumb="$prefix$thumb"
-    medium="$prefix$medium"
+    link="${prefix}${link}"
+    thumb="${prefix}${thumb}"
+    medium="${prefix}${medium}"
 
     # markdown medium and thumb
     echo "Markdown"
-    echo "[![$name $deletehash th]($thumb)̉]($link)"
-    echo "[![$name $deletehash md]($medium)̉]($link)"
-    echo "bb"
-    #echo "[url=$link][img alt="\"$name $deletehash th\"" title="\"$name\""]${thumb}[/img][/url]"
-    #echo "[url=$link][img alt="\"$name $deletehash md\"" title="\"$name\""]${medium}[/img][/url]"
+    echo "[![$name-$deletehash-th]($thumb)]($link)"
+    echo "[![$name-$deletehash-md]($medium)]($link)"
+    echo "bbcode"
     echo "[url=$link#$deletehash][img]${thumb}[/img][/url]"
     echo "[url=$link#$deletehash][img]${medium}[/img][/url]"
     
