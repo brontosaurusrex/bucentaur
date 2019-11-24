@@ -24,11 +24,26 @@ fi
 # required
 command -v jq >/dev/null 2>&1 || { >&2 echo "I need jq" ; exit 1; }
 command -v curl >/dev/null 2>&1 || { >&2 echo "I need curl" ; exit 1; }
+command -v identify >/dev/null 2>&1 || { >&2 echo "I need im identify" ; exit 1; }
+command -v convert >/dev/null 2>&1 || { >&2 echo "I need im convert" ; exit 1; }
 
 # tmpdir
 tmp="/tmp/$RANDOM-$$"
 trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
+# alpha?
+hasAlpha () {
+    identify -format %A "$1" | grep -q "True"
+}
+
+# upload $1=pathToimage $2=name
+upload () {
+    curl --request POST --url https://api.imgur.com/3/image \
+    --header "authorization: Client-ID $id" \
+    --header 'content-type: multipart/form-data;' \
+    -F "image=@$1" -F "name=$2" -F "title=$2" > "$tmp/return.json"
+}
 
 while [ $# -gt 0 ]; do
 
@@ -39,38 +54,62 @@ while [ $# -gt 0 ]; do
     name="$(basename "$1")"
 
     # upload (-sS to reduce verbosity)
-    curl --request POST --url https://api.imgur.com/3/image \
-    --header "authorization: Client-ID $id" \
-    --header 'content-type: multipart/form-data;' \
-    -F "image=@$1" -F "name=$name" -F "title=$name" > "$tmp/return.json"
+    echo "Uploading $1"
+    upload "$1" "$name"
 
     # get some bash variables from json, requires jq
     link="$( jq -r '.data | .link' < "$tmp/return.json" )"
     deletehash="$( jq -r '.data | .deletehash' < "$tmp/return.json" )"
     #echo "$name $link $deletehash"
     
-    # debug
-    #cp "$tmp/return.json" .
-
     # b=160x160 thumb, l=640x480 medium
     linknoext="${link%.*}"                      # get the filename
     extension="${link##*.}"                     # get the extension
     thumb="${linknoext}b.${extension}"
     medium="${linknoext}l.${extension}"
     
+    echo "$extension"
+    
+    # If image has alpha, lets make custom thumb and medium image
+    # filled with checkers
+    if hasAlpha "$1"; then
+    
+        [[ "$extension" == "jpg" ]] && echo "Warning: Image has transparency, but was converted to jpg by host"
+        
+        echo "image $1 has alpha, generating custom thumbs"
+        
+        # generate medium thumb
+        x="640"; y="480"
+        convert "$1" -resize ${x}x${y} -background none -gravity center -extent 640x480 \( -size ${x}x${y} tile:pattern:checkerboard \) +swap -composite "$tmp/medium.png"
+        
+        echo "Uploading medium ${x}x${y} transparent thumb"
+        upload "$tmp/medium.png" "${name%.*}_md"
+        medium="$( jq -r '.data | .link' < "$tmp/return.json" )"
+        
+        # generate small thumb
+        x="160"; y="160"
+        convert "$1" -resize ${x}x${y} -background none -gravity center -extent 640x480 \( -size ${x}x${y} tile:pattern:checkerboard \) +swap -composite "$tmp/thumb.png"
+        
+        echo "Uploading ${x}x${y} transparent thumb"
+        upload "$tmp/thumb.png" "${name%.*}_th"
+        thumb="$( jq -r '.data | .link' < "$tmp/return.json" )"
+    fi
+    
     # weserv proxy https://images.weserv.nl/docs
     prefix="https://images.weserv.nl/?url="
     link="${prefix}${link}"
     thumb="${prefix}${thumb}"
     medium="${prefix}${medium}"
-    
+
     # full link in clipboard
     xclip -sel clip <<< "$(printf '%s' "$link")"
     
     # markdown medium and thumb
+    echo
     echo "Markdown ${name%.*}"
     echo "[![$name-$deletehash-th]($thumb)]($link)"
     echo "[![$name-$deletehash-md]($medium)]($link)"
+    echo
     echo "bbcode ${name%.*}"
     echo "[url=$link#$deletehash][img]${thumb}[/img][/url]"
     echo "[url=$link#$deletehash][img]${medium}[/img][/url]"
