@@ -9,6 +9,45 @@
 # Copyright (C) 2019 brontosaurusrex
 # License: GPLv3 or later.
 
+# help
+help () { 
+cat << EOF
+
+    imgur is imgur.com uploader and transparent thumbnail maker,
+    that will also echo out some markdown and bbcode.
+    
+    Examples:
+    
+        imgur image.png
+    
+        # Upload and generate medium and small thumb if image has alpha,
+        # else just upload and blurb some embed code
+        
+        imgur https://i.imgur.com/Gnbk4iD.png
+        
+        # Temporarily download,
+        # generate medium and small thumb if image has alpha,
+        # else just blurb some embed code
+        
+    Notes:
+    
+        - Deletehash is only generated in certain scenarios (never for thumbnails).
+        - Bigger files than this script can support, can be uploaded
+        via imgur web interface.
+        - Currently imgur upload limit seems to be 50 files/hour/id.
+        
+    Config:
+    
+        Get your imgur id, see https://apidocs.imgur.com/?version=latest
+        and drop it in 
+        $HOME/.config/imgur/id
+    
+EOF
+}
+if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ $# -eq 0 ]; then
+    help && exit
+fi
+
 # imgurl id
 
 # Read id from config
@@ -46,22 +85,39 @@ upload () {
 
 }
 
+# main
 while [ $# -gt 0 ]; do
 
+    # var
+    image="$1"; url="false"
+
+    # url or file
+    if [[ $1 == http* ]] && [[ $1 == *"imgur"* ]] ; then 
+        echo "$image Looks like imgur hosted url, downloading to tmp"
+        #if wget "$image" -O "$tmp/image"; then
+        if curl "$image" --output "$tmp/image"; then
+            echo "download ok"
+            image="$tmp/image"
+            link="$1"
+            url="true"
+            deletehash="nohash"
+        fi
+    fi
+    
     # check input file
-    [[ -f "$1" ]] || exit 1
+    [[ -f "$image" ]] || exit 1
 
     # basename
-    name="$(basename "$1")"
+    name="$(basename "$image")"
 
-    # upload (-sS to reduce verbosity)
-    echo "Uploading $1"
-    upload "$1" "$name"
+    if [[ $url == false ]]; then # upload
+        echo "Uploading $image"
+        upload "$image" "$name"
 
-    # get some bash variables from json, requires jq
-    link="$( jq -r '.data | .link' < "$tmp/return.json" )"
-    deletehash="$( jq -r '.data | .deletehash' < "$tmp/return.json" )"
-    #echo "$name $link $deletehash"
+        # get some bash variables from json, requires jq
+        link="$( jq -r '.data | .link' < "$tmp/return.json" )"
+        deletehash="$( jq -r '.data | .deletehash' < "$tmp/return.json" )"
+    fi
     
     # b=160x160 thumb, l=640x480 medium
     linknoext="${link%.*}"                      # get the filename
@@ -69,28 +125,33 @@ while [ $# -gt 0 ]; do
     thumb="${linknoext}b.${extension}"
     medium="${linknoext}l.${extension}"
     
+    # Skip on upload error
     echo "$extension"
-    [[ "$extension" == "null" ]] && cat "$tmp/return.json"
+    if [[ "$extension" == "null" ]]; then
+        echo "Upload error"; cat "$tmp/return.json"; echo; echo
+        shift; continue
+    fi
+    
     
     # If image has alpha, lets make custom thumb and medium image
     # filled with checkers
-    if hasAlpha "$1"; then
+    if hasAlpha "$image"; then
     
-        [[ "$extension" == "jpg" ]] && echo "Warning: Image has transparency, but was converted to jpg by host"
+        [[ "$extension" == "jpg" ]] && echo "Warning: Image has alpha, but was converted to jpg by host"
         
-        echo "image $1 has alpha, generating custom thumbs"
+        echo "image $image has alpha, generating custom thumbs"
         
-        # generate medium thumb
-        x="640"; y="480"
-        convert "$1" -resize ${x}x${y} -background none -gravity center -extent 640x480 \( -size ${x}x${y} tile:pattern:checkerboard \) +swap -composite "$tmp/medium.png"
+        # generate and upload medium thumb
+        x="640"; y="400"
+        convert "$image" -resize ${x}x${y}^ -background none -gravity center -extent ${x}x${y} \( -size ${x}x${y} tile:pattern:checkerboard \) +swap -composite "$tmp/medium.png"
         
         echo "Uploading medium ${x}x${y} transparent thumb"
         upload "$tmp/medium.png" "${name%.*}_md"
         medium="$( jq -r '.data | .link' < "$tmp/return.json" )"
         
-        # generate small thumb
+        # generate and upload small thumb
         x="160"; y="160"
-        convert "$1" -resize ${x}x${y} -background none -gravity center -extent 640x480 \( -size ${x}x${y} tile:pattern:checkerboard \) +swap -composite "$tmp/thumb.png"
+        convert "$image" -resize ${x}x${y}^ -background none -gravity center -extent ${x}x${y} \( -size ${x}x${y} tile:pattern:checkerboard \) +swap -composite "$tmp/thumb.png"
         
         echo "Uploading ${x}x${y} transparent thumb"
         upload "$tmp/thumb.png" "${name%.*}_th"
