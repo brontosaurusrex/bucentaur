@@ -10,7 +10,7 @@
 # License: GPLv3 or later.
 
 # imgurl id
-set -x
+
 # Read id from config
 idfile="$HOME/.config/imgur/id" 
 if [ -f "$idfile" ]; then
