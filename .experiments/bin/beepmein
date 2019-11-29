@@ -220,7 +220,7 @@ if [ "$1" != "--reaction" ] ; then
     validate "$attime" || { >&2 superecho "at time format error." ; beep "2"; exit 1; } # beep two times for error
     
     # user input reason
-    read -rp "reason? " reason || reason="$(yad --timeout-indicator=bottom --timeout=60 --title="beepmein" --width=300 --separator="" --form --field="reason?")"
+    read -rp "reason? " reason || reason="$(yad --title="beepmein" --width=300 --separator="" --form --field="reason?")"
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason"
     # set 'at'
