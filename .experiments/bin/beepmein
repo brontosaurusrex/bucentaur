@@ -30,41 +30,35 @@ command -v yad >/dev/null 2>&1 || { >&2 echo "I need yad." ; exit 1; }
 help () { 
 cat << EOF
 
-       # Set reminder or alarm:
+    Set reminder or alarm:
 
-       beepmein now + 3 minutes 
-                ^                
-                'at' time format
+        beepmein now + 3 minutes # reminder ('at' time format)
+        
+        beepmein 22:10           # reminder ('at' time format)
                 
-       beepmein 22:10
-                ^
-                also 'at' time format
+        beepmein 3               # reminder (in 3 minutes, beepmein shortcut)
                 
-       beepmein 3
-                ^                
-                in 3 minutes (beepmein shortcut)
-                
-       beepmein --alarm 8:00 
-                  ^
-                  Will set alarm, must be first or last parameter.
-               
-       # Set sounds: (playback depends on mpv)
-       
-       beepmein --set-alarm <path/to/alarm.sound>
-       beepmein --ser-remind <path/to/reminder.sound>
+        beepmein --alarm 8:00    # alarm
+           
+    Set sounds: (playback depends on mpv)
 
-       # Testing:
+        beepmein --set-alarm <path/to/alarm.sound>
+        beepmein --set-remind <path/to/reminder.sound>
 
-       beepmein --test # test beep and notification
-       beepmein --reaction reminder_text
-       beepmein --reaction --alarm alarm_text
-       
-       killall beepmein # kill all running playback/beeping
+    Test playback, blinking and notifications:
 
-       # Notes:
-       
-       at -l       # will list pending jobs (or atq)
-       at -r <num> # will remove job <num>  (or atrm)
+        beepmein --reaction reminder_text
+        beepmein --reaction --alarm alarm_text
+        beepmein --test # test everything
+
+    Kill all running playback/beeping:
+
+        killall beepmein 
+
+    Notes:
+
+        at -l       # will list pending jobs (or atq)
+        at -r <num> # will remove job <num>  (or atrm)
 
 EOF
 }
@@ -184,7 +178,7 @@ if [ "$1" == "--set-alarm" ]; then
     if [[ -z "$2" ]]; then
         alarmpath="$(yad --title="Select alarm sample path" --file)"
     else
-        alarmpath="$2"
+        alarmpath=$(readlink -f "$2") # must be absolute path
     fi
     [[ -z "$alarmpath" ]] && { superecho "No alarm sample path given." ; beep "2"; exit 1; }
     # f=force
@@ -196,7 +190,7 @@ if [ "$1" == "--set-remind" ]; then
     if [[ -z "$2" ]]; then
         remindpath="$(yad --title="Select reminder sample path" --file)"
     else
-        remindpath="$2"
+        remindpath=$(readlink -f "$2") # must be absolute path
     fi
     [[ -z "$remindpath" ]] && { superecho "No reminder sample path given." ; beep "2"; exit 1; }
     # f=force
