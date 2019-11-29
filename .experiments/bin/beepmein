@@ -8,9 +8,13 @@
 # Copyright (C) 2019 brontosaurusrex
 # License: GPLv3 or later.
 
-# config
-alarmSample="$HOME/.cache/beepmein/AXELF.MOD" # longer sample, change me
-reminderSample="$HOME/.cache/beepmein/closeEnc.opus" # shorter sample, change me
+# prepare config dir
+config="$HOME/.cache/beepmein"
+mkdir -p "$config"
+
+# softlinks to audio samples
+alarmSample="$config/alarm"     # longer sample
+reminderSample="$config/remind" # shorter sample
 
 # Will kill all children with 'killall beepmein'
 trap 'kill $(jobs -p) >/dev/null 2>&1' EXIT
@@ -20,10 +24,13 @@ command -v at >/dev/null 2>&1 || { >&2 echo "I need at: sudo apt install --no-in
 command -v speaker-test >/dev/null 2>&1 || { >&2 echo "I need speaker-test from alsa-utils (for reminder sound)." ; exit 1; }
 command -v notify-send >/dev/null 2>&1 || { >&2 echo "I need notify-send." ; exit 1; }
 command -v mpv >/dev/null 2>&1 || { >&2 echo "I need mpv (for alarm sounds)." ; exit 1; }
+command -v yad >/dev/null 2>&1 || { >&2 echo "I need yad." ; exit 1; }
 
 # help
 help () { 
 cat << EOF
+
+       # Set reminder or alarm:
 
        beepmein now + 3 minutes 
                 ^                
@@ -39,19 +46,23 @@ cat << EOF
                 
        beepmein --alarm 8:00 
                   ^
-                  Will play audio sample,
-                  that you defined by setting alarmSample.
-                  Must be first or last parameter.
-    
-       beepmein --test # test beep and notification
+                  Will set alarm, must be first or last parameter.
+               
+       # Set sounds: (playback depends on mpv)
        
-       # More testing
+       beepmein --set-alarm <path/to/alarm.sound>
+       beepmein --ser-remind <path/to/reminder.sound>
+
+       # Testing:
+
+       beepmein --test # test beep and notification
        beepmein --reaction reminder_text
        beepmein --reaction --alarm alarm_text
        
        killall beepmein # kill all running playback/beeping
-                
+
        # Notes:
+       
        at -l       # will list pending jobs (or atq)
        at -r <num> # will remove job <num>  (or atrm)
 
@@ -152,11 +163,45 @@ else
 fi
 }
 
+# echo
+superecho () {
+    if [ -t 0 ] ; then
+        echo "$1"
+    else
+        notify-send -t 3500 "$1"
+    fi
+}
+
 # help or test
 if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ $# -eq 0 ]; then
     help; exit
 elif [ "$1" == "--test" ]; then
     test; exit
+fi
+
+# --set-alarm (via softlink)
+if [ "$1" == "--set-alarm" ]; then
+    if [[ -z "$2" ]]; then
+        alarmpath="$(yad --title="Select alarm sample path" --file)"
+    else
+        alarmpath="$2"
+    fi
+    [[ -z "$alarmpath" ]] && { superecho "No alarm sample path given." ; beep "2"; exit 1; }
+    # f=force
+    ln -fs "$alarmpath" "$config/alarm"
+    exit
+fi
+# --set-remind (via softlink)
+if [ "$1" == "--set-remind" ]; then
+    if [[ -z "$2" ]]; then
+        remindpath="$(yad --title="Select reminder sample path" --file)"
+    else
+        remindpath="$2"
+    fi
+    [[ -z "$remindpath" ]] && { superecho "No reminder sample path given." ; beep "2"; exit 1; }
+    # f=force
+    ln -fs "$remindpath" "$config/remind"
+    exit
 fi
 
 # main
@@ -178,13 +223,14 @@ if [ "$1" != "--reaction" ] ; then
     fi
     
     # validate at time format, exit if fails
-    validate "$attime" || { >&2 echo "at time format error." ; beep "2"; exit 1; } # beep two times for error
+    validate "$attime" || { >&2 superecho "at time format error." ; beep "2"; exit 1; } # beep two times for error
     
+    # user input reason
     read -rp "reason? " reason || reason="$(yad --title="beepmein" --width=300 --separator="" --form --field="reason?")"
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason"
     # set 'at'
-    at "$attime" <<< "$(echo "DISPLAY=${DISPLAY} beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1 || { echo "at input error." ; beep "2"; exit 1; } # beep two times for error
+    at "$attime" <<< "$(echo "DISPLAY=${DISPLAY} beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1 || { superecho "at input error." ; beep "2"; exit 1; } # beep two times for error
     
 else
     # reaction
