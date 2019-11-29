@@ -63,6 +63,15 @@ cat << EOF
 EOF
 }
 
+# superecho
+superecho () {
+    if [ -t 0 ] ; then
+        echo "$1"
+    else
+        notify-send -t 3500 "$1"
+    fi
+}
+
 # reminder sound, needs speaker-test (alsa-utils)
 beep () {
     [ -z "$1" ] && loops="1" || loops="$1"
@@ -122,9 +131,9 @@ for ((i=1; i<=10; i++)); do
 done
 }
 
-# test alarm sample path
+# test alarm sample path (no test for reminder sample)
 testAlarmPath () {
-    [[ -f "$alarmSample" ]] || { >&2 printf "Note: alarmSample %s not found, \nyou may want to configure the script. \nInternal fail-safe beep will be used instead.\n" "$alarmSample"; }
+    [[ -f "$alarmSample" ]] || { >&2 superecho "Note: alarmSample $alarmSample not found, Internal fail-safe beep will be used instead."; }
 }
 
 # test audio and notifications
@@ -155,15 +164,6 @@ else
     # error
     return 1
 fi
-}
-
-# echo
-superecho () {
-    if [ -t 0 ] ; then
-        echo "$1"
-    else
-        notify-send -t 3500 "$1"
-    fi
 }
 
 # help or test
@@ -200,7 +200,7 @@ fi
 
 # main
 if [ "$1" != "--reaction" ] ; then
-    if [ "$1" == "--alarm" ] ; then      # if first
+    if [ "$1" == "--alarm" ] ; then      # first
         # chop off first argument
         alarm="--alarm" && shift
         testAlarmPath
@@ -220,7 +220,7 @@ if [ "$1" != "--reaction" ] ; then
     validate "$attime" || { >&2 superecho "at time format error." ; beep "2"; exit 1; } # beep two times for error
     
     # user input reason
-    read -rp "reason? " reason || reason="$(yad --title="beepmein" --width=300 --separator="" --form --field="reason?")"
+    read -rp "reason? " reason || reason="$(yad --timeout-indicator=bottom --timeout=60 --title="beepmein" --width=300 --separator="" --form --field="reason?")"
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason"
     # set 'at'
