@@ -180,7 +180,7 @@ if [ "$1" == "--set-alarm" ]; then
     else
         alarmpath=$(readlink -f "$2") # must be absolute path
     fi
-    [[ -z "$alarmpath" ]] && { superecho "No alarm sample path given." ; beep "2"; exit 1; }
+    [[ -f "$alarmpath" ]] || { superecho "No valid alarm path given." ; beep "2"; exit 1; }
     # f=force
     ln -fs "$alarmpath" "$config/alarm"
     exit
@@ -192,7 +192,7 @@ if [ "$1" == "--set-remind" ]; then
     else
         remindpath=$(readlink -f "$2") # must be absolute path
     fi
-    [[ -z "$remindpath" ]] && { superecho "No reminder sample path given." ; beep "2"; exit 1; }
+    [[ -f "$remindpath" ]] || { superecho "No valid reminder path given." ; beep "2"; exit 1; }
     # f=force
     ln -fs "$remindpath" "$config/remind"
     exit
