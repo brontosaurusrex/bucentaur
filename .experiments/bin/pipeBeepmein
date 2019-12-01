@@ -43,11 +43,11 @@ echo "＋ beepmein $future --alarm (edit), gmrun '"beepmein $future --alarm"'"
 echo "^sep(Add morning alarm:)"
 echo "＋ beepmein 7:00 --alarm (edit), gmrun '"beepmein 7:00 --alarm"'"
 echo "＋ beepmein 7:30 --alarm (edit), gmrun '"beepmein 7:30 --alarm"'"
-
 echo "^sep(Test event:)"
 echo "▶  reminder, beepmein --reaction reminder"
 echo "▶  alarm, beepmein --reaction --alarm alarm"
 echo "◼  stop, killall beepmein"
+echo "Set sounds:,^checkout(Set sounds:)"
 
 lines="$(atq | wc -l)"
 if (( lines > 0 )) ; then
@@ -68,3 +68,7 @@ if (( lines > 0 )) ; then
     done
     
 fi
+
+echo "^tag(Set sounds:)"
+echo "alarm, beepmein --set-alarm"
+echo "reminder, beepmein --set-remind"
