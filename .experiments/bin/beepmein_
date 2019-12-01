@@ -38,9 +38,7 @@ cat << EOF
                 
         beepmein 3               # reminder (in 3 minutes, beepmein shortcut)
                 
-        beepmein 8:00 --alarm    # alarm (must be last parameter)
-        
-        beepmein --nr 5          # with no reason (must be first parameter)
+        beepmein --alarm 8:00    # alarm
            
     Set sounds: (playback depends on mpv)
 
@@ -202,11 +200,11 @@ fi
 
 # main
 if [ "$1" != "--reaction" ] ; then
-    if [ "$1" == "--nr" ] ; then       # --nr must be first
+    if [ "$1" == "--alarm" ] ; then      # first
         # chop off first argument
-        noreason="true" && shift
-    fi
-    if [ "${!#}" == "--alarm" ] ; then # --alarm must be last
+        alarm="--alarm" && shift
+        testAlarmPath
+    elif [ "${!#}" == "--alarm" ] ; then # or last
         # chop off last argument
         alarm="--alarm" && set -- "${@:1:$(($#-1))}"
         testAlarmPath
@@ -222,11 +220,9 @@ if [ "$1" != "--reaction" ] ; then
     validate "$attime" || { >&2 superecho "at time format error." ; beep "2"; exit 1; } # beep two times for error
     
     # user input reason
-    if [[ $noreason != true ]]; then
-        read -rp "reason? " reason || reason="$(yad --title="beepmein" --width=300 --separator="" --form --field="reason?")"
-    fi
+    read -rp "reason? " reason || reason="$(yad --title="beepmein" --width=300 --separator="" --form --field="reason?")"
     [[ -z "$reason" ]] && reason="beep beep beep"
-    echo "beepmein: $attime, reason: $reason $alarm"
+    echo "beepmein: $attime, reason: $reason"
     # set 'at'
     at "$attime" <<< "$(echo "DISPLAY=${DISPLAY} beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1 || { superecho "at input error." ; beep "2"; exit 1; } # beep two times for error
     
@@ -241,6 +237,6 @@ else
     else
         notify-send "$1" &
         blink 1 0 >/dev/null 2>&1 &
-        mpv --no-resume-playback --no-video "$reminderSample" || beep "3" 
+        mpv --no-resume-playback --no-video "$reminderSample" || beep "3" # removed sox from the game
     fi
 fi
