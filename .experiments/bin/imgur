@@ -87,9 +87,10 @@ upload () {
     -F "image=@$1" -F "name=$2" -F "title=$2" > "$tmp/return.json"
     
     # lets abort 
-    success="$( jq -r '.data | .success' < "$tmp/return.json" )"
+    success="$( jq -r '.success' < "$tmp/return.json" )"
     if [[ "$success" != "true" ]]; then
         echo "Upload error, aborting"; cat "$tmp/return.json"; echo; echo
+        cp "$tmp/return.json" "$cache/return.json" # lets log
         exit 1
     fi
 }
