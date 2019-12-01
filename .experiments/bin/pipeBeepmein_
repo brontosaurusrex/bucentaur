@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# pipeBeepmein
+# beepmein pipe menu for jgmenu
+
+# usage: pipeBeepmein | jgmenu --simple --icon-size=0
+
+future="$(date -d "+5 minutes" +%R)"
+
+echo "^sep(Time is now: $(date +%R))"
+
+echo "＋ beepmein ~ 1, beepmein 1"
+echo "＋ beepmein ~ 5, beepmein 5" 
+echo "＋ beepmein ~ 15 (edit), gmrun '"beepmein 15"'"
+echo "＋ beepmein $future (edit), gmrun '"beepmein $future"'"
+echo "＋ beepmein $future --alarm (edit), gmrun '"beepmein $future --alarm"'"
+echo "^sep(Add morning alarm:)"
+echo "＋ beepmein 7:00 --alarm (edit), gmrun '"beepmein 7:00 --alarm"'"
+echo "＋ beepmein 7:30 --alarm (edit), gmrun '"beepmein 7:30 --alarm"'"
+
+echo "^sep(Test event:)"
+echo "▶  reminder, beepmein --reaction reminder"
+echo "▶  alarm, beepmein --reaction --alarm alarm"
+echo "◼  stop, killall beepmein"
+
+lines="$(atq | wc -l)"
+if (( lines > 0 )) ; then
+    echo "^sep(Click to remove from queue:)"
+    atq | sort -r | awk '{printf"✕ "$5" ("$3"-"$4") "}{ if($7 == "\=") printf " ▶"; print ", atrm " $1}' 2> /dev/null
+fi
+
+

@@ -5,10 +5,36 @@
 
 # usage: pipeBeepmein | jgmenu --simple --icon-size=0
 
-future="$(date -d "+5 minutes" +%R)"
+# required
+command -v at >/dev/null 2>&1 || { >&2 echo "I need at: sudo apt install --no-install-recommends at" ; exit 1; }
+command -v gmrun >/dev/null 2>&1 || { >&2 echo "I need gmrun." ; exit 1; }
+command -v awk >/dev/null 2>&1 || { >&2 echo "I need awk." ; exit 1; }
 
+# for display purposes
+future="$(date -d "+5 minutes" +%R)"
 echo "^sep(Time is now: $(date +%R))"
 
+# for timeToEvent()
+now="$(date +%s)"
+
+# timeToEvent
+timeToEvent() {
+    # job Event time
+    event="$(echo "$1" | cut -d' ' -f 2-6)" # cut instead of awk?
+    if [[ "$event" ]]; then
+
+        event="$(date -d "$event" +%s)"
+        diff=$(( event - now ))
+
+        # And show as HH:MM:SS, only if less than 24 hours
+        # 24 hours is 86400 seconds
+        if (( diff < 86400 )); then
+            date -u -d @${diff} +%T
+        fi
+    fi
+}
+
+# action
 echo "＋ beepmein ~ 1, beepmein 1"
 echo "＋ beepmein ~ 5, beepmein 5" 
 echo "＋ beepmein ~ 15 (edit), gmrun '"beepmein 15"'"
@@ -25,8 +51,19 @@ echo "◼  stop, killall beepmein"
 
 lines="$(atq | wc -l)"
 if (( lines > 0 )) ; then
+
     echo "^sep(Click to remove from queue:)"
-    atq | sort -r | awk '{printf"✕ "$5" ("$3"-"$4") "}{ if($7 == "\=") printf " ▶"; print ", atrm " $1}' 2> /dev/null
+    
+    # This is the actual line by line loop    
+    atq | sort -r | while read -r line ; do
+    
+        # get diff
+        toEvent="\t&lt; $(timeToEvent "$line")"
+        
+        # awk pain
+        echo "$line" | awk -v toEvent="$toEvent" '{printf"✕ "$5" ("$3"-"$4") "}{ if($7 == "\=")
+        {printf " \t now"}else{printf toEvent}; print ", atrm " $1}' 2> /dev/null
+    
+    done
+    
 fi
-
-
