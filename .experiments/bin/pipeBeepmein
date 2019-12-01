@@ -8,7 +8,6 @@
 # required
 command -v at >/dev/null 2>&1 || { >&2 echo "I need at: sudo apt install --no-install-recommends at" ; exit 1; }
 command -v gmrun >/dev/null 2>&1 || { >&2 echo "I need gmrun." ; exit 1; }
-command -v awk >/dev/null 2>&1 || { >&2 echo "I need awk." ; exit 1; }
 
 # for display purposes
 future="$(date -d "+5 minutes" +%R)"
@@ -20,7 +19,8 @@ now="$(date +%s)"
 # timeToEvent
 timeToEvent() {
     # job Event time
-    event="$(echo "$1" | cut -d' ' -f 2-6)" # cut instead of awk?
+    #event="$(echo "$1" | cut -d' ' -f 2-6)" # cut instead of awk?
+    event="$1"
     if [[ "$event" ]]; then
 
         event="$(date -d "$event" +%s)"
@@ -55,16 +55,20 @@ if (( lines > 0 )) ; then
     echo "^sep(Click to remove from queue:)"
     
     # This is the actual line by line loop    
-    atq | sort -r | while read -r line ; do
+    atq | sort -r | while read -r job nameday month day clock year queue _ ; do
     
         # get diff
-        toEvent="$(timeToEvent "$line")"
+        toEvent="$(timeToEvent "$nameday $month $day $clock $year")"
         [[ "$toEvent" ]] && toEvent="\t&lt; $toEvent"
         
-        # awk pain
-        echo "$line" | awk -v toEvent="$toEvent" '{printf"✕ "$5" ("$3"-"$4") "}{ if($7 == "\=")
-        {printf " \t now"}else{printf toEvent}; print ", atrm " $1}' 2> /dev/null
-    
+        echo -n "✕ $clock ($month-$day)"
+        if [[ $queue == "=" ]]; then
+            echo -ne "\t now" 
+        else
+            echo -ne "$toEvent"
+        fi
+        echo ", atrm $job"
+            
     done
     
 fi
