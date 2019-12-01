@@ -58,7 +58,8 @@ if (( lines > 0 )) ; then
     atq | sort -r | while read -r line ; do
     
         # get diff
-        toEvent="\t&lt; $(timeToEvent "$line")"
+        toEvent="$(timeToEvent "$line")"
+        [[ "$toEvent" ]] && toEvent="\t&lt; $toEvent"
         
         # awk pain
         echo "$line" | awk -v toEvent="$toEvent" '{printf"✕ "$5" ("$3"-"$4") "}{ if($7 == "\=")
