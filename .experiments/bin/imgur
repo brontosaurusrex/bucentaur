@@ -48,7 +48,10 @@ if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ $# -eq 0 ]; then
     help && exit
 fi
 
-# imgurl id
+# store
+cache="$HOME/.cache/imgur"
+mkdir -p "$cache"
+date +%H%M%^b%d%y >> "$cache/thumbs.txt"
 
 # Read id from config
 idfile="$HOME/.config/imgur/id" 
@@ -82,7 +85,13 @@ upload () {
     --header "authorization: Client-ID $id" \
     --header 'content-type: multipart/form-data;' \
     -F "image=@$1" -F "name=$2" -F "title=$2" > "$tmp/return.json"
-
+    
+    # lets abort 
+    success="$( jq -r '.data | .success' < "$tmp/return.json" )"
+    if [[ "$success" != "true" ]]; then
+        echo "Upload error, aborting"; cat "$tmp/return.json"; echo; echo
+        exit 1
+    fi
 }
 
 # main
@@ -170,7 +179,7 @@ while [ $# -gt 0 ]; do
     # markdown medium and thumb
     echo
     echo "Markdown ${name%.*}"
-    echo "[![$name-$deletehash-th]($thumb)]($link)"
+    echo "[![$name-$deletehash-th]($thumb)]($link)" | tee -a "$cache/thumbs.txt"
     echo "[![$name-$deletehash-md]($medium)]($link)"
     echo
     echo "bbcode ${name%.*}"
