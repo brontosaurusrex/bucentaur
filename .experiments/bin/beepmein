@@ -230,7 +230,7 @@ if [ "$1" != "--reaction" ] ; then
         attime="now + $attime minutes"
         # lets add delay in seconds, since 'at' is only about minutes,
         # making this shortcut the only to seconds precise format.
-        delay="$(date +%_S)"
+        setdelay="1"
     fi
     
     # validate at time format, exit if fails
@@ -242,6 +242,9 @@ if [ "$1" != "--reaction" ] ; then
     fi
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason $alarm"
+    
+    # if custom input
+    (( setdelay )) && delay="$(date +%_S)"
     
     # set 'at'
     at "$attime" <<< "$(echo "sleep $delay; DISPLAY=${DISPLAY} beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1 || { superecho "at input error." ; beep "2"; exit 1; } # beep two times for error
