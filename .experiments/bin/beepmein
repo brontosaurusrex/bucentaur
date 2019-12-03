@@ -12,6 +12,9 @@
 config="$HOME/.cache/beepmein"
 mkdir -p "$config"
 
+# var
+delay="0"
+
 # softlinks to audio samples
 alarmSample="$config/alarm"     # longer sample
 reminderSample="$config/remind" # shorter sample
@@ -53,6 +56,10 @@ cat << EOF
         beepmein --reaction reminder_text
         beepmein --reaction --alarm alarm_text
         beepmein --test # test everything
+        
+    List jobs
+    
+        beepmein --list # or -l
 
     Kill all running playback/beeping:
 
@@ -169,6 +176,15 @@ if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ $# -eq 0 ]; then
     help; exit
 elif [ "$1" == "--test" ]; then
     test; exit
+fi
+
+# list all 'at' jobs, last non-empty line only
+if [ "$1" == "-l" ] || [ "$1" == "--list" ]; then
+    atq | sort -r | while read -r job rest ; do
+        echo -n "$job $rest | "
+        at -c "$job" | tac | grep -vm 1 '^[[:space:]]*$'
+    done
+    exit
 fi
 
 # --set-alarm (via softlink)
