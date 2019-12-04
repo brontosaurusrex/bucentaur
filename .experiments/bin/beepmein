@@ -40,7 +40,6 @@ cat << EOF
         beepmein 22:10           # reminder ('at' time format)
                 
         beepmein 3               # reminder (in 3 minutes, beepmein shortcut),
-                                 # also only input format that has precision in seconds.
                 
         beepmein 8:00 --alarm    # alarm (must be last parameter)
         
