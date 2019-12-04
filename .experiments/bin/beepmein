@@ -244,7 +244,7 @@ if [ "$1" != "--reaction" ] ; then
     echo "beepmein: $attime, reason: $reason $alarm"
     
     # if custom input
-    (( setdelay )) && delay="$(date +%_S)"
+    (( setdelay )) && delay="$(date +%_S.%N)"
     
     # set 'at'
     at "$attime" <<< "$(echo "sleep $delay; DISPLAY=${DISPLAY} beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1 || { superecho "at input error." ; beep "2"; exit 1; } # beep two times for error
