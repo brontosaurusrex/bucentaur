@@ -16,6 +16,29 @@ min="1"
 
 file=( "$@" ) # parameters to array
 
+# help
+help () { 
+cat << EOF
+
+    zebra *.png
+    
+    Shortkeys
+    j next
+    k previous
+    i identify (imagemagick)
+    m mediainfo
+    w set as wall head 0
+    e set as well head 1
+    h this help
+    q quit
+
+EOF
+}
+# help 
+if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+    help; exit
+fi    
+
 zebraview () {
     
     # code from https://blog.z3bra.org/2014/01/images-in-terminal.html
@@ -61,8 +84,9 @@ zebraview () {
     
 }
 
+# $1 = image, $2 = which head
 setwall () {
-    nitrogen --save --set-centered "$1" --set-color="#394A55" --head=0 || echo "nitrogen failed"
+    nitrogen --save --set-centered "$1" --set-color="#394A55" --head="$2" || echo "nitrogen failed"
 }
 
 dostuff () {
@@ -86,13 +110,19 @@ readOneKey () {
     elif  [[ "$key" == "k" ]]; then
         n=$(( n - 1 ))
     elif  [[ "$key" == "w" ]]; then
-        dostuff "$n" && setwall "${file[$m]}"
+        dostuff "$n" && setwall "${file[$m]}" 0 # head 0
+        return
+    elif  [[ "$key" == "e" ]]; then
+        dostuff "$n" && setwall "${file[$m]}" 1 # head 1
         return
     elif  [[ "$key" == "i" ]]; then
         identify "${file[$m]}"
         return
     elif  [[ "$key" == "m" ]]; then
         mediainfo "${file[$m]}"
+        return
+    elif  [[ "$key" == "h" ]]; then
+        help
         return
     elif  [[ "$key" == "q" ]]; then
         exit
