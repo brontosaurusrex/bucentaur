@@ -86,7 +86,7 @@ zebraview () {
 
 # $1 = image, $2 = which head
 setwall () {
-    nitrogen --save --set-centered "$1" --set-color="#394A55" --head="$2" || echo "nitrogen failed"
+    nitrogen --save --set-zoom-fill "$1" --set-color="#394A55" --head="$2" || echo "nitrogen failed"
 }
 
 dostuff () {
