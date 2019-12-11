@@ -28,7 +28,7 @@ cat << EOF
     i identify (imagemagick)
     m mediainfo
     w set as wall head 0
-    e set as well head 1
+    e set as wall head 1
     h this help
     q quit
 
