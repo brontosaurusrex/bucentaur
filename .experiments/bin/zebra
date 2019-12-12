@@ -8,22 +8,25 @@
 # needs: 'w3m-img' (w3mimgdisplay)
 # wants: 'nitrogen' as wallpaper setter, imagemagick 'identify' to display info, 'mediainfo' to display info.
 
-# if only 'zebra', search for jpg/png
-shopt -s extglob
-(( $# )) || set -- *.@(jpg|jpeg|png); [[ -e $1 ]] || { echo "No."; stty sane; exit 1; }
+# for zebraview
+FONTH=24 # 14 Size of one terminal row
+FONTW=8  # 8 Size of one terminal column
+# ^
+# Coresponds to measure of a fullblock char in pixels.
 
-n="1"
-max="$#"
-min="1"
-
-file=("$@") # parameters to array
-
-# help
+# help 1
 help () { 
 cat << EOF
 
-    zebra *.png
-    
+    zebra *.png      # all png (or anything else)
+    zebra            # defaults to all png & jpg
+EOF
+shortkeys
+}
+# help 2
+shortkeys () { 
+cat << EOF
+
     Shortkeys
     j next
     k previous
@@ -33,13 +36,22 @@ cat << EOF
     e set as wall head 1
     h this help
     q quit
-
 EOF
 }
 # help 
 if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
     help; exit
 fi    
+
+# if only 'zebra', search for jpg/png
+shopt -s extglob
+(( $# )) || set -- *.@(jpg|jpeg|png); [[ -e $1 ]] || { echo "No jpg/png pics found."; stty sane; exit 1; }
+
+n="1"
+max="$#"
+min="1"
+
+file=("$@") # parameters to array
 
 # actual render
 zebraview () {
@@ -53,10 +65,8 @@ zebraview () {
     
     FILENAME="$1"
     
-    FONTH=24 # 14 Size of one terminal row
-    FONTW=8  # 8 Size of one terminal column
-    # ^
-    # Measure a fullblock char in pixels
+    #FONTH=24 # 14 Size of one terminal row
+    #FONTW=8  # 8 Size of one terminal column
     
     COLUMNS="$(tput cols)"
     LINES="$(tput lines)"
@@ -127,7 +137,8 @@ dostuff () {
     echo -n "($n/$max) " ; echo "${file[$m]}"
 
 }
-dostuff # 1st time
+dostuff     # 1st time
+shortkeys   # 1st time
 
 # restart wbar
 restart() {
@@ -163,7 +174,7 @@ readOneKey () {
         mediainfo "${file[$m]}"
         return
     elif  [[ "$key" == "h" ]]; then
-        help
+        shortkeys
         return
     elif  [[ "$key" == "q" ]]; then
         exit
