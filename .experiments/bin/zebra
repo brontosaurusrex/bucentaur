@@ -8,13 +8,15 @@
 # needs: 'w3m-img' (w3mimgdisplay)
 # wants: 'nitrogen' as wallpaper setter, imagemagick 'identify' to display info, 'mediainfo' to display info.
 
+# if only 'zebra', search for jpg/png
+shopt -s extglob
+(( $# )) || set -- *.@(jpg|jpeg|png); [[ -e $1 ]] || { echo "No."; stty sane; exit 1; }
+
 n="1"
 max="$#"
 min="1"
 
-[[ "$#" -eq 0 ]] && exit 1
-
-file=( "$@" ) # parameters to array
+file=("$@") # parameters to array
 
 # help
 help () { 
@@ -39,6 +41,7 @@ if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
     help; exit
 fi    
 
+# actual render
 zebraview () {
     
     # code from https://blog.z3bra.org/2014/01/images-in-terminal.html
@@ -49,32 +52,37 @@ zebraview () {
     [[ -f "$W3MIMGDISPLAY" ]] || { echo "I need w3mimgdisplay (w3m-img), exiting." >&2; exit 1; }
     
     FILENAME="$1"
-    FONTH=14 # 14 Size of one terminal row
+    
+    FONTH=24 # 14 Size of one terminal row
     FONTW=8  # 8 Size of one terminal column
-    COLUMNS=`tput cols`
-    LINES=`tput lines`
+    # ^
+    # Measure a fullblock char in pixels
+    
+    COLUMNS="$(tput cols)"
+    LINES="$(tput lines)"
 
-    read width height <<< `echo -e "5;$FILENAME" | $W3MIMGDISPLAY`
+    read -r width height <<< "$(echo -e "5;$FILENAME" | $W3MIMGDISPLAY)"
     
     # defense by me
     if [[ $width == ?(-)+([0-9]) ]] && [[ $height == ?(-)+([0-9]) ]] ; then # is integer
     
-        max_width=$(($FONTW * $COLUMNS))
-        max_height=$(($FONTH * $(($LINES - 2)))) # substract one line for prompt
+        max_width=$((FONTW * COLUMNS))
+        max_height=$((FONTH * ((LINES - 2)))) # substract one line for prompt
 
-        if test $width -gt $max_width; then
-        height=$(($height * $max_width / $width))
-        width=$max_width
+        if test "$width" -gt "$max_width"; then
+            height=$((height * max_width / width))
+            width="$max_width"
         fi
-        if test $height -gt $max_height; then
-        width=$(($width * $max_height / $height))
-        height=$max_height
+        if test "$height" -gt "$max_height"; then
+            width=$((width * max_height / height))
+            height="$max_height"
         fi
 
         w3m_command="0;1;0;0;$width;$height;;;;;$FILENAME\n4;\n3;"
 
-        tput cup $(($height/$FONTH)) 0
-        echo -e $w3m_command|$W3MIMGDISPLAY
+        tput cup $((height/FONTH)) 0
+        
+        echo -e "$w3m_command"|$W3MIMGDISPLAY
       
     else
         echo
@@ -86,9 +94,30 @@ zebraview () {
 
 # $1 = image, $2 = which head
 setwall () {
-    nitrogen --save --set-zoom-fill "$1" --set-color="#394A55" --head="$2" || echo "nitrogen failed"
+    
+    # user select type
+    modes=(--set-centered --set-scaled --set-tiled --set-zoom --set-zoom-fill)
+    maxkey="${#modes[@]}"
+
+    for key in ${!modes[*]}
+    do
+        echo -n "${modes[$key]} ($(( key + 1 ))) "
+    done
+    echo
+    unset key
+
+    read -rsn1 key ; key="$(( key - 1 ))" 
+    if ! (( key >= 0 && key <= maxkey )); then
+        echo "nope"
+        return
+    fi
+
+    # action
+    nitrogen "$1" --set-color="#394A55" "${modes[$key]}" --head="$2" --save || echo "nitrogen failed"
+    restart wbar > /dev/null 2>&1
 }
 
+# mkay
 dostuff () {
     
     clear # screen
@@ -98,9 +127,21 @@ dostuff () {
     echo -n "($n/$max) " ; echo "${file[$m]}"
 
 }
-
 dostuff # 1st time
 
+# restart wbar
+restart() {
+if pgrep -x "$1" > /dev/null
+then
+    (echo "$1 running, restarting"
+    killall -w "$1"
+    "${1}" &) &
+else
+    echo "$1 wasn't running"
+fi
+}
+
+# user input
 readOneKey () {
     
     read -rsn1 key
@@ -128,13 +169,15 @@ readOneKey () {
         exit
     fi
     
-    # limit and dostuff
+    # limit 
     if (( "$n" > "$max" )); then
         n="$min"
     elif (( "$n" < "$min" )); then
         n="$max"
     fi
-        dostuff "$n"
+    
+    # dostuff
+    dostuff "$n"
     
 }
 
