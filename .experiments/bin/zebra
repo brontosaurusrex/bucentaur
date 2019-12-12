@@ -125,6 +125,7 @@ setwall () {
     # action
     nitrogen "$1" --set-color="#394A55" "${modes[$key]}" --head="$2" --save || echo "nitrogen failed"
     restart wbar > /dev/null 2>&1
+    dostuff # redraw
 }
 
 # mkay
