@@ -24,8 +24,8 @@ slidetime="5"
 help () { 
 cat << EOF
 
-    zebra *.png      # all png (or anything else)
-    zebra            # defaults to all png & jpg
+zebra *.png      # png (or anything else)
+zebra            # defaults to all png & jpg
 EOF
 shortkeys
 }
