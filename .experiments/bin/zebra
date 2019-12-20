@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # zebra (display png/jpg images in urxvt/xterm)
-# use j and k to move to previous / next, w to set wallpaper, i and m for info.
 
 # example: zebra *.png
 
