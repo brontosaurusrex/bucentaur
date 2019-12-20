@@ -21,15 +21,17 @@ FONTW=8  # 8 Size of one terminal column
 xoff="0"; yoff="0"; offset="100"
 
 # slideshow
-slidetime="5"
+slidetime="1"
 
 # help 1
 help () { 
 cat << EOF
 
-zebra *.png           # png (or anything else)
-zebra                 # defaults to all png & jpg
-zebra --quit some.png # show and quit
+zebra *.png                 # png (or anything else)
+zebra                       # defaults to all png & jpg
+zebra *.png*(om)            # zsh glob by date
+zebra *.(jpg|png)*(om)      # zsh glob by date
+zebra --quit some.png       # show and quit
 EOF
 shortkeys
 }
@@ -40,7 +42,7 @@ cat << EOF
 Shortkeys
 j next                      v set as wall head 0
 k previous                  b set as wall head 1
-i identify (imagemagick)    1 100%, 0 'fit to fill'
+i identify (imagemagick)    1 toggle 100% 
 m mediainfo                 w,a,s,d offset
 h this help                 r reset view
 q quit                      9 toggle slideshow
@@ -100,7 +102,7 @@ if [ "$1" == "--quit" ] || [ "$1" == "-q" ]; then
     clear # screen
     shift
     zebraview "$1"
-    zebraview "$1"
+    zebraview "$1" # alpha fix?
     exit
 fi    
 # if only 'zebra', search for jpg/png
@@ -201,10 +203,12 @@ readOneKey () {
     elif  [[ "$key" == "b" ]]; then
         dostuff "$n" && setwall "${file[$m]}" 1 # head 1
         return
-    elif  [[ "$key" == "1" ]]; then # 100 %
-        realpixels="1"
-    elif  [[ "$key" == "0" ]]; then # back to 'fit to fill'
-        realpixels=""
+    elif  [[ "$key" == "1" ]]; then # toggle 100 %
+        if ! (( realpixels )); then
+            realpixels="1"
+        else
+            yoff="0"; xoff="0"; realpixels=""
+        fi
     # wasd offsets
     elif  [[ "$key" == "d" ]]; then # xoff bigger
         xoff=$(( xoff + offset ))
