@@ -9,6 +9,9 @@
 # wants: 'nitrogen' as wallpaper setter, imagemagick 'identify' to display info, 'mediainfo' to display info.
 
 # for zebraview
+W3MIMGDISPLAY="/usr/lib/w3m/w3mimgdisplay"
+# defense by me
+[[ -f "$W3MIMGDISPLAY" ]] || { echo "I need w3mimgdisplay (w3m-img), exiting." >&2; exit 1; }
 FONTH=24 # 14 Size of one terminal row
 FONTW=8  # 8 Size of one terminal column
 # ^
@@ -24,8 +27,9 @@ slidetime="5"
 help () { 
 cat << EOF
 
-zebra *.png      # png (or anything else)
-zebra            # defaults to all png & jpg
+zebra *.png           # png (or anything else)
+zebra                 # defaults to all png & jpg
+zebra --quit some.png # show and quit
 EOF
 shortkeys
 }
@@ -47,28 +51,11 @@ if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
     help; exit
 fi    
 
-# if only 'zebra', search for jpg/png
-shopt -s extglob
-(( $# )) || set -- *.@(jpg|jpeg|png); [[ -e $1 ]] || { echo "No jpg/png pics found."; stty sane; exit 1; }
-
-n="1"
-max="$#"
-min="1"
-
-file=("$@") # parameters to array
-
-# actual render
+# $1 = file
 zebraview () {
     
     # code from https://blog.z3bra.org/2014/01/images-in-terminal.html
-    
-    W3MIMGDISPLAY="/usr/lib/w3m/w3mimgdisplay"
-    
-    # defense by me
-    [[ -f "$W3MIMGDISPLAY" ]] || { echo "I need w3mimgdisplay (w3m-img), exiting." >&2; exit 1; }
-    
     FILENAME="$1"
-    
     #FONTH=24 # 14 Size of one terminal row
     #FONTW=8  # 8 Size of one terminal column
     
@@ -107,6 +94,24 @@ zebraview () {
     fi
     
 }
+
+# show and quit
+if [ "$1" == "--quit" ] || [ "$1" == "-q" ]; then
+    clear # screen
+    shift
+    zebraview "$1"
+    zebraview "$1"
+    exit
+fi    
+# if only 'zebra', search for jpg/png
+shopt -s extglob
+(( $# )) || set -- *.@(jpg|jpeg|png); [[ -e $1 ]] || { echo "No jpg/png pics found."; stty sane; exit 1; }
+
+n="1"
+max="$#"
+min="1"
+
+file=("$@") # parameters to array
 
 # $1 = image, $2 = which head
 setwall () {
