@@ -13,7 +13,12 @@ FONTH=24 # 14 Size of one terminal row
 FONTW=8  # 8 Size of one terminal column
 # ^
 # Coresponds to measure of a fullblock char in pixels.
+
+# offsets
 xoff="0"; yoff="0"; offset="100"
+
+# slideshow
+slidetime="5"
 
 # help 1
 help () { 
@@ -34,7 +39,7 @@ k previous                  b set as wall head 1
 i identify (imagemagick)    1 100%, 0 'fit to fill'
 m mediainfo                 w,a,s,d offset
 h this help                 r reset view
-q quit
+q quit                      9 toggle slideshow
 EOF
 }
 # help 
@@ -129,7 +134,16 @@ setwall () {
     dostuff # redraw
 }
 
-# mkay
+# limit, cycle array
+limit () {
+    if (( "$n" > "$max" )); then
+        n="$min"
+    elif (( "$n" < "$min" )); then
+        n="$max"
+    fi
+}
+
+# dostuff
 dostuff () {
     
     clear # screen
@@ -141,6 +155,19 @@ dostuff () {
 }
 dostuff     # 1st time
 shortkeys   # 1st time
+
+# slideshow
+slideshow () {
+    
+    clear # screen
+    
+    m=$(( n - 1 )) # because it starts with 0
+    zebraview "${file[$m]}"
+    echo -n "($n/$max) " ; echo "${file[$m]} ▶"
+    n=$(( n + 1 ))
+    limit
+    
+}
 
 # restart wbar
 restart() {
@@ -174,17 +201,29 @@ readOneKey () {
     elif  [[ "$key" == "0" ]]; then # back to 'fit to fill'
         realpixels=""
     # wasd offsets
-    elif  [[ "$key" == "d" ]]; then #xoff bigger
+    elif  [[ "$key" == "d" ]]; then # xoff bigger
         xoff=$(( xoff + offset ))
-    elif  [[ "$key" == "a" ]]; then #xoff smaller
+    elif  [[ "$key" == "a" ]]; then # xoff smaller
         xoff=$(( xoff - offset )); (( xoff < 0 )) && xoff="0"
-    elif  [[ "$key" == "w" ]]; then #yoff bigger
+    elif  [[ "$key" == "w" ]]; then # yoff bigger
         yoff=$(( yoff + offset ))
-    elif  [[ "$key" == "s" ]]; then #yoff smaller
+    elif  [[ "$key" == "s" ]]; then # yoff smaller
         yoff=$(( yoff - offset )); (( yoff < 0 )) && yoff="0"
     # end offsets
-    elif  [[ "$key" == "r" ]]; then #reset view
+    elif  [[ "$key" == "r" ]]; then # reset view
         yoff="0"; xoff="0"; realpixels=""
+    elif  [[ "$key" == "9" ]]; then # slideshow
+        while true; do
+        
+            slideshow
+        
+            read -t "$slidetime" -N 1 input
+            if [[ $input = "9" ]]; then
+                n=$(( n - 1 )) # hmm
+                break
+            fi
+            
+        done
     elif  [[ "$key" == "i" ]]; then
         identify "${file[$m]}"
         return
@@ -198,13 +237,8 @@ readOneKey () {
         exit
     fi
     
-    # limit 
-    if (( "$n" > "$max" )); then
-        n="$min"
-    elif (( "$n" < "$min" )); then
-        n="$max"
-    fi
-    
+    limit # array
+        
     # dostuff
     dostuff "$n"
     
