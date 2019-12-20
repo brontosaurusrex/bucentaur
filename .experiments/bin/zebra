@@ -10,12 +10,17 @@
 
 # for zebraview
 W3MIMGDISPLAY="/usr/lib/w3m/w3mimgdisplay"
-# defense by me
 [[ -f "$W3MIMGDISPLAY" ]] || { echo "I need w3mimgdisplay (w3m-img), exiting." >&2; exit 1; }
-FONTH=24 # 14 Size of one terminal row
-FONTW=8  # 8 Size of one terminal column
-# ^
-# Coresponds to measure of a fullblock char in pixels.
+
+if [[ "$TERM" == "xterm" ]]; then
+    FONTH=14 # 14 Size of one terminal row
+    FONTW=8  # 8 Size of one terminal column
+else # assume custom urxvt
+    FONTH=24 # 14 Size of one terminal row
+    FONTW=8  # 8 Size of one terminal column
+    # ^
+    # Coresponds to measure of a fullblock char in pixels.
+fi
 
 # offsets
 xoff="0"; yoff="0"; offset="100"
