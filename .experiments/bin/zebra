@@ -236,15 +236,15 @@ readOneKey () {
         else
             realpixels=""
         fi
-    # wasd offsets
+    # wasd offsets, should only change in 100% mode
     elif  [[ "$key" == "d" ]]; then # xoff bigger
-        xoff=$(( xoff + offset ))
+        (( realpixels )) && xoff=$(( xoff + offset ))
     elif  [[ "$key" == "a" ]]; then # xoff smaller
-        xoff=$(( xoff - offset )); (( xoff < 0 )) && xoff="0"
+        (( realpixels )) && xoff=$(( xoff - offset )); (( xoff < 0 )) && xoff="0"
     elif  [[ "$key" == "w" ]]; then # yoff bigger
-        yoff=$(( yoff + offset ))
+        (( realpixels )) && yoff=$(( yoff + offset ))
     elif  [[ "$key" == "s" ]]; then # yoff smaller
-        yoff=$(( yoff - offset )); (( yoff < 0 )) && yoff="0"
+        (( realpixels )) && yoff=$(( yoff - offset )); (( yoff < 0 )) && yoff="0"
     # end offsets
     elif  [[ "$key" == "r" ]]; then # reset view
         yoff="0"; xoff="0"; realpixels=""
