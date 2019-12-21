@@ -50,7 +50,8 @@ i identify (imagemagick)    1 toggle 100%
 m mediainfo                 w,a,s,d offset
 h this help                 r reset view
 g goto                      9 toggle slideshow
-q quit                      z open in gimp
+z open in gimp              t set slide time
+                            q quit
 EOF
 }
 # help 
@@ -260,6 +261,8 @@ readOneKey () {
             fi
             
         done
+    elif  [[ "$key" == "t" ]]; then # slide time
+        read -rp "slidetime " slidetime
     elif  [[ "$key" == "i" ]]; then
         identify "${file[$m]}"
         return
