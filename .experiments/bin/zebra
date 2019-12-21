@@ -87,8 +87,15 @@ zebraview () {
                 height="$max_height"
             fi
         fi
-
-        w3m_command="0;1;0;0;$width;$height;$xoff;$yoff;;;$FILENAME\n4;\n3;"
+        
+        # ignore offset in 'fit to fill' mode
+        if (( realpixels )); then
+            xaoff="$xoff" ; yaoff="$yoff"
+        else
+            xaoff="0" ; yaoff="0"
+        fi
+        
+        w3m_command="0;1;0;0;$width;$height;$xaoff;$yaoff;;;$FILENAME\n4;\n3;"
 
         tput cup $((height/FONTH)) 0
         
@@ -155,6 +162,15 @@ limit () {
     fi
 }
 
+# echopixelstatus
+echopixels () {
+    if (( realpixels )); then 
+        echo " 100%"
+    else
+        echo 
+    fi
+}
+    
 # dostuff
 dostuff () {
     
@@ -162,7 +178,8 @@ dostuff () {
     
     m=$(( n - 1 )) # because it starts with 0
     zebraview "${file[$m]}"
-    echo -n "($n/$max) " ; echo "${file[$m]}"
+    echo -n "($n/$max) " ; echo -n "${file[$m]}"
+    echopixels
 
 }
 dostuff     # 1st time
@@ -175,7 +192,8 @@ slideshow () {
     
     m=$(( n - 1 )) # because it starts with 0
     zebraview "${file[$m]}"
-    echo -n "($n/$max) " ; echo "${file[$m]} ▶"
+    echo -n "($n/$max) " ; echo -n "${file[$m]} ▶"
+    echopixels
     n=$(( n + 1 ))
     limit
     
@@ -216,7 +234,7 @@ readOneKey () {
         if ! (( realpixels )); then
             realpixels="1"
         else
-            yoff="0"; xoff="0"; realpixels=""
+            realpixels=""
         fi
     # wasd offsets
     elif  [[ "$key" == "d" ]]; then # xoff bigger
