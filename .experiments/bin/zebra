@@ -25,7 +25,7 @@ fi
 xoff="0"; yoff="0"; offset="100"
 
 # slideshow
-slidetime="1"
+slidetime="5"
 
 # help 1
 help () { 
@@ -49,7 +49,8 @@ k previous                  b set as wall head 1
 i identify (imagemagick)    1 toggle 100% 
 m mediainfo                 w,a,s,d offset
 h this help                 r reset view
-q quit                      9 toggle slideshow
+g goto                      9 toggle slideshow
+q quit                      z open in gimp
 EOF
 }
 # help 
@@ -201,6 +202,10 @@ readOneKey () {
         n=$(( n + 1 ))
     elif  [[ "$key" == "k" ]]; then
         n=$(( n - 1 ))
+    elif  [[ "$key" == "g" ]]; then # goto
+        read -rp "goto " n
+    elif  [[ "$key" == "z" ]]; then # gimp
+        dostuff "$n" >/dev/null 2>&1 && gimp "${file[$m]}" >/dev/null 2>&1 &
     elif  [[ "$key" == "v" ]]; then
         dostuff "$n" && setwall "${file[$m]}" 0 # head 0
         return
