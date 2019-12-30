@@ -15,5 +15,6 @@ alias asciize='img2txt -W "$( tput cols )" -f utf8 -d random'
 alias space='gdmap -f . &'
 alias rndPlay='mpv --no-config --no-video --no-resume-playback --no-ytdl --shuffle *'
 alias dice='echo $(( RANDOM % 6 + 1 ))'
-alias cpu='ps -e -o pcpu,args --sort pcpu | tail'
+#alias cpu='ps -e -o pcpu,args --sort pcpu | tail'
+alias cpu='ps -eo fname --sort pcpu | uniq | tail | tac'
 alias space2u="rename 's/ /_/g'"
