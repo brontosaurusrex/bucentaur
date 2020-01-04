@@ -7,6 +7,8 @@
 xdotool search -name 'calculus' windowactivate && { echo "allready running" ; exit; }
 
 # not really using any resolution calculations from above
-urxvt -bl -g 31x12 -bg rgb:0000/1234/0000 -title calculus \
--icon SomePath/.config/bucentaur/images/wbar/papirus/calc.png \
--e pycalc 
+urxvt -bl -g 31x12 -title calculus \
+-icon /home/b/.config/stretchbang/images/wbar/papirus/calc.png \
+-e pycalc
+
+# pycalc
