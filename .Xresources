@@ -88,3 +88,13 @@ URxvt.iso14755_52:      false
 *color13:  #b08599
 *color14:  #8dada6
 *color15:  #fefbf4
+
+! dArk
+*background:  #1C2023
+URxvt.borderColor: #1C2023
+
+
+! XTERM
+! Use a nice truetype font and size by default... 
+xterm*faceName: FantasqueSansMono-Regular
+xterm*faceSize: 12
