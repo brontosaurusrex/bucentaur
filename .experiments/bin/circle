@@ -1,0 +1,54 @@
+#!/bin/bash
+
+clear
+
+# circle in term
+
+pi="3.14159265358979323844"
+
+calc () {
+    echo "scale=5; $*" | bc -l
+}
+
+awk_round () {
+    awk 'BEGIN{printf "%3."'$1'"f\n", "'$2'"}'
+}
+
+# https://www.mathopenref.com/coordcirclealgorithm.html
+
+theta="0"  # angle that will be increased each loop
+h="20"     # x coordinate of circle center
+k="40"     # y coordinate of circle center
+step="1"  # amount to add to theta each time (degrees)
+#step="$(calc "2 * $pi / 20")" #; step="$(awk_round 0 "$step")"
+r="20"     # radius
+
+echo "$step"
+#sleep 1
+
+until (( theta >= 360 ))
+do
+    x="$(calc "$h + $r * c($theta)")"; x="$(awk_round 0 "$x")"
+    y="$(calc "$k + $r * 2 * s($theta)")"; y="$(awk_round 0 "$y")"
+    
+    #draw a char to x,y
+    tput cup "$x" "$y" && echo "·"
+
+    theta=$(( theta + step ))
+done
+
+tput cup 45 0 && echo
+
+
+
+
+
+
+
+
+
+
+
+
+
+
