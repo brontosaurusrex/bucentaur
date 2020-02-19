@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# cover
+
+# make txt cover for a cd, 
+# usage: 'cover *.flac > tmp.txt'
+
+n="1"
+
+# Use folder name for cd title
+printf '(%s)\n' "${PWD##*/}"
+
+# main
+while [ $# -gt 0 ]; do
+
+    song="$1"
+
+    title="$(metaflac --show-tag=title "$song")" && title="${title#TITLE=}"
+    artist="$(metaflac --show-tag=artist "$song")" && artist="${artist#ARTIST=}"
+
+    if [ -z "$title" ]; then
+        title="$song"
+    fi
+    if [ -z "$artist" ]; then
+        artist="$song"
+    fi
+    
+    #echo "$n. $title - $artist"
+    printf '%02d. %s - %s\n' "$n" "$title" "$artist"
+
+   
+    (( n = n + 1 ))
+
+shift
+done
