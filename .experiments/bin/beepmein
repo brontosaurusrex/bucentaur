@@ -145,9 +145,6 @@ test () {
     echo "notify test"
     notify-send "notify test" || echo "failed"
     echo
-    echo "internal beep test used for reminders"
-    soxchord || echo "failed"
-    echo
     echo "failsafe internal beep test used for reminders"
     beep "3" || echo "failed"
     echo
