@@ -34,7 +34,14 @@ do
     #line=$(xmlescape "$line")
     #sed replacement https://github.com/koalaman/shellcheck/wiki/SC2001
     line="${line//_/__}"
-    echo "<item label=\"$line\" />"
+    echo "<item label=\"$line\">
+        <action name=\"Execute\">
+            <execute>
+                x-terminal-emulator -e bash -c \"echo '$line' | /usr/bin/xsel --clipboard\"
+            </execute>
+        </action>
+    </item>"
+    
 
 done
 

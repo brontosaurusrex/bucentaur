@@ -35,7 +35,7 @@ command -v inxi >/dev/null 2>&1 || { header; echo "<item label=\"Horrible error,
 inxido () {
     
     c="0"
-    array=( -S -M -C -G -A -N -D no-P -s -I ) # ignore option by adding 'no'
+    array=( -S -M -C -G -A -N no-D no-P -s -I ) # ignore option by adding 'no'
     for i in "${array[@]}"
     do
 
@@ -78,7 +78,13 @@ do
         if (( ${#line} > 2 )); then
             line=$(xmlescape "$line")
             line="${line//_/__}"
-            echo "<item label=\"$line\" />"
+            echo "<item label=\"$line\">
+                <action name=\"Execute\">
+                    <execute>
+                        x-terminal-emulator -e bash -c \"echo '$line' | /usr/bin/xsel --clipboard\"
+                    </execute>
+                </action>
+            </item>"
         fi
         
     done <"$file"
@@ -88,5 +94,3 @@ do
 
 done
 footer
-
-

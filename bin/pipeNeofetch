@@ -38,7 +38,13 @@ do
     #sed replacement https://github.com/koalaman/shellcheck/wiki/SC2001
     if (( ${#line} > 2 )); then
         line="${line//_/.}" # Dot . instead of __ should make this 'jgmenu ob' compatible
-        echo "<item label=\"$line\" />"
+        echo "<item label=\"$line\">
+            <action name=\"Execute\">
+                <execute>
+                    x-terminal-emulator -e bash -c \"echo '$line' | /usr/bin/xsel --clipboard\"
+                </execute>
+            </action>
+        </item>"
     fi
 
 done
@@ -48,3 +54,5 @@ done
 #echo "<item label=\"$parent\" />"
 
 footer
+
+# x-terminal-emulator -e sh -c \"echo '$line' | /usr/bin/xclip -selection clipboard; sleep 5\" # < this is not working without sleep, woot??
