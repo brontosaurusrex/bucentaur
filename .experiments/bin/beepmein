@@ -143,7 +143,7 @@ testAlarmPath () {
 # mpv or cvlc
 playa () {
     file="$1"
-    [[ -f $file ]] || { superecho "file not found" ; exit 1; }
+    [[ -f "$file" ]] || { superecho "file not found" ; exit 1; }
     mpv --no-resume-playback --no-video "$file" || \
     cvlc --no-video "$file" vlc://quit || { superecho "playback error" ; exit 1; }
 }
