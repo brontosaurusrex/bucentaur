@@ -186,7 +186,7 @@ fi
 # --set-alarm (via softlink)
 if [ "$1" == "--set-alarm" ]; then
     if [[ -z "$2" ]]; then
-        alarmpath="$(yad --title="Select alarm sample path" --file)"
+        alarmpath="$(yad --on-top --center --title="Select alarm sample path" --file)"
     else
         alarmpath=$(readlink -f "$2") # must be absolute path
     fi
@@ -198,7 +198,7 @@ fi
 # --set-remind (via softlink)
 if [ "$1" == "--set-remind" ]; then
     if [[ -z "$2" ]]; then
-        remindpath="$(yad --title="Select reminder sample path" --file)"
+        remindpath="$(yad --on-top --center --title="Select reminder sample path" --file)"
     else
         remindpath=$(readlink -f "$2") # must be absolute path
     fi
@@ -234,7 +234,7 @@ if [ "$1" != "--reaction" ] ; then
     
     # user input reason
     if [[ $noreason != true ]]; then
-        read -rp "reason? " reason || reason="$(yad --title="beepmein" --width=300 --separator="" --form --field="reason?")"
+        read -rp "reason? " reason || reason="$(yad --on-top --center --title="beepmein" --width=300 --separator="" --form --field="reason?")"
     fi
     [[ -z "$reason" ]] && reason="beep beep beep"
     echo "beepmein: $attime, reason: $reason $alarm"
