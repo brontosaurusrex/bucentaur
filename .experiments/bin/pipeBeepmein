@@ -35,19 +35,14 @@ timeToEvent() {
 }
 
 # action
-echo "＋ beepmein ~ 1, beepmein 1"
-echo "＋ beepmein ~ 5, beepmein 5" 
-echo "＋ beepmein ~ 15 (edit), gmrun '"beepmein 15"'"
-echo "＋ beepmein $future (edit), gmrun '"beepmein $future"'"
-echo "＋ beepmein $future --alarm (edit), gmrun '"beepmein $future --alarm"'"
-echo "^sep(Add morning alarm:)"
-echo "＋ beepmein --nr 7:00 --alarm, beepmein --nr 7:00 --alarm"
-echo "＋ beepmein --nr 7:30 --alarm, beepmein --nr 7:30 --alarm"
-echo "^sep(Test event:)"
-echo "▶  reminder, beepmein --reaction reminder"
-echo "▶  alarm, beepmein --reaction --alarm alarm"
-echo "◼  stop, killall beepmein"
-echo "Set sounds:,^checkout(Set sounds:)"
+echo "◼  stop all playback, killall beepmein"
+echo "＋ Reminder in 1 min., beepmein --nr 1"
+echo "＋ Reminder in 5 min., beepmein --nr 5" 
+echo "＋ Reminder in 15 min (edit), gmrun '"beepmein 15"'"
+echo "＋ Reminder @ $future (edit), gmrun '"beepmein $future"'"
+echo "＋ Alarm @ $future (edit), gmrun '"beepmein $future --alarm"'"
+echo "＋ Alarm @ morning (edit), gmrun '"beepmein 7:00 --alarm"'"
+echo "Sounds,^checkout(Set sounds:)"
 
 lines="$(atq | wc -l)"
 if (( lines > 0 )) ; then
@@ -74,5 +69,7 @@ if (( lines > 0 )) ; then
 fi
 
 echo "^tag(Set sounds:)"
-echo "alarm, beepmein --set-alarm"
-echo "reminder, beepmein --set-remind"
+echo "select alarm sample, beepmein --set-alarm"
+echo "▶  alarm, beepmein --reaction --alarm alarm"
+echo "select reminder sample, beepmein --set-remind"
+echo "▶  reminder, beepmein --reaction reminder"
