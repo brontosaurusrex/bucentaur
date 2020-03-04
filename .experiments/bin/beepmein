@@ -253,9 +253,11 @@ else
         notify-send "$1" &
         blink 1 0 >/dev/null 2>&1 &
         mpv --no-resume-playback --no-video "$alarmSample" || alarmfailsafe
+        wait
     else
         notify-send "$1" &
         blink 1 0 >/dev/null 2>&1 &
-        mpv --no-resume-playback --no-video "$reminderSample" || beep "3" 
+        mpv --no-resume-playback --no-video "$reminderSample" || beep "3"
+        wait
     fi
 fi
