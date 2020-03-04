@@ -37,7 +37,7 @@ do
     echo "<item label=\"$line\">
         <action name=\"Execute\">
             <execute>
-                x-terminal-emulator -e bash -c \"echo '$line' | /usr/bin/xsel --clipboard\"
+                bash -c \"echo '$line' | /usr/bin/xsel --clipboard\"
             </execute>
         </action>
     </item>"
