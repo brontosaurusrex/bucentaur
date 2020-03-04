@@ -140,6 +140,14 @@ testAlarmPath () {
     [[ -f "$alarmSample" ]] || { >&2 superecho "Note: alarmSample $alarmSample not found, Internal fail-safe beep will be used instead."; }
 }
 
+# mpv or cvlc
+playa () {
+    file="$1"
+    [[ -f $file ]] || { superecho "file not found" ; exit 1; }
+    mpv --no-resume-playback --no-video "$file" || \
+    cvlc --no-video "$file" vlc://quit || { superecho "playback error" ; exit 1; }
+}
+
 # test audio and notifications
 test () {
     echo "notify test"
@@ -149,7 +157,11 @@ test () {
     beep "3" || echo "failed"
     echo
     echo "mpv sample test used for alarms"
-    mpv --no-resume-playback --no-video --length=10 "$alarmSample" || echo "failed"
+    mpv --no-resume-playback --no-video --length=10 "$alarmSample" || echo "mpv failed"
+    echo
+    echo "vlc sample test used for alarms"
+    cvlc --no-video --run-time=10 "$alarmSample" vlc://quit || echo "cvlc failed"
+    echo
     echo "failsafe internal beep test used for alarms"
     alarmfailsafe || echo "failed"
     echo
@@ -252,12 +264,12 @@ else
         shift
         notify-send "$1" &
         blink 1 0 >/dev/null 2>&1 &
-        mpv --no-resume-playback --no-video "$alarmSample" || alarmfailsafe
+        playa "$alarmSample" || alarmfailsafe
         wait
     else
         notify-send "$1" &
         blink 1 0 >/dev/null 2>&1 &
-        mpv --no-resume-playback --no-video "$reminderSample" || beep "3"
+        playa "$reminderSample" || beep "3"
         wait
     fi
 fi
