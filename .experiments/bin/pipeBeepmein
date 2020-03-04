@@ -35,7 +35,7 @@ timeToEvent() {
 }
 
 # action
-echo "◼  stop all playback, killall beepmein"
+echo "◼  Stop all playback, killall beepmein"
 echo "＋ Reminder in 1 min., beepmein --nr 1"
 echo "＋ Reminder in 5 min., beepmein --nr 5" 
 echo "＋ Reminder in 15 min (edit), gmrun '"beepmein 15"'"
@@ -69,7 +69,7 @@ if (( lines > 0 )) ; then
 fi
 
 echo "^tag(Set sounds:)"
-echo "select alarm sample, beepmein --set-alarm"
-echo "▶  alarm, beepmein --reaction --alarm alarm"
-echo "select reminder sample, beepmein --set-remind"
-echo "▶  reminder, beepmein --reaction reminder"
+echo "Select alarm sample, beepmein --set-alarm"
+echo "▶  Alarm test, beepmein --reaction --alarm alarm"
+echo "Select reminder sample, beepmein --set-remind"
+echo "▶  Reminder test, beepmein --reaction reminder"
