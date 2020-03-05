@@ -5,7 +5,7 @@
 # A little wrapper around linux 'at' command, that will beep you at specific time, see --help.
 # On Debian systems make sure 'at' is installed with --no-install-recommends.
 
-# Copyright (C) 2019 brontosaurusrex
+# Copyright (C) 2019/2020 brontosaurusrex
 # License: GPLv3 or later.
 
 # prepare config dir
@@ -26,7 +26,7 @@ trap 'kill $(jobs -p) >/dev/null 2>&1' EXIT
 command -v at >/dev/null 2>&1 || { >&2 echo "I need at: sudo apt install --no-install-recommends at" ; exit 1; }
 command -v speaker-test >/dev/null 2>&1 || { >&2 echo "I need speaker-test from alsa-utils (for reminder sound)." ; exit 1; }
 command -v notify-send >/dev/null 2>&1 || { >&2 echo "I need notify-send." ; exit 1; }
-command -v mpv >/dev/null 2>&1 || { >&2 echo "I need mpv (for alarm sounds)." ; exit 1; }
+( command -v mpv >/dev/null 2>&1 || command -v cvlc >/dev/null 2>&1 ) || { >&2 echo "I need mpv or vlc (for alarm sounds)." ; exit 1; }
 command -v yad >/dev/null 2>&1 || { >&2 echo "I need yad." ; exit 1; }
 
 # help
@@ -140,12 +140,20 @@ testAlarmPath () {
     [[ -f "$alarmSample" ]] || { >&2 superecho "Note: alarmSample $alarmSample not found, Internal fail-safe beep will be used instead."; }
 }
 
-# mpv or cvlc
+# mpv or cvlc (by jr)
 playa () {
     file="$1"
-    [[ -f "$file" ]] || { superecho "file not found" ; exit 1; }
-    mpv --no-resume-playback --no-video "$file" || \
-    cvlc --no-video "$file" vlc://quit || { superecho "playback error" ; exit 1; }
+    [[ -f $file ]] || { superecho "file not found" ; return 1; }
+    if command -v mpv >/dev/null 2>&1
+    then
+        mpv --no-resume-playback --no-video "$file"
+    elif command -v cvlc >/dev/null 2>&1
+    then
+        cvlc --no-video "$file" vlc://quit
+    else
+        superecho "no player"
+        return 1
+    fi
 }
 
 # test audio and notifications
@@ -153,16 +161,16 @@ test () {
     echo "notify test"
     notify-send "notify test" || echo "failed"
     echo
-    echo "failsafe internal beep test used for reminders"
+    echo "fail-safe internal beep test used for reminders"
     beep "3" || echo "failed"
     echo
-    echo "mpv sample test used for alarms"
+    echo "mpv sample test used for alarms (either this or vlc must pass)"
     mpv --no-resume-playback --no-video --length=10 "$alarmSample" || echo "mpv failed"
     echo
     echo "vlc sample test used for alarms"
     cvlc --no-video --run-time=10 "$alarmSample" vlc://quit || echo "cvlc failed"
     echo
-    echo "failsafe internal beep test used for alarms"
+    echo "fail-safe internal beep test used for alarms"
     alarmfailsafe || echo "failed"
     echo
 }

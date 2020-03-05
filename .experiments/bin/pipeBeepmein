@@ -11,7 +11,9 @@ command -v gmrun >/dev/null 2>&1 || { >&2 echo "I need gmrun." ; exit 1; }
 
 # for display purposes
 future="$(date -d "+5 minutes" +%R)"
-echo "^sep(Time is now: $(date +%R))"
+
+echo "Beepmein Alarm Clock (Time is now: $(date +%R))"
+#echo "^sep(Time is now: $(date +%R))"
 
 # for timeToEvent()
 now="$(date +%s)"
@@ -35,14 +37,14 @@ timeToEvent() {
 }
 
 # action
-echo "◼  Stop all playback, killall beepmein"
 echo "＋ Reminder in 1 min., beepmein --nr 1"
 echo "＋ Reminder in 5 min., beepmein --nr 5" 
 echo "＋ Reminder in 15 min (edit), gmrun '"beepmein 15"'"
 echo "＋ Reminder @ $future (edit), gmrun '"beepmein $future"'"
 echo "＋ Alarm @ $future (edit), gmrun '"beepmein $future --alarm"'"
 echo "＋ Alarm @ morning (edit), gmrun '"beepmein 7:00 --alarm"'"
-echo "Sounds,^checkout(Set sounds:)"
+echo "◼  Stop all playback, killall beepmein"
+echo "Set sounds,^checkout(Set sounds:)"
 
 lines="$(atq | wc -l)"
 if (( lines > 0 )) ; then
@@ -69,7 +71,7 @@ if (( lines > 0 )) ; then
 fi
 
 echo "^tag(Set sounds:)"
-echo "Select alarm sample, beepmein --set-alarm"
+echo "Set Alarm sound, beepmein --set-alarm"
 echo "▶  Alarm test, beepmein --reaction --alarm alarm"
-echo "Select reminder sample, beepmein --set-remind"
+echo "Set Reminder sound, beepmein --set-remind"
 echo "▶  Reminder test, beepmein --reaction reminder"
