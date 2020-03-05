@@ -26,7 +26,7 @@ trap 'kill $(jobs -p) >/dev/null 2>&1' EXIT
 command -v at >/dev/null 2>&1 || { >&2 echo "I need at: sudo apt install --no-install-recommends at" ; exit 1; }
 command -v speaker-test >/dev/null 2>&1 || { >&2 echo "I need speaker-test from alsa-utils (for reminder sound)." ; exit 1; }
 command -v notify-send >/dev/null 2>&1 || { >&2 echo "I need notify-send." ; exit 1; }
-( command -v mpv >/dev/null 2>&1 || command -v cvlc >/dev/null 2>&1 ) || { >&2 echo "I need mpv or vlc (for alarm sounds)." ; exit 1; }
+#( command -v mpv >/dev/null 2>&1 || command -v cvlc >/dev/null 2>&1 ) || { >&2 echo "I need mpv or vlc (for alarm sounds)." ; exit 1; }
 command -v yad >/dev/null 2>&1 || { >&2 echo "I need yad." ; exit 1; }
 
 # help
