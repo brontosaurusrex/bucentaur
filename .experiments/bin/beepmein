@@ -32,17 +32,14 @@ command -v yad >/dev/null 2>&1 || { >&2 echo "I need yad." ; exit 1; }
 # help
 help () { 
 cat << EOF
+beepmein help
 
     Set reminder or alarm:
 
         beepmein now + 3 minutes # reminder ('at' time format)
-        
         beepmein 22:10           # reminder ('at' time format)
-                
         beepmein 3               # reminder (in 3 minutes, beepmein shortcut),
-                
         beepmein 8:00 --alarm    # alarm (must be last parameter)
-        
         beepmein --nr 5          # with no reason (must be first parameter)
            
     Set sounds: (playback depends on mpv)
@@ -271,7 +268,8 @@ else
     if [ "$1" == "--alarm" ]; then
         shift
         notify-send "$1" &
-        blink 1 0 >/dev/null 2>&1 &
+        #blink 1 0 >/dev/null 2>&1 &
+        blink 3 0.2 >/dev/null 2>&1 &
         playa "$alarmSample" || alarmfailsafe
         wait
     else

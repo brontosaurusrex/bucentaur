@@ -12,7 +12,9 @@ command -v gmrun >/dev/null 2>&1 || { >&2 echo "I need gmrun." ; exit 1; }
 # for display purposes
 future="$(date -d "+5 minutes" +%R)"
 
-echo "Beepmein Alarm Clock (Time is now: $(date +%R))"
+# start to display jgmenu
+echo "Beepmein Alarm Clock (Time is now: $(date +%R)),x-terminal-emulator -T beepmein -e bash -c 'beepmein -h; echo "Press any key to close"; read -srn1' "
+#echo "Beepmein Alarm Clock (Time is now: $(date +%R))"
 #echo "^sep(Time is now: $(date +%R))"
 
 # for timeToEvent()
