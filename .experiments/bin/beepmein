@@ -42,7 +42,7 @@ beepmein help
         beepmein 8:00 --alarm    # alarm (must be last parameter)
         beepmein --nr 5          # with no reason (must be first parameter)
            
-    Set sounds: (playback depends on mpv)
+    Set sounds: (playback depends on mpv or vlc)
 
         beepmein --set-alarm <path/to/alarm.sound>
         beepmein --set-remind <path/to/reminder.sound>
