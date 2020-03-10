@@ -263,7 +263,7 @@ if [[ "$1" != "--reaction" ]] ; then
     (( setdelay )) && delay="$(date +%_S.%N)"
     
     # set 'at'
-    at "$attime" <<< "$(echo "sleep $delay; DISPLAY=${DISPLAY} beepmein --reaction $alarm '${reason}'")" > /dev/null 2>&1 || { superecho "at input error." ; beep "2"; exit 1; } # beep two times for error
+    at "$attime" <<< "$(echo "sleep $delay; DISPLAY=${DISPLAY} beepmein --reaction $alarm '${reason}'")" &>/dev/null || { superecho "at input error." ; beep "2"; exit 1; } # beep two times for error
     
 else
     # reaction
@@ -271,13 +271,12 @@ else
     if [ "$1" == "--alarm" ]; then
         shift
         notify-send "$1" &
-        #blink 1 0 >/dev/null 2>&1 &
-        blink 3 0.2 >/dev/null 2>&1 &
+        blink 3 0.2 &>/dev/null &
         playa "$alarmSample" || alarmfailsafe
         wait
     else
         notify-send "$1" &
-        blink 1 0 >/dev/null 2>&1 &
+        blink 1 0 &>/dev/null &
         playa "$reminderSample" || beep "3"
         wait
     fi
