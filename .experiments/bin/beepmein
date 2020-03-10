@@ -208,7 +208,7 @@ if [[ "$1" == "--set-alarm" ]]; then
     if [[ -z "$2" ]]; then
         alarmpath="$(yad --on-top --center --title="Select alarm sample path" --file)"
     else
-        alarmpath="$(readlink -f "$2")" # must be absolute path
+        alarmpath="$(readlink -f -- "$2")" # must be absolute path
     fi
     [[ -f "$alarmpath" ]] || { superecho "No valid alarm path given." ; beep "2"; exit 1; }
     # f=force
@@ -220,7 +220,7 @@ if [[ "$1" == "--set-remind" ]]; then
     if [[ -z "$2" ]]; then
         remindpath="$(yad --on-top --center --title="Select reminder sample path" --file)"
     else
-        remindpath="$(readlink -f "$2")" # must be absolute path
+        remindpath="$(readlink -f -- "$2")" # must be absolute path
     fi
     [[ -f "$remindpath" ]] || { superecho "No valid reminder path given." ; beep "2"; exit 1; }
     # f=force
