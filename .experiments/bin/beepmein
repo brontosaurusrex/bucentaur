@@ -8,9 +8,19 @@
 # Copyright (C) 2019/2020 brontosaurusrex
 # License: GPLv3 or later.
 
+# superecho
+superecho () {
+    local msg="$1"
+    if [[ -t 0 ]] ; then
+        echo "$msg"
+    else
+        notify-send -t 3500 "$msg"
+    fi
+}
+
 # prepare config dir
 config="$HOME/.cache/beepmein"
-mkdir -p "$config"
+mkdir -p "$config" || superecho "$config not found, warning."
 
 # var
 delay="0"
@@ -67,21 +77,13 @@ beepmein help
 EOF
 }
 
-# superecho
-superecho () {
-    if [[ -t 0 ]] ; then
-        echo "$1"
-    else
-        notify-send -t 3500 "$1"
-    fi
-}
-
 # reminder sound, needs speaker-test (alsa-utils)
 beep () {
-    [[ -z "$1" ]] && loops="1" || loops="$1"
+    local loops="$1"
+    [[ -z "$loops" ]] && loops="1"
     for ((i=1; i<=loops; i++))
     do
-        timeout -s HUP 0.2 speaker-test -t sine -f 1000  > /dev/null 2>&1
+        timeout -s HUP 0.2 speaker-test -t sine -f 1000 &>/dev/null
         sleep 0.2
     done
 }
@@ -99,9 +101,9 @@ blink () {
     now="$(xrandr --verbose | grep -A 15 "$monitor" | grep -i brightness | cut -f2 -d ' ')"
     [[ -z "$now" ]] && { >&2 echo "Could not get current brightness error" ;  exit 1; }
     
-    
-    [[ -z "$1" ]] && loops="1" || loops="$1"
-    for ((c=1; c<=loops; c++))
+    local blinks="$1"
+    [[ -z "$blinks" ]] && blinks="1"
+    for ((c=1; c<=blinks; c++))
     do
         # blink up
         for i in $(seq "$now" 0.2 3.0); do     
@@ -114,7 +116,10 @@ blink () {
             xrandr --output "$monitor" --brightness "$i"
             sleep 0.01
         done
-    sleep "$2"
+
+    local pause="$2"
+    [[ -z "$pause" ]] && pause="0.1"
+    sleep "$pause"
     xrandr --output "$monitor" --brightness "$now"
     done
 }
