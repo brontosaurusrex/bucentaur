@@ -5,6 +5,16 @@
 # a script that will try those commands for every id# listed in "xinput list" under  Virtual core pointer section
 # https://forums.bunsenlabs.org/viewtopic.php?pid=10771#p10771
 
+# superecho
+superecho () {
+    local msg="$1"
+    if [[ -t 0 ]] ; then
+        echo "$msg"
+    else
+        notify-send -t 3500 "$msg"
+    fi
+}
+
 set -ex
 
 # 2 = middle, 3 = right
@@ -15,10 +25,20 @@ do
         case "$(xinput list-props "$id")" in
         *"libinput Scroll Method Enabled"*)
         
-            xinput set-prop "$id" "libinput Scroll Method Enabled" 0, 0, 1
-            # This is button
+            # toggle
+            if xinput -list-props 8 | grep "libinput Scroll Method Enabled" | grep "0, 0, 1"; then
+                # disable
+                xinput set-prop "$id" "libinput Scroll Method Enabled" 0, 0, 0
+                superecho "Mice scroll disabled"
+            else
+                # enable
+                xinput set-prop "$id" "libinput Scroll Method Enabled" 0, 0, 1
+                superecho "Mice scroll enabled"
+            fi
+            
+            # which button
             xinput set-prop "$id" "libinput Button Scrolling Button" "$button"
-            # This is middle mouse. Already 2 by default
+            
                 ;;
         esac
 done

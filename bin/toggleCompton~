@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# toggleCompton
+# usually patched to meta+f12
+
+pgrep -x compton
+
+    if [ $? -eq 0 ]; then
+        
+        echo "kill compton"
+        killall compton && notify-send -u low -t 1000 "compton killed"
+       
+    else
+        
+        echo "start compton"
+        (compton &) && notify-send -u low -t 1000 "compton started"
+       
+    fi
