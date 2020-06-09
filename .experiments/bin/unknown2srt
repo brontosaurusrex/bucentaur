@@ -2,8 +2,22 @@
 
 # unknown2srt
 
+# usage: unknown2srt file.txt > file.srt
+
 #set -x
 
+# required
+command -v dos2unix >/dev/null 2>&1 || { >&2 echo "I need dos2unix: sudo apt install dos2unix" ; exit 1; }
+
+# tmp dir
+tmp="/tmp/$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
+# dos2unix
+dos2unix -n "$1" "$tmp/file.txt"
+
+# var
 count="1"
 
 # bc calc
@@ -12,7 +26,7 @@ calc () {
 }
 
 # action
-cat "$1" | while read -r line; do
+cat "$tmp/file.txt" | while read -r line; do
 
     
     # if it looks like timecode line then 
@@ -57,24 +71,18 @@ exit
 
 # example unknown input format
 
-00:00:00:13  00:00:04:08
-*Lorem ipsum dolor sit amet, consectetur adipiscing elit, 
-sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.*
+#00:00:00:13  00:00:04:08
+#*Lorem ipsum dolor sit amet, consectetur adipiscing elit, 
+#sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.*
 
-00:00:44:06  00:00:47:03
-At vero eos et accusamus?
+#00:00:44:06  00:00:47:03
+#At vero eos et accusamus?
 
-00:00:47:07  00:00:52:24
-Itaque earum rerum hic,
-tenetur a sapiente delectus.
+#00:00:47:07  00:00:52:24
+#Itaque earum rerum hic,
+#tenetur a sapiente delectus.
 
-00:00:53:04  00:00:56:08
-Ex ea commodi consequatur? 
--Velit esse.
+#00:00:53:04  00:00:56:08
+#Ex ea commodi consequatur? 
+#-Velit esse.
 
-
-
-# notes
-
-# http://www.microhowto.info/howto/convert_the_line_endings_in_a_text_file_from_unix_to_dos_format.html
-#  sed -i 's/$/\r/' test.srt  
