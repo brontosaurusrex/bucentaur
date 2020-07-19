@@ -26,6 +26,12 @@ fi
 
 # action
 angle="$(echo "((60*$h)+$m)/2" | bc )"
+
+# normalize angle
+while ((angle > 360)) ; do
+	angle=$((angle-360))
+done
+
 echo "$angle"
 
 # draw
