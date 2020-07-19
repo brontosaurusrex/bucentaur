@@ -27,13 +27,17 @@ fi
 # action
 angle="$(echo "((60*$h)+$m)/2" | bc )"
 
+tmpangle="$angle"
+echo "$tmpangle"
+
 # normalize angle
 while ((angle > 360)) ; do
 	angle=$((angle-360))
 done
 
-echo "$angle"
-
+if ((angle != tmpangle)); then
+	echo "$angle < normalized"
+fi
 # draw
 #<svg width="200" height="200">
   #<g stroke="white" stroke-width="12" stroke-linecap="square">
