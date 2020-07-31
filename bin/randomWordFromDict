@@ -2,6 +2,8 @@
 
 # Should return random word from dict
 
+# https://unix.stackexchange.com/questions/213628/where-do-the-words-in-usr-share-dict-words-come-from
+
 # lets make it a function
 randomword()  {
     dict="/usr/share/dict/words"
