@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# areascale
+# usage: areascale *.png
+# will downscale images that have more than 1000000 pixels,
+# generates new file next to old one.
+
+command -v convert >/dev/null 2>&1 || { echo "I need im convert, exiting." >&2; exit 1; }
+
+# loop
+
+while [ $# -gt 0 ]; do
+
+    image=$(readlink -f "$1")      # absolute
+    baseext=${image##*/}           # file.ext
+    base="${baseext%.*}"           # file
+    dir=$(dirname "${image}") 
+
+# skip images with '@1M' string.
+
+resize () {
+
+    convert -resize @1000000\> "$image" "$dir/$base@1M.png"
+
+}
+
+if ! [[ -f "$dir/$base@1M.png" ]]; then
+
+    if ! [[ $base =~ "@1M" ]] ; then        
+        resize #&& echo "string @1M not found, resizing"
+        echo "resizing $baseext"
+    else 
+        echo "skiping string @1M $baseext"
+    fi
+
+else
+
+    echo "skiping, already there $baseext"
+
+fi
+
+shift
+done

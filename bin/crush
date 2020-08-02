@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# crush, a pngcrush loop
+# usage: crush *.png
+# note: for further reduction use pngquant *.png (reduces colors)
+
+command pngcrush >/dev/null 2>&1 || { echo "I need pngcrush, exiting." >&2; exit 1; }
+
+# loop
+
+while [ $# -gt 0 ]; do
+
+    image="$1"
+    ext="${image##*.}" # only process png extensions
+    [[ $ext = png ]] && pngcrush -ow "$image"
+
+shift
+done
