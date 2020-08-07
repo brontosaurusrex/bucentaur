@@ -2,17 +2,36 @@
 
 # crush, a pngcrush loop
 # usage: crush *.png
+
 # note: for further reduction use pngquant *.png (reduces colors)
 
 command pngcrush >/dev/null 2>&1 || { echo "I need pngcrush, exiting." >&2; exit 1; }
+
+# tmp dir
+tmp="/tmp/pngquant-$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
 
 # loop
 
 while [ $# -gt 0 ]; do
 
-    image="$1"
+    image="$1" ; baseext=${image##*/}  
     ext="${image##*.}" # only process png extensions
-    [[ $ext = png ]] && pngcrush -ow "$image"
+    
+    if [[ $ext = png ]] ; then
+
+        pngcrush "$image" "$tmp/$baseext"
+
+        # only take it back if not empty
+        if [[ -s "$tmp/$baseext" ]] ; then
+            mv "$tmp/$baseext" "$image"
+        else
+            echo "$tmp/$baseext is empty, skiping"
+        fi
+
+    fi 
+
 
 shift
 done
