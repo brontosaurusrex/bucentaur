@@ -54,7 +54,7 @@ xset s noblank &    # don't blank the video device
 middleMice &
 
 # In case of virtualbox 
-~/bin/changeres &
+changeres &
 
 # nm-applet (sudo rm /etc/xdg/autostart/nm-applet.desktop)
 nm-applet &
