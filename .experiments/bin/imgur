@@ -6,7 +6,7 @@
 
 # PNG files over X MB will be converted to JPEGs. https://0x0.st/sGED
 
-# Copyright (C) 2019 brontosaurusrex
+# Copyright (C) 2019, 2020 brontosaurusrex
 # License: GPLv3 or later.
 
 # help
@@ -19,6 +19,7 @@ cat << EOF
     Examples:
     
         imgur image.png
+        xargs -a list.txt imgur # for a list of images
     
         # Upload and generate medium and small thumb if image has alpha,
         # else just upload and blurb some embed code
@@ -28,6 +29,10 @@ cat << EOF
         # Temporarily download,
         # generate medium and small thumb if image has alpha,
         # else just blurb some embed code
+
+        imgur --cache # or -c
+
+        # cat cached log file
         
     Notes:
     
@@ -44,6 +49,7 @@ cat << EOF
     
 EOF
 }
+# help
 if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ $# -eq 0 ]; then
     help && exit
 fi
@@ -51,6 +57,14 @@ fi
 # store
 cache="$HOME/.cache/imgur"
 mkdir -p "$cache"
+
+# read cache
+if [ "$1" == "--cache" ] || [ "$1" == "-c" ] || [ $# -eq 0 ]; then
+    cat "$cache/thumbs.txt"
+    exit
+fi
+
+# add time stamp to cache file
 date +%H%M%^b%d%y >> "$cache/thumbs.txt"
 
 # Read id from config
@@ -175,9 +189,9 @@ while [ $# -gt 0 ]; do
     medium="${prefix}${medium}"
 
     # full link in clipboard
-    xclip -sel clip <<< "$(printf '%s' "$link")"
+    xclip -sel clip <<< "$(printf '%s' "$link")" 2> /dev/null
     
-    # markdown medium and thumb
+    # echo thumb and medium
     echo
     echo "Markdown ${name%.*}"
     echo "[![$name-$deletehash-th]($thumb)]($link)" | tee -a "$cache/thumbs.txt"
