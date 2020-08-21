@@ -9,6 +9,6 @@
 # hits
 url="https://www.youtube.com/watch?&list=PLEcM7o5U4BRCWrXxAOZBQ1_-hSPXd6CaH"ž
 # rock
-#url="https://www.youtube.com/watch?list=PL3485902CC4FB6C67"
+url="https://www.youtube.com/watch?list=PL3485902CC4FB6C67"
 
 mpv --shuffle=yes --ytdl-format="140" --term-playing-msg='${media-title}' --no-resume-playback "$url"
