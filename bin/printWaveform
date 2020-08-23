@@ -3,8 +3,9 @@
 # print audio ascii waveform to terminal (and play)
 
 # examples: 
-# print waveform and play:    printWaveform *.flac, 
+# print waveform and play:    printWaveform *.flac
 # just print waveform:        printWaveform np *.flac
+# shuffle                     printWaveform sh *.flac
 
 # needs: ffmpeg, caca-utils, imagemagick, mpv (for playback), tput, toilet
 # brontosaurusrex 2018
@@ -33,6 +34,23 @@ centertext(){
     string="$1" 
     printf "%*s\n" $(((${#string}+columns)/2)) "$string"
 }
+
+# shuffle input
+if [ "$1" == "sh" ]; then
+
+    shift    
+
+    a=("$@") t=(); 
+
+    while [[ ${#a[@]} -gt 0 ]]; do 
+
+        i=$((RANDOM % ${#a[@]})); 
+        t+=("${a[i]}"); 
+        unset 'a[i]'; 
+        a=("${a[@]}"); done; 
+        set -- "${t[@]}"; 
+        echo "$@"
+fi
 
 # main
 while [ $# -gt 0 ]; do
