@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# xml2srt
+
+# usage: xml2srt file.xml > file.srt
+
+#set -x
+
+# required
+command -v dos2unix >/dev/null 2>&1 || { >&2 echo "I need dos2unix: sudo apt install dos2unix" ; exit 1; }
+command -v xml2 >/dev/null 2>&1 || { >&2 echo "I need xml2" ; exit 1; }
+
+# tmp dir
+tmp="/tmp/$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
+# dos2unix
+dos2unix -n "$1" "$tmp/file.txt"
+
+# var
+count="1"
+
+# bc calc
+calc () {
+    echo "scale=5; $*" | bc -l
+}
+
+# frames to miliseconds
+
+frames2ms () {
+    
+        # time to var
+        time="$(echo "$line" | sed "s/.*=//g")"
+        
+        #echo "$time"
+        
+        # assume            hh:mm:ss:ff     25 fps timecode input format
+        # and convert to    hh:mm:ss,mmm    srt format
+        # 1 frame is 40 ms
+        
+        frames="${time:9:2}"       # just frames part
+        
+            #echo "frames $frames" # debug
+        
+        hmstime="${time:0:8}"     # hh:mm:ss part
+        
+        mstime="$(calc "$frames"*40)"   # frames to miliseconds
+        
+        printf -v mstime "%03d" "$mstime"   # pad
+        
+            #echo "ms $mstime" # debug
+}
+
+
+# action
+xml2 < "$tmp/file.txt" | while read -r line; do
+
+# xml2 < subs.xml | grep -E '@StartTimecode=|@EndTimecode=|@Title=' | sed "s/.*=//g"
+    
+    if [[ $line == *"@StartTimecode="* ]] ; then
+    
+        # check if the timecode line was already seen
+        if [[ "$line" != "$seenin" ]]; then
+    
+            if [[ "$count" != "1" ]]; then
+                echo # empty line
+            fi
+            echo "$count"
+            
+            frames2ms
+            echo -n "$hmstime,$mstime"
+
+            count="$(( count + 1 ))"
+            
+        fi
+        
+        # store line for later comparision
+        seenin="$line"
+        
+    elif [[ $line == *"@EndTimecode="* ]] ; then
+    
+        # check if the timecode line was already seen
+        if [[ "$line" != "$seenout" ]]; then
+    
+            frames2ms
+            echo " --> $hmstime,$mstime"
+        
+        fi
+        
+        # store line for later comparision
+        seenout="$line"
+        
+    elif echo "$line" | grep -E '@Title=' > /dev/null 2>&1 ; then
+    
+        echo "$line" | sed "s/.*=//g" | sed 's|ital;|<i>|g' | sed 's|/<i>|</i>|g'
+        # sed 's|/ital;|</i>|g' 
+        
+    fi
+    
+    
+    
+done
+
+
+
+
+exit
+
+# example xml input format
+
+  #<Data Font="Some font" ColorR="233" ColorG="233" ColorB="233" ShadowSize="0.35" HardShadow="1" StartTimecode="00:01:42:17" EndTimecode="00:01:45:12" Title="Lorem Ipsum." CharSize="0.330" PosY="0.915" HAlign="0" PosX="0.5" BkgEnable="0" />
+  #<Data Font="Some font" ColorR="233" ColorG="233" ColorB="233" ShadowSize="0.35" HardShadow="1" StartTimecode="00:01:45:17" EndTimecode="00:01:48:21" Title="Lorem Ipsum." CharSize="0.330" PosY="0.82" HAlign="0" PosX="0.5" BkgEnable="0" />
+  #<Data Font="Some font" ColorR="233" ColorG="233" ColorB="233" ShadowSize="0.35" HardShadow="1" StartTimecode="00:01:45:17" EndTimecode="00:01:48:21" Title="ital;This is i guess italic. /ital;" CharSize="0.330" PosY="0.915" HAlign="0" PosX="0.5" BkgEnable="0" />

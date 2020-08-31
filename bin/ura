@@ -15,7 +15,9 @@ date1=`date +%s`; while true; do
 
      # nice -n 19 figlet -f mono9 $(echo -ne "\r$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)";);
   
-     nice -n 19 figlet -f mono9 $(echo -ne "\r$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)";);
+     #nice -n 19 figlet -f mono9 $(echo -ne "\r$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)";);
+
+     nice -n 19 figlet -f 3x3 $(echo -ne "\r$(date -u --date @$((`date +%s` - $date1)) +%H:%M:%S)";);
 
 sleep 1
 
