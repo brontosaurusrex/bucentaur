@@ -58,7 +58,7 @@ xml2 < "$tmp/file.txt" | while read -r line; do
 
 # xml2 < subs.xml | grep -E '@StartTimecode=|@EndTimecode=|@Title=' | sed "s/.*=//g"
     
-    if echo "$line" | grep -E '@StartTimecode=' > /dev/null 2>&1 ; then
+    if [[ $line == *"@StartTimecode="* ]] ; then
     
         # check if the timecode line was already seen
         if [[ "$line" != "$seenin" ]]; then
@@ -78,7 +78,7 @@ xml2 < "$tmp/file.txt" | while read -r line; do
         # store line for later comparision
         seenin="$line"
         
-    elif echo "$line" | grep -E '@EndTimecode=' > /dev/null 2>&1 ; then
+    elif [[ $line == *"@EndTimecode="* ]] ; then
     
         # check if the timecode line was already seen
         if [[ "$line" != "$seenout" ]]; then
