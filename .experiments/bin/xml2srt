@@ -69,8 +69,8 @@ xml2 < "$tmp/file.txt" | while read -r line; do
             echo "$count"
             
             frames2ms
-            echo -n "$hmstime,$mstime"
-
+            echo -n "$hmstime,$mstime" && printedin="1" # make not that the in timecode was printed
+            
             count="$(( count + 1 ))"
             
         fi
@@ -78,13 +78,16 @@ xml2 < "$tmp/file.txt" | while read -r line; do
         # store line for later comparision
         seenin="$line"
         
+
     elif [[ $line == *"@EndTimecode="* ]] ; then
     
         # check if the timecode line was already seen
         if [[ "$line" != "$seenout" ]]; then
     
             frames2ms
-            echo " --> $hmstime,$mstime"
+            # only print out if in was already printed (this is a poor tc overlap workaround)
+            ((printedin)) && echo " --> $hmstime,$mstime" && printedin="0"
+            
         
         fi
         
