@@ -87,7 +87,6 @@ convert "$tmp/woot.png" "$tmp/woot.jpg"
 jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" # using 'R' as a placeholder for easier centering, will be replaced with space
 
 # center
-
 while read -r line ; do
     centertext "$line"
 done <"$tmp/tmp.txt"
