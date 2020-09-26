@@ -81,6 +81,7 @@ cat > "$tmp/analog.svg" << EOF
 </svg>
 EOF
 
+main () {
 # main
 firefox --screenshot --window-size=1000,1000 "$tmp/woot.png" "file:///$tmp/analog.svg" >/dev/null 2>&1 
 convert "$tmp/woot.png" -resize 1100\!x1000 "$tmp/woot.jpg" # fix final aspect ratio by resizing
@@ -90,3 +91,10 @@ jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" # using 'R' as a placeho
 while read -r line ; do
     centertext "$line"
 done <"$tmp/tmp.txt"
+}
+
+# loop 4ever
+while true; do # updating each full minute
+    main
+    sleep $((60 - $(date +%s) % 60)) 
+done
