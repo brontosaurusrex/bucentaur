@@ -13,6 +13,13 @@ command -v firefox >/dev/null 2>&1 || { echo "I need firefox, exiting." >&2; exi
 command -v jp2a >/dev/null 2>&1 || { echo "I need jp2a, exiting." >&2; exit 1; }
 command -v convert >/dev/null 2>&1 || { echo "I need im convert, exiting." >&2; exit 1; }
 
+# center text custom
+centertext(){
+    columns=$(tput cols)
+    string="$1"
+    printf "%*s\\n" $(((${#string}+columns)/2)) "${string//R/ }"
+}
+
 # tmp dir http://mywiki.wooledge.org/BashFAQ/062
 tmp="/tmp/$RANDOM-$$"
 trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
@@ -77,4 +84,10 @@ EOF
 # main
 firefox --screenshot --window-size=600,600 "$tmp/woot.png" "file:///$tmp/analog.svg" >/dev/null 2>&1 
 convert "$tmp/woot.png" "$tmp/woot.jpg"
-jp2a -f --chars=" .xX" "$tmp/woot.jpg" 
+jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" # using 'R' as a placeholder for easier centering, will be replaced with space
+
+# center
+
+while read line ; do
+    centertext "$line"
+done <"$tmp/tmp.txt"
