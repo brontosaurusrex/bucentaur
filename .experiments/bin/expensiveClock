@@ -82,8 +82,8 @@ cat > "$tmp/analog.svg" << EOF
 EOF
 
 # main
-firefox --screenshot --window-size=600,600 "$tmp/woot.png" "file:///$tmp/analog.svg" >/dev/null 2>&1 
-convert "$tmp/woot.png" "$tmp/woot.jpg"
+firefox --screenshot --window-size=1000,1000 "$tmp/woot.png" "file:///$tmp/analog.svg" >/dev/null 2>&1 
+convert "$tmp/woot.png" -resize 1100\!x1000 "$tmp/woot.jpg" # fix final aspect ratio by resizimg
 jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" # using 'R' as a placeholder for easier centering, will be replaced with space
 
 # center
