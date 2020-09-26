@@ -89,8 +89,10 @@ jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" # using 'R' as a placeho
 
 # center
 while read -r line ; do
-    centertext "$line"
+    centertext "$line" >> "$tmp/final.txt" # lets collect for refesh speed reasons
 done <"$tmp/tmp.txt"
+clear
+cat "$tmp/final.txt" && rm "$tmp/final.txt"
 }
 
 # loop 4ever
