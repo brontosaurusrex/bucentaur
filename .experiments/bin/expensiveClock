@@ -4,10 +4,6 @@
 
 # required: firefox, jp2a, imagemagick (just for png2jpg)
 
-# usage:
-# expensiveClock
-# watch -n 20 -t expensiveClock 
-
 # checks
 command -v firefox >/dev/null 2>&1 || { echo "I need firefox, exiting." >&2; exit 1; }
 command -v jp2a >/dev/null 2>&1 || { echo "I need jp2a, exiting." >&2; exit 1; }
