@@ -84,8 +84,8 @@ EOF
 main () {
 # main
 firefox --screenshot --window-size=1000,1000 "$tmp/woot.png" "file:///$tmp/analog.svg" >/dev/null 2>&1 
-convert "$tmp/woot.png" -resize 1100\!x1000 "$tmp/woot.jpg" # fix final aspect ratio by resizing
-jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" # using 'R' as a placeholder for easier centering, will be replaced with space
+convert "$tmp/woot.png" -resize 1100\!x1000 "$tmp/woot.jpg" || exit # fix final aspect ratio by resizing
+jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering, will be replaced with space
 
 # center
 printf "\\033[H" # cursor to home
