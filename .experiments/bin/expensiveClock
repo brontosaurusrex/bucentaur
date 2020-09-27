@@ -15,7 +15,7 @@ command -v convert >/dev/null 2>&1 || { echo "I need im convert, exiting." >&2; 
 
 # clear once
 clear
-printf "\\33[?25l" # hide cursor
+printf "\\33[?25l" # hide cursor https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
 
 # center text custom
 centertext(){
@@ -26,7 +26,7 @@ centertext(){
 
 # tmp dir http://mywiki.wooledge.org/BashFAQ/062
 tmp="/tmp/$RANDOM-$$"
-trap '[ -n "$tmp" ] && rm -fr "$tmp" ; printf "\\33[?25h"' EXIT
+trap '[ -n "$tmp" ] && rm -fr "$tmp" ; printf "\\33[?25h"' EXIT # unhide cursor on exit
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
 
 # scripted svg found on web
