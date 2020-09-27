@@ -5,7 +5,7 @@
 # required: firefox, jp2a, imagemagick (just for png2jpg)
 
 # checks
-command -v firefox >/dev/null 2>&1 || { echo "I need firefox, exiting." >&2; exit 1; }
+command -v chromium >/dev/null 2>&1 || { echo "I need chromium, exiting." >&2; exit 1; }
 command -v jp2a >/dev/null 2>&1 || { echo "I need jp2a, exiting." >&2; exit 1; }
 command -v convert >/dev/null 2>&1 || { echo "I need im convert, exiting." >&2; exit 1; }
 
@@ -84,7 +84,7 @@ EOF
 main () {
 # main
 #firefox --screenshot --window-size=200,200 "$tmp/woot.png" "file:///$tmp/analog.svg" 
-chromium --headless --screenshot="$tmp/woot.png" "file:///$tmp/analog.svg"
+chromium --no-sandbox --headless --hide-scrollbars --window-size=1000,1000 --disable-gpu --screenshot="$tmp/woot.png" "file:///$tmp/analog.svg" >/dev/null 2>&1 || exit
 convert "$tmp/woot.png" -resize 1100\!x1000 "$tmp/woot.jpg" || exit # fix final aspect ratio by resizing
 jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering, will be replaced with space
 
