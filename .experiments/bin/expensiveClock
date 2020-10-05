@@ -87,12 +87,12 @@ EOF
 
 #debug
 cd "$tmp" || exit
-python3 -m http.server &
+python3 -m http.server >/dev/null 2>&1 &
 
 main () {
 # main
 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "http://localhost:8000/analog.svg" >/dev/null 2>&1 
-convert "$tmp/woot.png" -resize 1100\!x1000 "$tmp/woot.jpg" || exit # fix final aspect ratio by resizing
+convert "$tmp/woot.png" -resize 1500\!x1000 "$tmp/woot.jpg" || exit # fix final aspect ratio by resizing
 jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering, will be replaced with space
 
 # center
