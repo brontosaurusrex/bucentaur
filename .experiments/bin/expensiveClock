@@ -5,9 +5,13 @@
 # required: firefox, jp2a, imagemagick (just for png2jpg)
 
 # checks
-command -v firefox >/dev/null 2>&1 || { echo "I need firefox, exiting." >&2; exit 1; }
+#command -v firefox >/dev/null 2>&1 || { echo "I need firefox, exiting." >&2; exit 1; }
 command -v jp2a >/dev/null 2>&1 || { echo "I need jp2a, exiting." >&2; exit 1; }
 command -v convert >/dev/null 2>&1 || { echo "I need im convert, exiting." >&2; exit 1; }
+
+# modern firefox whereabouts
+app=($HOME/apps/firefox/firefox)
+command -v "${app[@]}" >/dev/null 2>&1 || { echo "I need modern firefox, exiting." >&2; exit 1; }
 
 # clear once
 clear
@@ -22,7 +26,7 @@ centertext(){
 
 # tmp dir http://mywiki.wooledge.org/BashFAQ/062
 tmp="/tmp/$RANDOM-$$"
-trap '[ -n "$tmp" ] && rm -fr "$tmp" ; printf "\\33[?25h"' EXIT # unhide cursor on exit
+trap '[ -n "$tmp" ] && rm -fr "$tmp"; printf "\\33[?25h"; kill %%' EXIT # unhide cursor on exit
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
 
 # scripted svg found on web
@@ -81,9 +85,13 @@ cat > "$tmp/analog.svg" << EOF
 </svg>
 EOF
 
+#debug
+cd "$tmp" || exit
+python3 -m http.server &
+
 main () {
 # main
-firefox --screenshot --window-size=1000,1000 "$tmp/woot.png" "file:///$tmp/analog.svg" >/dev/null 2>&1 
+"${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "http://localhost:8000/analog.svg" >/dev/null 2>&1 
 convert "$tmp/woot.png" -resize 1100\!x1000 "$tmp/woot.jpg" || exit # fix final aspect ratio by resizing
 jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering, will be replaced with space
 
