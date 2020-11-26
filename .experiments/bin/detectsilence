@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# check if ffmpeg seems to be capable of tasks ahead
+ffmpeg -filters 2>/dev/null | grep -q 'silencedetect' || { echo "your ffmpeg can't silencedetect" ; exit; }
+
+# var
+limit="-90dB"
+searchdur="5"
+silencedur="0.1"
+
+# loop
+while [ $# -gt 0 ]; do
+
+    file="$1" && echo "---" && echo "$file"
+
+    # from start
+    ffmpeg -to "${searchdur}" -i "${file}" -af silencedetect=n="${limit}":d="${silencedur}" -f null 2>&1 - | grep silencedetect || echo "no silence at start"
+    echo
+    # from end
+    ffmpeg -sseof -"${searchdur}" -i "${file}" -af silencedetect=n="${limit}":d="${silencedur}" -f null 2>&1 - | grep silencedetect || echo "no silence at the end"
+    
+    shift
+done
