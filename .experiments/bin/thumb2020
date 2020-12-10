@@ -9,15 +9,17 @@
 # needed:
 # ffmpeg, ffprobe, mediainfo, imagemagick (convert & mogrify), pngquant, inkscape (for svg)
 # for pdf read https://stackoverflow.com/questions/52998331/imagemagick-security-policy-pdf-blocking-conversion first.
+# /etc/ImageMagick-6/policy.xml
 
-# brex 2018, 2020
+# brex 2020
 
 # config
-size="150"      # thumb size
-index="true"    # generate index.htm or not (set to "" for false)
-corners=""      # rounded corners or not (set to "" for false)
-hidden="true"   # hidden thumb or not (set to "" for false)
-fps="1"         # decreasing this could get you more interesting video thumbs (1/100), increasing might reduce ffmpeg errors (1).
+size="150"              # thumb size
+index="true"            # generate index.htm or not (set to "" for false)
+indexname="thumbs.htm"  # name of the generated html
+corners=""              # rounded corners or not (set to "" for false)
+hidden="true"           # hidden thumb or not (set to "" for false)
+fps="1"                 # decreasing this could get you more interesting video thumbs (1/100), increasing might reduce ffmpeg errors (1).
 
 # no arguments
 if [ $# -eq 0 ]; then
@@ -156,14 +158,14 @@ while [ $# -gt 0 ]; do
         convert "$1"[0]  "$tmpdir/${base}.png"
 
         else
-            echo "$basename is not a movie or image file, skipping"
+            echo "skipping"
             shift
             continue # skip the loop
         fi
     fi
    
     # thumb
-    mogrify -background gray -define png:size=240x240 -thumbnail ${size}x${size}^ -gravity center -extent ${size}x${size} -auto-orient "$tmpdir/${base}.png"
+    mogrify -background gray -define png:size=240x240 -thumbnail ${size}x${size}^ -gravity north -extent ${size}x${size} -auto-orient "$tmpdir/${base}.png"
     
     if [ "$corners" ]; then
         # round corners http://www.imagemagick.org/Usage/thumbnails/
@@ -190,9 +192,9 @@ while [ $# -gt 0 ]; do
         htmlname="${base}_thumb.png"
     fi
     
-    # index.html
+    # thumbs.htm
     if [ "$index" ]; then
-        echo "<a href=\"${basename}\"><img src=\"$htmlname\"></a>" >> "$dir/index.htm"
+        echo "<a href=\"${basename}\"><img src=\"$htmlname\"></a>" >> "$dir/$indexname"
     fi
 
     shift
@@ -200,10 +202,10 @@ while [ $# -gt 0 ]; do
 done
 
 if [ "$index" ]; then
-# Fix last known "$dir/index.htm" (assumes that all files belong to the same directory, which may not be true)
+# Fix last known "$dir/$index" (assumes that all files belong to the same directory, which may not be true)
 
 # header
-cat > "$tmpdir/index.htm" << EOFMENU
+cat > "$tmpdir/$indexname" << EOFMENU
 <!doctype html>
 <html><head><meta charset="utf-8">
 <title></title>
@@ -220,14 +222,14 @@ body {
 <body>
 EOFMENU
 
-cat "$dir/index.htm" >> "$tmpdir/index.htm"
+cat "$dir/$indexname" >> "$tmpdir/$indexname"
 
 # footer
-cat >> "$tmpdir/index.htm" << EOFMENU
+cat >> "$tmpdir/$indexname" << EOFMENU
 </body></html>
 EOFMENU
 
 # move back
-mv "$tmpdir/index.htm" "$dir/index.htm"
+mv "$tmpdir/$indexname" "$dir/$indexname"
 
 fi
