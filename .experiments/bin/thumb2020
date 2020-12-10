@@ -163,7 +163,7 @@ while [ $# -gt 0 ]; do
     fi
    
     # thumb
-    mogrify -background gray -define png:size=240x240 -thumbnail ${size}x${size}^ -gravity center -extent ${size}x${size} -auto-orient "$tmpdir/${base}.png"
+    mogrify -background gray -define png:size=240x240 -thumbnail ${size}x${size}^ -gravity north -extent ${size}x${size} -auto-orient "$tmpdir/${base}.png"
     
     if [ "$corners" ]; then
         # round corners http://www.imagemagick.org/Usage/thumbnails/
@@ -228,6 +228,6 @@ cat >> "$tmpdir/index.htm" << EOFMENU
 EOFMENU
 
 # move back
-mv "$tmpdir/index.htm" "$dir/index.htm"
+mv "$tmpdir/index.htm" "$dir/thumbs.htm"
 
 fi
