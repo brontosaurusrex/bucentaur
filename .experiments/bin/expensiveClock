@@ -10,7 +10,7 @@ command -v jp2a >/dev/null 2>&1 || { echo "I need jp2a, exiting." >&2; exit 1; }
 command -v convert >/dev/null 2>&1 || { echo "I need im convert, exiting." >&2; exit 1; }
 
 # modern firefox whereabouts
-# note: dev edition seems to work in wsl1 https://www.mozilla.org/sl/firefox/all/#product-desktop-developer
+# note: dev edition seems to work in wsl1 https://www.mozilla.org/en-US/firefox/all/#product-desktop-developer
 app=($HOME/apps/firefox/firefox)
 command -v "${app[@]}" >/dev/null 2>&1 || { echo "I need modern firefox, exiting." >&2; exit 1; }
 
