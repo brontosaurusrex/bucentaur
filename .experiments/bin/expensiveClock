@@ -10,8 +10,8 @@ command -v jp2a >/dev/null 2>&1 || { echo "I need jp2a, exiting." >&2; exit 1; }
 command -v convert >/dev/null 2>&1 || { echo "I need im convert, exiting." >&2; exit 1; }
 
 # modern firefox whereabouts
-#app=($HOME/apps/firefox/firefox)
-app=(firefox)
+# note: dev edition seems to work in wsl1 https://www.mozilla.org/sl/firefox/all/#product-desktop-developer
+app=($HOME/apps/firefox/firefox)
 command -v "${app[@]}" >/dev/null 2>&1 || { echo "I need modern firefox, exiting." >&2; exit 1; }
 
 # clear once
@@ -92,7 +92,7 @@ python3 -m http.server >/dev/null 2>&1 &
 
 main () {
 # main
-"${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "http://localhost:8000/analog.svg" >/dev/null 2>&1 
+"${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "http://127.0.0.1:8000/analog.svg" >/dev/null 2>&1 
 convert "$tmp/woot.png" -resize 1100\!x1000 "$tmp/woot.jpg" || exit # fix final aspect ratio by resizing
 jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering, will be replaced with space
 
