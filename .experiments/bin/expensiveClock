@@ -27,7 +27,7 @@ centertext(){
 
 # tmp dir http://mywiki.wooledge.org/BashFAQ/062
 tmp="/tmp/$RANDOM-$$"
-trap '[ -n "$tmp" ] && rm -fr "$tmp"; printf "\\33[?25h"; kill %%' EXIT # unhide cursor on exit
+trap '[ -n "$tmp" ] && rm -fr "$tmp"; printf "\\33[?25h"; kill %% >/dev/null 2>&1' EXIT # unhide cursor on exit
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
 
 # scripted svg found on web
@@ -86,17 +86,18 @@ cat > "$tmp/analog.svg" << EOF
 </svg>
 EOF
 
-# serv (will exit on script exit)
-cd "$tmp" || exit
+# where it happens
+#cd "$tmp" || exit
 
+# serv (will exit on script exit)
 #python3 -m http.server >/dev/null 2>&1 &
 
 # main
 main () {
-#timeout 25 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "http://127.0.0.1:8000/analog.svg" >/dev/null 2>&1
-timeout 25 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "file:///${tmp}/analog.svg" >/dev/null 2>&1 
-convert "$tmp/woot.png" -resize 1150\!x1000 "$tmp/woot.jpg" || exit # fix final aspect ratio by resizing
-jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering, will be replaced with space
+timeout -v 25 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "file:///${tmp}/analog.svg" >/dev/null 2>&1 
+
+# just pipe
+convert "$tmp/woot.png" -resize 1150\!x1000 jpg:- | jp2a -f --chars="R.xX" - > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering
 
 # center
 printf "\\033[H" # cursor to home
