@@ -88,11 +88,13 @@ EOF
 
 # serv (will exit on script exit)
 cd "$tmp" || exit
-python3 -m http.server >/dev/null 2>&1 &
+
+#python3 -m http.server >/dev/null 2>&1 &
 
 # main
 main () {
-timeout 25 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "http://127.0.0.1:8000/analog.svg" >/dev/null 2>&1 
+#timeout 25 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "http://127.0.0.1:8000/analog.svg" >/dev/null 2>&1
+timeout 25 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "file:///${tmp}/analog.svg" >/dev/null 2>&1 
 convert "$tmp/woot.png" -resize 1150\!x1000 "$tmp/woot.jpg" || exit # fix final aspect ratio by resizing
 jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering, will be replaced with space
 
