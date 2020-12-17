@@ -2,17 +2,17 @@
 
 # expensiveClock
 
-# required: firefox, jp2a, imagemagick (just for png2jpg)
+# required: firefox, jp2a, imagemagick (just for png2jpg), timeout (coreutils)
 
 # checks
-#command -v firefox >/dev/null 2>&1 || { echo "I need firefox, exiting." >&2; exit 1; }
 command -v jp2a >/dev/null 2>&1 || { echo "I need jp2a, exiting." >&2; exit 1; }
-command -v convert >/dev/null 2>&1 || { echo "I need im convert, exiting." >&2; exit 1; }
+command -v convert >/dev/null 2>&1 || { echo "I need imagemagick convert, exiting." >&2; exit 1; }
+command -v timeout >/dev/null 2>&1 || { echo "I need timeout (coreutils), exiting." >&2; exit 1; }
 
 # modern firefox whereabouts
 # note: dev edition seems to work in wsl1 https://www.mozilla.org/en-US/firefox/all/#product-desktop-developer
-app=($HOME/apps/firefox/firefox)
-command -v "${app[@]}" >/dev/null 2>&1 || { echo "I need modern firefox, exiting." >&2; exit 1; }
+app=("$HOME/apps/firefox/firefox")
+command -v "${app[@]}" >/dev/null 2>&1 || { echo "I need some sort of firefox, exiting." >&2; exit 1; }
 
 # clear once
 clear
@@ -86,14 +86,14 @@ cat > "$tmp/analog.svg" << EOF
 </svg>
 EOF
 
-#debug
+# serv (will exit on script exit)
 cd "$tmp" || exit
 python3 -m http.server >/dev/null 2>&1 &
 
-main () {
 # main
-"${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "http://127.0.0.1:8000/analog.svg" >/dev/null 2>&1 
-convert "$tmp/woot.png" -resize 1100\!x1000 "$tmp/woot.jpg" || exit # fix final aspect ratio by resizing
+main () {
+timeout 25 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "http://127.0.0.1:8000/analog.svg" >/dev/null 2>&1 
+convert "$tmp/woot.png" -resize 1150\!x1000 "$tmp/woot.jpg" || exit # fix final aspect ratio by resizing
 jp2a -f --chars="R.xX" "$tmp/woot.jpg" > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering, will be replaced with space
 
 # center
