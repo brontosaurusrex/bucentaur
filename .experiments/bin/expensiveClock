@@ -170,7 +170,7 @@ timeout -v 25 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "
 if [[ $clock == "analog" ]]; then
         convert "$tmp/woot.png" -resize 1140\!x1000 jpg:- | jp2a -f --chars="R.xX" - > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering
 elif [[ $clock == "digital" ]]; then
-        convert "$tmp/woot.png" -trim +repage jpg:- | jp2a -f --chars="R.xX" - > "$tmp/tmp.txt" || exit
+        convert "$tmp/woot.png" -trim -bordercolor black -border 55 +repage jpg:- | jp2a -f --chars="R.xX" - > "$tmp/tmp.txt" || exit
         clear
 fi
 # center
