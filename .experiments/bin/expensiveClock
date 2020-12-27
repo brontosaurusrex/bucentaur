@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# expensiveClock
+# expensiveClock -d
 
 # required: firefox, jp2a, imagemagick (just for png2jpg), timeout (coreutils)
 
@@ -9,9 +9,16 @@ command -v jp2a >/dev/null 2>&1 || { echo "I need jp2a, exiting." >&2; exit 1; }
 command -v convert >/dev/null 2>&1 || { echo "I need imagemagick convert, exiting." >&2; exit 1; }
 command -v timeout >/dev/null 2>&1 || { echo "I need timeout (coreutils), exiting." >&2; exit 1; }
 
+# analog or digital
+app=("$HOME/apps/firefox/firefox")
+if [[ "$1" == "-d" ]]; then
+        clock="digital"
+else
+        clock="analog"
+fi
+
 # modern firefox whereabouts
 # note: dev edition seems to work in wsl1 https://www.mozilla.org/en-US/firefox/all/#product-desktop-developer
-app=("$HOME/apps/firefox/firefox")
 command -v "${app[@]}" >/dev/null 2>&1 || { echo "I need some sort of firefox, exiting." >&2; exit 1; }
 
 # clear once
@@ -31,7 +38,9 @@ trap '[ -n "$tmp" ] && rm -fr "$tmp"; printf "\\33[?25h"; kill %% >/dev/null 2>&
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
 
 # scripted svg found on web
-cat > "$tmp/analog.svg" << EOF
+if [[ $clock == "analog" ]]; then
+name="$tmp/analog.svg"
+cat > "$name" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <!--
@@ -84,21 +93,86 @@ cat > "$tmp/analog.svg" << EOF
         ]]>
         </script>
 </svg>
+
 EOF
 
-# where it happens
-#cd "$tmp" || exit
+elif [[ $clock == "digital" ]]; then
+name="$tmp/digital.htm"
+cat > "$name" << EOF
 
-# serv (will exit on script exit)
-#python3 -m http.server >/dev/null 2>&1 &
+<!--
+  - Full screen clock (24-hour)
+  - Copyright (c) 2020 Project Nayuki
+  - 
+  - https://www.nayuki.io/page/full-screen-clock-javascript
+  -->
+<!DOCTYPE html>
+<html style="height:100%; margin:0; padding:0">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>Clock</title>
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond&display=swap" rel="stylesheet">
+        <style type="text/css">
+
+			/* Customizable font and colors */
+			html {
+				background: #000000;
+                font-family: 'Cormorant Garamond', serif;
+				/* font-weight: bold; */
+				color: #FFFFFF;
+			}
+		</style>
+	</head>
+	
+	<body style="display:flex; height:100%; margin:0; padding:0; justify-content:center; align-items:top">
+		<span id="clocktext" style="font-kerning:none"></span>
+		
+		<script>
+			"use strict";
+			
+			var textElem = document.getElementById("clocktext");
+			var targetWidth = 0.9;  // Proportion of full screen width
+			var curFontSize = 20;  // Do not change
+			
+			function updateClock() {
+				var d = new Date();
+				var s = "";
+				s += (10 > d.getHours  () ? "0" : "") + d.getHours  () + "";
+				s += (10 > d.getMinutes() ? "0" : "") + d.getMinutes();
+				 textElem.textContent = s;
+                //listElement.innerHTML = s;
+				setTimeout(updateClock, 60000 - d.getTime() % 60000 + 100);
+			}
+			
+			function updateTextSize() {
+				for (var i = 0; 3 > i; i++) {  // Iterate for better better convergence
+					curFontSize *= targetWidth / (textElem.offsetWidth / textElem.parentNode.offsetWidth);
+					textElem.style.fontSize = curFontSize + "pt";
+				}
+			}
+			
+			updateClock();
+			updateTextSize();
+			window.addEventListener("resize", updateTextSize);
+		</script>
+	</body>
+</html>
+
+EOF
+fi
 
 # main
 main () {
-timeout -v 25 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "file:///${tmp}/analog.svg" >/dev/null 2>&1 
+timeout -v 25 "${app[@]}" --screenshot --window-size=1000,1000 "$tmp/woot.png" "file:///${name}" >/dev/null 2>&1 
 
 # just pipe
-convert "$tmp/woot.png" -resize 1150\!x1000 jpg:- | jp2a -f --chars="R.xX" - > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering
-
+if [[ $clock == "analog" ]]; then
+        convert "$tmp/woot.png" -resize 1140\!x1000 jpg:- | jp2a -f --chars="R.xX" - > "$tmp/tmp.txt" || exit # using 'R' as a placeholder for easier centering
+elif [[ $clock == "digital" ]]; then
+        convert "$tmp/woot.png" -trim +repage jpg:- | jp2a -f --chars="R.xX" - > "$tmp/tmp.txt" || exit
+        clear
+fi
 # center
 printf "\\033[H" # cursor to home
 while read -r line ; do
