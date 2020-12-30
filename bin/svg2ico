@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# svg2ico < convert svg to ico
+# required
+command -v convert>/dev/null 2>&1 || { echo "I need im convert installed." ; exit 1; }
+command -v inkscape>/dev/null 2>&1 || { echo "I need inkscape installed." ; exit 1; }
+
+# tmp dir
+tmp="/tmp/$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
+# action
+while [ $# -gt 0 ]; do
+
+    file=$(readlink -f "$1")       # abs link
+    baseext=$(basename "${1}")     # file.ext
+    base="${baseext%.*}"           # file
+    dir=$(dirname "${file}")          # directory
+
+    echo "$dir/$base".ico
+    
+    inkscape "$file" -w 1000 -o "$tmp/$base".png
+
+    convert -background transparent "$tmp/$base".png -define icon:auto-resize=16,24,32,48,64,72,96,128,256 "$dir/$base".ico
+
+    rm "$tmp/$base".png
+
+shift
+done
