@@ -1,0 +1,2 @@
+--restrict-filenames
+-o '%(title)s.%(ext)s'
