@@ -1,0 +1,16 @@
+[line_break]
+disabled = true
+
+[username]
+format = "[$user]($style) "
+disabled = false
+show_always = false
+
+[hostname]
+disabled = true
+
+[directory]
+disabled = true
+
+[cmd_duration]
+min_time = 10000
