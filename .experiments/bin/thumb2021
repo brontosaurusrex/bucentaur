@@ -7,7 +7,7 @@
 # cd folder && thumb2020 *
 
 # traverse into dirs and subdirs (zsh syntax)
-# for dir in **/; do ( cd "$dir" && pwd && thumb2021 *.(jpg|png|mp4) ); done
+# for dir in **/; do ( cd "$dir" && pwd && thumb2021 *.(jpg|png|mp4|mov|MOV) ); done
 
 # needed:
 # ffmpeg, ffprobe, mediainfo, imagemagick (convert & mogrify), pngquant, inkscape (for svg)
