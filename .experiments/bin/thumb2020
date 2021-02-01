@@ -14,7 +14,7 @@
 # brex 2020
 
 # config
-size="150"              # thumb size
+size="200"              # thumb size
 index="true"            # generate index.htm or not (set to "" for false)
 indexname="thumbs.htm"  # name of the generated html
 corners=""              # rounded corners or not (set to "" for false)
@@ -54,6 +54,9 @@ ispdf() {
         file -b "$1" | grep -qi "PDF document"
 }
 
+# rename indexname html if already there
+[ -f "$indexname" ] && mv "$indexname" "${indexname}.bak"
+
 # main 
 while [ $# -gt 0 ]; do
 
@@ -70,18 +73,11 @@ while [ $# -gt 0 ]; do
     fi
 
     # echo
-    echo "$basename"
+    echo "$1"
     
     # thumb
     thumb="$dir/${base}_thumb.png"
-    
-    ## thumb already there?
-    #if [ -f "$thumb" ]; then
-        #echo "thumb ${base}_thumb.png already there"
-        #shift
-        #continue # skip the loop
-    #fi
-    
+     
     # is dir writable?
     if [ -w "$dir" ]; then 
         true
@@ -201,8 +197,9 @@ while [ $# -gt 0 ]; do
 
 done
 
-if [ "$index" ]; then
 # Fix last known "$dir/$index" (assumes that all files belong to the same directory, which may not be true)
+
+if [ "$index" ]; then
 
 # header
 cat > "$tmpdir/$indexname" << EOFMENU
