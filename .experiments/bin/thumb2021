@@ -7,7 +7,7 @@
 # cd folder && thumb2020 *
 
 # traverse into dirs and subdirs (zsh syntax)
-# for dir in **/; do ( cd "$dir" && pwd && thumb2021 *.(jpg|png|mp4|mov|MOV) ); done
+# unsetopt CASE_GLOB ; for dir in **/; do ( cd "$dir" && pwd && thumb2021 *.(jpg|png|mp4|mov) ); done
 
 # needed:
 # ffmpeg, ffprobe, mediainfo, imagemagick (convert & mogrify), pngquant, inkscape (for svg)
@@ -17,11 +17,15 @@
 # brex 2020
 
 # config
-size="200"              # thumb size
-index="true"            # generate index.htm or not (set to "" for false)
-indexname="thumbs.htm"  # name of the generated html
-corners=""              # rounded corners or not (set to "" for false)
-fps="1"                 # decreasing this could get you more interesting video thumbs (1/100), increasing might reduce ffmpeg errors (1).
+size="200"                      # thumb size
+index="true"                    # generate index.htm or not (set to "" for false)
+indexname="thumbs.htm"          # name of the generated html
+master="$HOME/.cache/thumbs"    # generate one html for all as well (set to "" for false), will need some post
+relative="$(pwd)"               # master relative, this will need some post
+corners=""                      # rounded corners or not (set to "" for false)
+fps="1"                         # decreasing this could get you more interesting video thumbs (1/100), 
+                                # increasing might reduce ffmpeg errors (1).
+
 
 # no arguments
 if [ $# -eq 0 ]; then
@@ -58,6 +62,7 @@ ispdf() {
 
 # rename indexname html if already there
 [ -f "$indexname" ] && mv "$indexname" "${indexname}.bak"
+
 
 # main 
 while [ $# -gt 0 ]; do
@@ -189,13 +194,28 @@ while [ $# -gt 0 ]; do
         # rename
         mv "$thumb" "$dir/.${base}_thumb.png"
         
-
     fi # end skip
 
-    # thumbs.htm
-    htmlname=".${base}_thumb.png"
-    if [ "$index" ]; then
-        echo "<a href=\"${basename}\"><img src=\"$htmlname\"></a>" >> "$dir/$indexname"
+    # if thumb was actually generated make some html, else error report
+    if isImage "$dir/.${base}_thumb.png"; then
+        
+        # thumbs.htm
+        htmlname=".${base}_thumb.png"
+        if [ "$index" ]; then
+            echo "<a href=\"${basename}\"><img src=\"$htmlname\"></a>" >> "$dir/$indexname"
+        fi
+
+        # master thumbs
+        if [ "$master" ]; then
+            mkdir -p "$master"
+            echo "<a href=\"${relative}/${basename}\"><img src=\"${relative}/$htmlname\"></a>" >> "$master/$indexname" 
+        fi
+
+    else # error report
+
+        mkdir -p "$HOME/.cache/thumbs/"
+        echo "${relative}/.${base}_thumb.png" >> "$HOME/.cache/thumbs/error.log"
+
     fi
 
     shift
