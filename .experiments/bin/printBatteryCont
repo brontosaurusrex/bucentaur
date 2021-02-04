@@ -13,43 +13,34 @@ do
     number="$(upower -d | grep percentage | head -1 | tr -dc '0-9')"
     
         if ((number > 80)); then
-      
-            var=":)"
-            
+            #var=""
+            var=""
         elif ((number > 60)); then
-      
-            var=":|"
-            
+            var=""
         elif ((number > 40)); then
-        
-            var=":/"
-            
+            var=""
         elif ((number > 20)); then
-            
-            var=":("
-            
+            var=""
         elif ((number > 10)); then
-            
-            var=":|\\"
-            
-        else
-        
-            var=":)?"
-      
+            var=""
+        else # undefined
+            var=""
         fi
     
-    echo "${number}% ${var}"
+    echo "${var}"
 
 done
 
 # tint2 executor example:
 
+#-------------------------------------
+# printBatteryCont
 #execp = new
 #execp_centered = 1
 #execp_has_icon = 0
 #execp_command = printBatteryCont
 #execp_continuous = 1
-#execp_font = cuprum 8
+#execp_font = cuprum 21
 #execp_font_color = #111111 100
 #execp_padding = 0 0 0
 #execp_tooltip = power
