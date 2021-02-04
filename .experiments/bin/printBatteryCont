@@ -10,6 +10,7 @@
 while read
 do
 
+    # battery state simplified
     number="$(upower -d | grep percentage | head -1 | tr -dc '0-9')"
     
         if ((number > 80)); then
@@ -28,6 +29,11 @@ do
         fi
     
     echo "${var}"
+    
+    # tooltip is for state
+    state="$(upower -d | grep state | head -1 | awk '{print $2}')"
+    >&2 echo -en "\033[2J"
+    >&2 echo "$state"
 
 done
 
@@ -43,6 +49,5 @@ done
 #execp_font = cuprum 21
 #execp_font_color = #111111 100
 #execp_padding = 0 0 0
-#execp_tooltip = power
 #execp_mclick_command = xfce4-power-manager-settings
 
