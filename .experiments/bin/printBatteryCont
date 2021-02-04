@@ -7,7 +7,7 @@
 
 # main
 (upower -m) |
-while read
+while read -r
 do
 
     # battery state simplified
@@ -32,6 +32,7 @@ do
     
     # tooltip is for state
     state="$(upower -d | grep state | head -1 | awk '{print $2}')"
+    [[ ! "$state" ]] && state="power"
     >&2 echo -en "\033[2J"
     >&2 echo "$state"
 
