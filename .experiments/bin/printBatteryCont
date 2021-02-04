@@ -22,7 +22,7 @@ do
             var=""
         elif ((number > 20)); then
             var=""
-        elif ((number > 10)); then
+        elif ((number > 0)); then
             var=""
         else # undefined
             var=""
