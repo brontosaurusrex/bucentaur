@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# text to images for off piloting purposes
+
+# usage: txt2titles text.txt
+# Where each new image will be separated by empty line in text.txt
+
+# tmp dir
+tmp="/tmp/$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
+# here
+here="$(pwd)"
+
+# split based on empty line https://stackoverflow.com/questions/1644532/how-to-split-file-on-first-empty-line-in-a-portable-way-in-shell-e-g-using-sed
+
+file=$(readlink -f "$1")
+pushd "$tmp" || exit
+csplit -s "$file" '/^$/' '{*}'
+popd
+
+# cat
+ls "$tmp"
+
+# make images to current dir
+
+for file in "$tmp/"*; do
+    
+    #cat "$file"
+    value="$(<$file)"
+    echo "$value"
+
+    font="Open-Sans"
+    size="75"
+
+    # white
+    convert -background transparent -fill "#ff0" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center label:"${value}" "${file}a".png
+    # black
+    convert -background transparent -fill "#000" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center label:"${value}" -blur 0x3 "${file}b".png
+    # comp
+    composite -gravity North -geometry +0-2 "${file}a".png "${file}b".png "${file}".png
+
+    rm "${file}a".png "${file}b".png 
+
+
+done
+
+# clean
+pushd "$tmp" || exit
+mv *.png "${here}"
+popd
