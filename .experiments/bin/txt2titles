@@ -5,39 +5,79 @@
 # usage: txt2titles text.txt
 # Where each new image will be separated by empty line in text.txt
 
+# get base-name to be used as csplit prefix
+baseext=$(basename "${1}") && base="${baseext%.*}"
+
 # tmp dir
 tmp="/tmp/$RANDOM-$$"
 trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
 
 # here
-here="$(pwd)"
+here="$(pwd)" 2>/dev/null
 
 # split based on empty line https://stackoverflow.com/questions/1644532/how-to-split-file-on-first-empty-line-in-a-portable-way-in-shell-e-g-using-sed
 
 file=$(readlink -f "$1")
-pushd "$tmp" || exit
-csplit -s "$file" '/^$/' '{*}'
-popd
+pushd "$tmp" >/dev/null || exit
+csplit -f "$base" -s "$file" '/^$/' '{*}' 
+popd >/dev/null || exit
 
 # cat
-ls "$tmp"
+#ls "$tmp"
+
+# What fonts can we have
+doWeHavefont () {
+    fontname="$1"
+    #fc-list | grep -i "$fontname" >/dev/null
+    convert -list font | grep -i "Font: $fontname" >/dev/null
+}
+
+fontarray=(
+Ubuntu-Condensed
+Nimbus-Sans-L
+Lato-Medium
+OstrichSans-Medium
+OstrichSans-Heavy
+Open-Sans
+Roboto
+Courier-Screenplay
+Fantasque-Sans-Mono-Regular
+)
+
+for m in "${fontarray[@]}"
+do
+    doWeHavefont "$m" && font="$m" 
+    # last one in array has priority
+done
+
+if [[ -z "$font" ]]; then
+    echo "None of the fonts defined in array:" 
+    ( IFS=$'\n'; echo "${fontarray[*]}" )
+    echo "are on the system, exiting."
+    exit 1
+else
+    echo "$font font present and ready for action."
+    echo # empty line
+fi
+#exit # tmp
+
+# font size
+size="60"
 
 # make images to current dir
-
 for file in "$tmp/"*; do
     
     #cat "$file"
-    value="$(<$file)"
+    value="$(<"$file")"
     echo "$value"
 
-    font="Open-Sans"
-    size="75"
-
     # white
-    convert -background transparent -fill "#ff0" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center label:"${value}" "${file}a".png
+    convert -background transparent -fill "#fff" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center caption:"${value}" "${file}a".png &
     # black
-    convert -background transparent -fill "#000" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center label:"${value}" -blur 0x3 "${file}b".png
+    convert -background transparent -fill "#000" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center caption:"${value}" -blur 0x3 "${file}b".png
+    wait
+
     # comp
     composite -gravity North -geometry +0-2 "${file}a".png "${file}b".png "${file}".png
 
@@ -47,6 +87,6 @@ for file in "$tmp/"*; do
 done
 
 # clean
-pushd "$tmp" || exit
-mv *.png "${here}"
-popd
+pushd "$tmp" >/dev/null || exit
+mv -- *.png "${here}"
+popd >/dev/null || exit
