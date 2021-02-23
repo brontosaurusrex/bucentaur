@@ -1,27 +1,54 @@
 #!/bin/bash
 
+# txt2titles
 # text to images for off piloting purposes
 
-# usage: txt2titles text.txt
-# Where each new image will be separated by empty line in text.txt
+# usage: 
+# txt2titles text.txt
+# Where each new image will be separated by empty line in file text.txt
+# or
+# txt2titles "text1" "text2" "text3"
 
 # misc, list font names that imagemagick convert can use
 # convert -list font | grep Font
 
-# get base-name to be used as csplit prefix
-baseext=$(basename "${1}") && base="${baseext%.*}"
-
 # tmp dir
-tmp="/tmp/$RANDOM-$$"
-trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+tmp="/tmp/txt2titles$RANDOM-$$"
+tmpfile="/tmp/txt2titles$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp" "$tmpfile"' EXIT
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+mkdir -m 700 "$tmpfile" || { echo '!! unable to create a file tmpdir' >&2; tmp=; exit 1; }
 
 # here
 here="$(pwd)" 2>/dev/null
 
+# cover the option when input is not file, but bunch of text input arguments
+if [ ! -f "$1" ]; then
+    echo "$1 is not a file."
+
+    # So lets make one
+    while [ $# -gt 0 ]; do
+
+        echo "$1" >> "$tmpfile/input.txt"
+        echo >> "$tmpfile/input.txt" # empty line for separation purposes
+
+    shift
+    done
+    #vim "$tmpfile/input.txt"
+    file="$tmpfile/input.txt"
+
+else
+
+    file="$1"
+
+fi
+
+# get base-name to be used as csplit prefix
+baseext=$(basename "${file}") && base="${baseext%.*}"
+
 # split based on empty line https://stackoverflow.com/questions/1644532/how-to-split-file-on-first-empty-line-in-a-portable-way-in-shell-e-g-using-sed
 
-file=$(readlink -f "$1")
+file=$(readlink -f "$file")
 pushd "$tmp" >/dev/null || exit
 csplit -f "$base" -s "$file" '/^$/' '{*}' 
 popd >/dev/null || exit
@@ -47,6 +74,8 @@ Roboto
 Courier-Screenplay
 Fantasque-Sans-Mono-Regular
 Old-Standard-TT-Regular
+Ostrich-Sans-Bold
+OstrichSans-Medium
 )
 
 for m in "${fontarray[@]}"
@@ -76,16 +105,20 @@ for file in "$tmp/"*; do
     value="$(<"$file")"
     echo "$value"
 
-    # white
-    convert -background transparent -fill "#fff" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center caption:"${value}" -scale 200% -blur 0x1 -scale 50% "${file}a".png &
-    # black
-    convert -background transparent -fill "#000" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center caption:"${value}" -blur 0x3 "${file}b".png
-    wait
+    if [ -n "$value" ]; then # If value is not empty
 
-    # comp
-    composite -gravity North -geometry +0-2 "${file}a".png "${file}b".png "${file}".png
+        # white
+        convert -background transparent -fill "#fff" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center caption:"${value}" -scale 200% -blur 0x1 -scale 50% "${file}a".png &
+        # black
+        convert -background transparent -fill "#000" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center caption:"${value}" -blur 0x3 "${file}b".png
+        wait
 
-    rm "${file}a".png "${file}b".png 
+        # comp
+        composite -gravity North -geometry +0-2 "${file}a".png "${file}b".png "${file}".png
+
+        rm "${file}a".png "${file}b".png 
+
+    fi
 
 
 done
