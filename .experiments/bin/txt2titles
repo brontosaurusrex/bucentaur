@@ -5,6 +5,9 @@
 # usage: txt2titles text.txt
 # Where each new image will be separated by empty line in text.txt
 
+# misc, list font names that imagemagick convert can use
+# convert -list font | grep Font
+
 # get base-name to be used as csplit prefix
 baseext=$(basename "${1}") && base="${baseext%.*}"
 
@@ -43,6 +46,7 @@ Open-Sans
 Roboto
 Courier-Screenplay
 Fantasque-Sans-Mono-Regular
+Old-Standard-TT-Regular
 )
 
 for m in "${fontarray[@]}"
@@ -63,7 +67,7 @@ fi
 #exit # tmp
 
 # font size
-size="60"
+size="80"
 
 # make images to current dir
 for file in "$tmp/"*; do
@@ -73,7 +77,7 @@ for file in "$tmp/"*; do
     echo "$value"
 
     # white
-    convert -background transparent -fill "#fff" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center caption:"${value}" "${file}a".png &
+    convert -background transparent -fill "#fff" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center caption:"${value}" -scale 200% -blur 0x1 -scale 50% "${file}a".png &
     # black
     convert -background transparent -fill "#000" -font "${font}" -interline-spacing 20 -pointsize "${size}" -size 1920x1080 -gravity center caption:"${value}" -blur 0x3 "${file}b".png
     wait
