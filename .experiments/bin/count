@@ -6,6 +6,10 @@
 # Usage: count 20 # in seconds
 # Note: This is NOT miliseconds precise.
 
-c="$1" && d="$c"
-echo -ne "${(l(3)( ))c}\r"
-repeat c {(( c-- )); sleep 1; echo -ne "${(l(3)( ))c}\r"} && echo "$d seconds has passed."
+second="0.99"
+set +m
+c="$1" ; d="$1"
+echo -ne "${(l(5)( ))c}\r" &
+repeat c {(( c-- )); sleep "$second" & var="${(l(5)( ))c}\r"; wait; echo -ne "$var"} 
+wait
+echo "$d seconds has passed."
