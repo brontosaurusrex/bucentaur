@@ -1,12 +1,11 @@
-#!/bin/bash
+#!/bin/zsh
 
-# simple countup
+# count
 
-echo "Press return to keep line."
+# A simle countdown ZSH script
+# Usage: count 20 # in seconds
+# Note: This is NOT miliseconds precise.
 
-date1="$(date +%s)"; while true; do 
-
-    echo -ne "\r$(date -u --date @$(("$(date +%s)" - date1)) +%H:%M:%S) "
-    sleep 1
-
-done
+c="$1" && d="$c"
+echo -ne "${(l(3)( ))c}\r"
+repeat c {(( c-- )); sleep 1; echo -ne "${(l(3)( ))c}\r"} && echo "$d seconds has passed."
