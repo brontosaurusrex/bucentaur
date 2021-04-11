@@ -1,0 +1,20 @@
+#!/bin/zsh
+
+# countPerc
+
+# A simle countdown ZSH script that draws 
+# progress bar using perc2 script
+# https://raw.githubusercontent.com/brontosaurusrex/bucentaur/master/bin/perc2
+
+# Usage: countPerc 20 # in seconds
+# Note: This is NOT miliseconds precise.
+
+second="0.99"
+set +m
+c="$1" ; d="$1"
+
+perc=$(( 100.0/c ))
+
+repeat c {(( c-- )); sleep "$second" & var="$(perc2 $(( 100 - perc * c )))"; echo -ne "\r"; wait ; echo -ne "$var" }
+
+echo "$d seconds has passed."
