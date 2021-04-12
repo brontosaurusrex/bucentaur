@@ -9,12 +9,13 @@
 # Usage: countPerc 20 # in seconds
 # Note: This is NOT miliseconds precise.
 
-second="0.99"
+second="1"
 set +m
 c="$1" ; d="$1"
 
 perc=$(( 100.0/c ))
 
-repeat c {(( c-- )); sleep "$second" & var="$(perc2 $(( 100 - perc * c )))"; echo -ne "\r"; wait ; echo -ne "$var" }
+repeat c {(( c-- )); sleep "$second" & var="$(perc2 $(( 100 - perc * c )))";\
+echo -ne "$var\r"; wait }
 
 echo "$d seconds has passed."
