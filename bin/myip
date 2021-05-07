@@ -5,7 +5,9 @@ echo -n "internal: "
 #/sbin/ifconfig $1 | grep "inet addr" | awk -F: '{print $2}' | awk '{print $1}' | head -1
 # https://askubuntu.com/questions/430853/how-do-i-find-my-internal-ip-address
 #ip route get 8.8.8.8 | awk '{print $NF; exit}'
-hostname -I
+#hostname -I
+
+hostname -I | cut -d' ' -f1
 
 # external
 echo -n "external: "
@@ -14,4 +16,4 @@ curl -B http://wtfismyip.com/text
 
 # https://unix.stackexchange.com/questions/22615/how-can-i-get-my-external-ip-address-in-a-shell-script/194136#194136
 # faster than curl (dig is a part of dnsutils in debian)
-#dig +short myip.opendns.com @resolver1.opendns.com
+dig +short myip.opendns.com @resolver1.opendns.com
