@@ -2,9 +2,11 @@
 
 # set font size in urxvt, example: fsize 16
 
-IFS=: read -r _ _ font _ size<<<"$(xrdb -query | grep -i urxvt.font | tr '=' ':')"
+IFS=: read -r _ _ font _ _<<<"$(xrdb -query | grep -i urxvt.font | tr '=' ':')"
 
-#echo "xft:$font:size=$size"
+size="$(xrdb -query | grep -i urxvt.font: | grep -Eo '[0-9]{1,}')"
+
+
 
 if ! [[ -z "$1" ]]; then # if $1 is null or unset use the default one from .Xresources
 
