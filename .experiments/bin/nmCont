@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# nmCont
+
+# Monitor basic network manager connection state for tint2 continous purposes.
+
+command -v nmcli >/dev/null 2>&1 || { >&2 echo "I need nmcli." ; exit 1; }
+
+main (){
+    state="$(nmcli -f state g | grep -v STATE | xargs)"
+    # xargs works as a white space remover ^
+
+    if [ "$state" == "connected" ]; then
+        icon="✓"
+    elif [ "$state" == "asleep" ]; then
+        icon="✗"
+    else
+        icon="?"
+    fi
+    
+    echo "$icon"
+}
+
+main # once 
+
+(nmcli monitor) |
+while read -r
+do
+
+    main # many times
+
+done
+
+# tint2 executor example
+
+# Executor nmCont 
+#execp = new
+#execp_command =nmCont
+#execp_interval = 0
+#execp_has_icon = 0
+#execp_cache_icon = 0
+#execp_continuous = 1
+#execp_markup = 0
+#execp_tooltip = network
+#execp_lclick_command = nmcli networking on
+#execp_rclick_command = nmcli networking off
