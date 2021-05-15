@@ -7,6 +7,11 @@
 command -v nmcli >/dev/null 2>&1 || { >&2 echo "I need nmcli." ; exit 1; }
 
 main (){
+    
+    # clear stuff for tint2 tooltip
+    >&2 echo -en "\033[2J"
+    
+    # action
     state="$(nmcli -f state g | grep -v STATE | xargs)"
     # xargs works as a white space remover ^
 
@@ -19,6 +24,11 @@ main (){
     fi
     
     echo "$icon"
+    # end action
+    
+    # for tint2 tooltip
+    >&2 echo "$state"
+    
 }
 
 main # once 
@@ -28,7 +38,7 @@ while read -r
 do
 
     main # many times
-
+    
 done
 
 # tint2 executor example
@@ -37,10 +47,6 @@ done
 #execp = new
 #execp_command =nmCont
 #execp_interval = 0
-#execp_has_icon = 0
-#execp_cache_icon = 0
 #execp_continuous = 1
-#execp_markup = 0
-#execp_tooltip = network
-#execp_lclick_command = nmcli networking on
-#execp_rclick_command = nmcli networking off
+#execp_lclick_command = nm-applet
+#execp_rclick_command = killall nm-applet
