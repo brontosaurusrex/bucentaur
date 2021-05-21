@@ -32,7 +32,7 @@ while read -r line; do
     if [ "$engine" == "flite" ]; then
         flite -voice slt -t "$line" -o "$tmp/some.wav"
         mpv --no-config --no-video --no-resume-playback --no-ytdl "$tmp/some.wav" >/dev/null 2>&1
-    else
+    elif [ "$engine" == "google" ]; then
         gtts-cli "$(echo "$line")" | mpv --no-config --no-video --no-resume-playback --no-ytdl - >/dev/null 2>&1
     fi
 
