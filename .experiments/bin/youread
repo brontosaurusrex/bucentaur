@@ -3,7 +3,13 @@
 # youread 
 # read clipboard with flite, assuming input is text with some punctuations.
 
-# needs: flite, xclip, mpv
+# needs: flite or gtts, xclip, mpv
+
+# to install google text to speech
+# pip install gTTS
+
+# flite or google 
+engine="flite"
 
 # tmp dir
 tmp="/tmp/$RANDOM-$$"
@@ -22,8 +28,12 @@ echo "" >> "$tmp/some2.txt" # add new line at the end
 while read -r line; do
 
     echo "$line"
-    flite -voice slt -t "$line" -o "$tmp/some.wav"
-    mpv --no-config --no-video --no-resume-playback --no-ytdl "$tmp/some.wav" &>/dev/null 
-    #killall flite &>/dev/null # reset flite
+    
+    if [ "$engine" == "flite" ]; then
+        flite -voice slt -t "$line" -o "$tmp/some.wav"
+        mpv --no-config --no-video --no-resume-playback --no-ytdl "$tmp/some.wav" >/dev/null 2>&1
+    else
+        gtts-cli "$(echo "$line")" | mpv --no-config --no-video --no-resume-playback --no-ytdl - >/dev/null 2>&1
+    fi
 
 done < "$tmp/some2.txt"
