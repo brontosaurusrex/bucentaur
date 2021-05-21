@@ -11,6 +11,11 @@
 # flite or google 
 engine="flite"
 
+# play
+play (){
+    mpv --no-resume-playback --msg-level=all=no --no-video "$1"
+}
+
 # tmp dir
 tmp="/tmp/$RANDOM-$$"
 trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
@@ -22,18 +27,19 @@ xclip -selection clipboard -o > "$tmp/some.txt"
 
 # reflow so each line is sentence (assuming text)
 cat "$tmp/some.txt" | tr '\r\n' ' ' | sed 's/[.!?]  */&\n/g' > "$tmp/some2.txt"
-echo "" >> "$tmp/some2.txt" # add new line at the end
+printf "\n\n\n" >> "$tmp/some2.txt" # 3 new lines
 
 # loop over lines and read each
-while read -r line; do
+while read -r line1; read -r line2; read -r line3; do
 
+    line="$line1 $line2 $line3" # Let's throw 3 lines at once, so that the engine tokenizer has a chance to be smart.
     echo "$line"
-    
+   
     if [ "$engine" == "flite" ]; then
         flite -voice slt -t "$line" -o "$tmp/some.wav"
-        mpv --no-config --no-video --no-resume-playback --no-ytdl "$tmp/some.wav" >/dev/null 2>&1
+        play "$tmp/some.wav" #>/dev/null 2>&1
     elif [ "$engine" == "google" ]; then
-        gtts-cli "$(echo "$line")" | mpv --no-config --no-video --no-resume-playback --no-ytdl - >/dev/null 2>&1
+        gtts-cli "$(echo "$line")" | play - #>/dev/null 2>&1
     fi
 
 done < "$tmp/some2.txt"
