@@ -8,6 +8,10 @@
 # to install google text to speech
 # pip install gTTS
 
+# Usage
+# youread                   # will read whatever is in clipboard
+# youread path/to/text.txt  # will read the text file
+
 # flite or google 
 engine="google"
 
@@ -21,9 +25,15 @@ tmp="/tmp/$RANDOM-$$"
 trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1; }
 
-# store clipboard to tmp (assuming text)
-#xclip -selection clipboard -o -
-xclip -selection clipboard -o > "$tmp/some.txt"
+# read clipboard or file (assuming text)
+if [ "$#" -eq  "0" ]
+then
+    # store clipboard to tmp (assuming text)
+    xclip -selection clipboard -o > "$tmp/some.txt"
+else
+    # file
+    cp "$1" "$tmp/some.txt"
+fi
 
 # reflow so each line is sentence (assuming text)
 cat "$tmp/some.txt" | tr '\r\n' ' ' | sed 's/[.!?]  */&\n/g' > "$tmp/some2.txt"
