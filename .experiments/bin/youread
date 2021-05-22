@@ -43,13 +43,14 @@ printf "\n\n\n" >> "$tmp/some2.txt" # 3 new lines
 while read -r line1; read -r line2; read -r line3; do
 
     line="$line1 $line2 $line3" # Let's throw 3 lines at once, so that the engine tokenizer has a chance to be smart.
+    echo 
     echo "$line"
    
     if [ "$engine" == "flite" ]; then
         flite -voice slt -t "$line" -o "$tmp/some.wav"
         play "$tmp/some.wav" #>/dev/null 2>&1
     elif [ "$engine" == "google" ]; then
-        gtts-cli "$(echo "$line")" | play - #>/dev/null 2>&1
+        gtts-cli "$(echo "$line")" | play - 2>/dev/null
     fi
 
 done < "$tmp/some2.txt"
