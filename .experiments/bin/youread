@@ -15,6 +15,9 @@
 # flite or google 
 engine="google"
 
+# google tld voices https://gtts.readthedocs.io/en/latest/module.html
+tld=(com.au co.uk com ca co.in ie co.za)
+
 # play
 play (){
     mpv --no-resume-playback --msg-level=all=no --no-video "$1"
@@ -50,7 +53,9 @@ while read -r line1; read -r line2; read -r line3; do
         flite -voice slt -t "$line" -o "$tmp/some.wav"
         play "$tmp/some.wav" #>/dev/null 2>&1
     elif [ "$engine" == "google" ]; then
-        gtts-cli "$(echo "$line")" | play - 2>/dev/null
+        rand=$[$RANDOM % ${#tld[@]}]
+        echo "(${tld[$rand]})"
+        gtts-cli "$(echo "$line")" -t ${tld[$rand]} | play - 2>/dev/null
     fi
 
 done < "$tmp/some2.txt"
