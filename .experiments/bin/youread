@@ -28,7 +28,6 @@ tmp="/tmp/$RANDOM-$$"
 trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1; }
 
-set -x
 # read clipboard or file (assuming text)
 if [ "$#" -eq  "0" ]
 then
