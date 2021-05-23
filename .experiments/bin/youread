@@ -13,14 +13,16 @@
 # youread path/to/text.txt  # will read the text file
 
 # flite or google 
-engine="google"
+engine="google" ; speed="1.2"
+#engine="flite" ; speed="1"
 
 # google tld voices https://gtts.readthedocs.io/en/latest/module.html
-tld=(com.au co.uk com ca co.in ie co.za)
+tld=(com.au co.uk com co.in ie)
+# disabled ca co.za
 
 # play
 play (){
-    mpv --no-resume-playback --msg-level=all=no --no-video "$1"
+    mpv --no-resume-playback --msg-level=all=no --no-video --speed="$speed" "$1"
 }
 
 # tmp dir
@@ -44,7 +46,7 @@ else
 fi
 
 # reflow so each line is sentence (assuming text)
-cat "$tmp/some.txt" | tr '\r\n' ' ' | sed 's/[.!?]  */&\n/g' > "$tmp/some2.txt"
+cat "$tmp/some.txt" | tr '\r\n' ' ' | sed 's/[.!?]  */&\n/g' | sed 's/  */ /g' > "$tmp/some2.txt"
 printf "\n\n\n" >> "$tmp/some2.txt" # 3 new lines
 
 # loop over lines and read each
@@ -56,7 +58,7 @@ while read -r line1; read -r line2; read -r line3; do
    
     if [ "$engine" == "flite" ]; then
         flite -voice slt -t "$line" -o "$tmp/some.wav"
-        play "$tmp/some.wav" #>/dev/null 2>&1
+        play "$tmp/some.wav" 2>/dev/null
     elif [ "$engine" == "google" ]; then
         rand=$[$RANDOM % ${#tld[@]}]
         echo "(${tld[$rand]})"
