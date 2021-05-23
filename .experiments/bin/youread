@@ -34,7 +34,7 @@ mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1;
 if [ "$#" -eq  "0" ]
 then
     # store clipboard to tmp (assuming text)
-    if xclip -o 2>/dev/null; then
+    if xclip -selection clipboard -o - | head >/dev/null; then
         xclip -selection clipboard -o > "$tmp/some.txt" || exit 1
     else # support wsl
         powershell.exe Get-clipboard > "$tmp/some.txt" || exit 1
