@@ -12,13 +12,17 @@
 # youread                   # will read whatever is in clipboard
 # youread path/to/text.txt  # will read the text file
 
-# flite or google 
-engine="google" ; speed="1.2"
+# flite or google or ibm (you will need your own api key)
+#engine="google" ; speed="1.2"
 #engine="flite" ; speed="1"
+engine="ibm" ; speed="1"
 
 # google tld voices https://gtts.readthedocs.io/en/latest/module.html
 tld=(com.au co.uk com co.in ie)
 # disabled ca co.za
+
+# ibm voices
+ibmvoice=(en-GB_CharlotteV3Voice en-GB_JamesV3Voice en-GB_KateVoice en-GB_KateV3Voice en-US_AllisonVoice en-US_AllisonV3Voice en-US_EmilyV3Voice en-US_HenryV3Voice en-US_KevinV3Voice en-US_LisaVoice en-US_LisaV3Voice en-US_MichaelVoice en-US_MichaelV3Voice en-US_OliviaV3Voice)
 
 # play
 play (){
@@ -34,11 +38,9 @@ mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1;
 if [ "$#" -eq  "0" ]
 then
     # store clipboard to tmp (assuming text)
-    if xclip -selection clipboard -o - | head >/dev/null; then
-        xclip -selection clipboard -o > "$tmp/some.txt" || exit 1
-    else # support wsl
-        powershell.exe Get-clipboard > "$tmp/some.txt" || exit 1
-    fi
+
+        xclip -selection clipboard -o > "$tmp/some.txt" 2>/dev/null ||  powershell.exe Get-clipboard > "$tmp/some.txt" || exit 1
+ 
 
 else
     # file
@@ -62,8 +64,23 @@ while read -r line1; read -r line2; read -r line3; do
         play "$tmp/some.wav" 2>/dev/null
     elif [ "$engine" == "google" ]; then
         rand=$[$RANDOM % ${#tld[@]}]
-        echo "(${tld[$rand]})"
+        #echo "(${tld[$rand]})"
         gtts-cli "$(echo "$line")" -t ${tld[$rand]} | play - 2>/dev/null
+    elif [ "$engine" == "ibm" ]; then
+        scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
+        source "$scriptdir/ibmapi.txt"
+        # imbapi should look like
+        # apikey="{key}"
+        # ibmurl="{url}"
+
+        # line to json
+        jq -c -n --arg input "${line}" '{ text: $input }' > "$tmp/ibm.json"
+
+        # ibm action
+        rand=$[$RANDOM % ${#ibmvoice[@]}]
+        echo "(voice ${ibmvoice[$rand]})"
+        
+        curl -X POST -u "apikey:${apikey}" --header "Content-Type: application/json" --header "Accept: audio/flac" --data-binary "@$tmp/ibm.json" "${ibmurl}/v1/synthesize?voice=${ibmvoice[$rand]}" 2>/dev/null | play - 2>/dev/null
     fi
 
 done < "$tmp/some2.txt"
