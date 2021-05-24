@@ -13,13 +13,13 @@
 # youread path/to/text.txt  # will read the text file
 
 # flite or google or ibm (you will need your own api key)
-#engine="google" ; speed="1.2"
+engine="google" ; speed="1.2"
 #engine="flite" ; speed="1"
-engine="ibm" ; speed="1"
+#engine="ibm" ; speed="1"
 
 # google tld voices https://gtts.readthedocs.io/en/latest/module.html
-tld=(com.au co.uk com co.in ie)
-# disabled ca co.za
+tld=(co.uk com co.in ie)
+# disabled ca co.za com.au
 
 # ibm voices
 ibmvoice=(en-GB_CharlotteV3Voice en-GB_JamesV3Voice en-GB_KateVoice en-GB_KateV3Voice en-US_AllisonVoice en-US_AllisonV3Voice en-US_EmilyV3Voice en-US_HenryV3Voice en-US_KevinV3Voice en-US_LisaVoice en-US_LisaV3Voice en-US_MichaelVoice en-US_MichaelV3Voice en-US_OliviaV3Voice)
