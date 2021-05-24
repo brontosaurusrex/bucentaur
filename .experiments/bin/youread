@@ -68,7 +68,7 @@ while read -r line1; read -r line2; read -r line3; do
         gtts-cli "$(echo "$line")" -t ${tld[$rand]} | play - 2>/dev/null
     elif [ "$engine" == "ibm" ]; then
         scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
-        source "$scriptdir/ibmapi.txt"
+        source "$scriptdir/ibmapi.txt" || exit 1
         # imbapi should look like
         # apikey="{key}"
         # ibmurl="{url}"
