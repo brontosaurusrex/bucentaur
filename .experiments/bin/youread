@@ -47,15 +47,25 @@ else
     cp "$1" "$tmp/some.txt"
 fi
 
-# reflow so each line is sentence (assuming text)
+# reflow so each line is sentence (assuming text with some punctuations)
 cat "$tmp/some.txt" | tr '\r\n' ' ' | sed 's/[.!?]  */&\n/g' | sed 's/  */ /g' > "$tmp/some2.txt"
-printf "\n\n\n" >> "$tmp/some2.txt" # 3 new lines
+printf "\n\n\n\n\n" >> "$tmp/some2.txt" # 5 new lines
+
+# measure to get # of parts
+all="0"
+while read -r line1; read -r line2; read -r line3; read -r line4; read -r line5; do
+    ((all=all+1))
+    #echo "$all"
+done < "$tmp/some2.txt"
 
 # loop over lines and read each
-while read -r line1; read -r line2; read -r line3; do
+part="0"
+while read -r line1; read -r line2; read -r line3; read -r line4; read -r line5; do
 
-    line="$line1 $line2 $line3" # Let's throw 3 lines at once, so that the engine tokenizer has a chance to be smart.
-    echo 
+    line="$line1 $line2 $line3 $line4 $line5" # Let's throw 5 lines at once, so that the engine tokenizer has a chance to be smart.
+    ((part=part+1))
+    echo
+    (( all > 1 )) && echo "($part/$all)"
     echo "$line" | fmt -w 80
     #fold -s
 
@@ -64,7 +74,7 @@ while read -r line1; read -r line2; read -r line3; do
         play "$tmp/some.wav" 2>/dev/null
     elif [ "$engine" == "google" ]; then
         rand=$[$RANDOM % ${#tld[@]}]
-        #echo "(${tld[$rand]})"
+        echo "(tld ${tld[$rand]})"
         gtts-cli "$(echo "$line")" -t ${tld[$rand]} | play - 2>/dev/null
     elif [ "$engine" == "ibm" ]; then
         scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
