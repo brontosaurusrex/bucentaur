@@ -69,7 +69,7 @@ while read -r line1; read -r line2; read -r line3; do
     elif [ "$engine" == "ibm" ]; then
         scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
         source "$scriptdir/ibmapi.txt" || exit 1
-        # imbapi should look like
+        # ibmapi.txt should look like
         # apikey="{key}"
         # ibmurl="{url}"
 
