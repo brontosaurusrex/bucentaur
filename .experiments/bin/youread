@@ -13,9 +13,10 @@
 # youread path/to/text.txt  # will read the text file
 
 # flite or google or ibm (you will need your own api key)
-engine="google" ; speed="1.2"
+#engine="google" ; speed="1.2"
 #engine="flite" ; speed="1"
-#engine="ibm" ; speed="1"
+engine="ibm" ; speed="1"
+#engine=""
 
 # google tld voices https://gtts.readthedocs.io/en/latest/module.html
 tld=(co.uk com co.in ie)
@@ -27,6 +28,13 @@ ibmvoice=(en-GB_CharlotteV3Voice en-GB_JamesV3Voice en-GB_KateVoice en-GB_KateV3
 # play
 play (){
     mpv --no-resume-playback --msg-level=all=no --no-video --speed="$speed" "$1"
+}
+
+# echo line
+echoline (){
+    echo
+    (( all > 1 )) && echo "($part/$all)"
+    echo "$line" | fmt -w 80
 }
 
 # tmp dir
@@ -64,15 +72,13 @@ while read -r line1; read -r line2; read -r line3; read -r line4; read -r line5;
 
     line="$line1 $line2 $line3 $line4 $line5" # Let's throw 5 lines at once, so that the engine tokenizer has a chance to be smart.
     ((part=part+1))
-    echo
-    (( all > 1 )) && echo "($part/$all)"
-    echo "$line" | fmt -w 80
-    #fold -s
 
     if [ "$engine" == "flite" ]; then
+        echoline
         flite -voice slt -t "$line" -o "$tmp/some.wav"
         play "$tmp/some.wav" 2>/dev/null
     elif [ "$engine" == "google" ]; then
+        echoline
         rand=$[$RANDOM % ${#tld[@]}]
         echo "(tld ${tld[$rand]})"
         gtts-cli "$(echo "$line")" -t ${tld[$rand]} | play - 2>/dev/null
@@ -88,10 +94,23 @@ while read -r line1; read -r line2; read -r line3; read -r line4; read -r line5;
 
         # ibm action
         rand=$[$RANDOM % ${#ibmvoice[@]}]
-        echo "(voice ${ibmvoice[$rand]})"
         
-        curl -X POST -u "apikey:${apikey}" --header "Content-Type: application/json" --header "Accept: audio/flac" --data-binary "@$tmp/ibm.json" "${ibmurl}/v1/synthesize?voice=${ibmvoice[$rand]}" 2>/dev/null | play - 2>/dev/null
-    else
+        if (( all > 3 )); then # preload
+            curl -X POST -u "apikey:${apikey}" --header "Content-Type: application/json" --header "Accept: audio/flac" --data-binary "@$tmp/ibm.json" "${ibmurl}/v1/synthesize?voice=${ibmvoice[$rand]}" --output "$tmp/$part" 2>/dev/null
+            wait # after the download the previous playback is probably still running, so wait here
+            mv "$tmp/$part" "$tmp/read"
+            echoline
+            echo "(voice ${ibmvoice[$rand]}) *"
+            # the 'previous' playback
+            play "$tmp/read" 2>/dev/null & # go to next while loop downloading next synth
+        else # just pipe play
+            echoline
+            echo "(voice ${ibmvoice[$rand]})"
+            curl -X POST -u "apikey:${apikey}" --header "Content-Type: application/json" --header "Accept: audio/flac" --data-binary "@$tmp/ibm.json" "${ibmurl}/v1/synthesize?voice=${ibmvoice[$rand]}" 2>/dev/null | play - 2>/dev/null
+        fi
+        
+    else # no engine test
+        echoline
         echo "(test)"
     fi
 
