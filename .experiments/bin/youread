@@ -109,9 +109,12 @@ while read -r line1; read -r line2; read -r line3; read -r line4; read -r line5;
             curl -X POST -u "apikey:${apikey}" --header "Content-Type: application/json" --header "Accept: audio/flac" --data-binary "@$tmp/ibm.json" "${ibmurl}/v1/synthesize?voice=${ibmvoice[$rand]}" 2>/dev/null | play - 2>/dev/null
         fi
         
+
     else # no engine test
         echoline
         echo "(test)"
     fi
 
 done < "$tmp/some2.txt"
+
+wait # just in case?
