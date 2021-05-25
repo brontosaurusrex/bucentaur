@@ -49,7 +49,7 @@ fi
 
 # reflow so each line is sentence (assuming text with some punctuations)
 cat "$tmp/some.txt" | tr '\r\n' ' ' | sed 's/[.!?]  */&\n/g' | sed 's/  */ /g' > "$tmp/some2.txt"
-printf "\n\n\n\n\n" >> "$tmp/some2.txt" # 5 new lines
+printf "\n\n\n\n" >> "$tmp/some2.txt" # new lines
 
 # measure to get # of parts
 all="0"
@@ -91,6 +91,8 @@ while read -r line1; read -r line2; read -r line3; read -r line4; read -r line5;
         echo "(voice ${ibmvoice[$rand]})"
         
         curl -X POST -u "apikey:${apikey}" --header "Content-Type: application/json" --header "Accept: audio/flac" --data-binary "@$tmp/ibm.json" "${ibmurl}/v1/synthesize?voice=${ibmvoice[$rand]}" 2>/dev/null | play - 2>/dev/null
+    else
+        echo "(test)"
     fi
 
 done < "$tmp/some2.txt"
