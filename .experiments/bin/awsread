@@ -8,20 +8,26 @@
 # awsread                       # will read from clipboard
 # awsreas /path/to/file.txt     # will read from file
 
+input="$1"
+
+storeInit (){
+    hash="$(readlink -f "$input" | md5sum | awk '{print $1}')"
+    store="$HOME/tmp/recAWS/${hash}/"
+    mkdir -p "$store" || exit
+}
+
 # config
 voices=(Amy Brian Salli Joanna Matthew Kendra Joey)
 #disabled Ivy Justin Emma Kimberly 
 #aws polly describe-voices --language-code en-GB ; aws polly describe-voices --language-code en-US
-
-keepAudio="" # non-empty is true
-if [[ ! -z $keepAudio ]]; then
-    hash="$(readlink -f "$1" | md5sum | awk '{print $1}')"
-    store="/mnt/d/tmp/recAWS/${hash}/"
-    mkdir -p "$store" || exit
-fi
-# split at
+resume="please" # non-empty is true
+keepAudio=""    # non-empty is true
+# split text at
 bytes="1000"
 # end config
+
+storeInit
+jumpto="1" # resume initial
 
 # checks
 command -v aws >/dev/null 2>&1 || { echo "I need aws cli, exiting." >&2; exit 1; }
@@ -31,7 +37,7 @@ command -v md5sum >/dev/null 2>&1 || { echo "I need md5sum, exiting." >&2; exit 
 
 # tmp dir
 tmp="/tmp/$RANDOM-$$"
-trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+trap '[ -n "$tmp" ] && rm -fr "$tmp" && echo "$part" > "$store/resume"' EXIT 
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1; }
 
 # named pipe
@@ -42,7 +48,7 @@ fi
 
 # play
 play (){
-    if [[ ! -z $keepAudio ]]; then
+    if [[ -n $keepAudio ]]; then
         name="$(($(date +%s%N)/1000000))" # lets name parts by epoch miliseconds
         mpv --no-resume-playback --msg-level=all=no --no-video --record-file="${store}${name}.ogg" "$1"
     else
@@ -57,8 +63,15 @@ then
     xclip -selection clipboard -o > "$tmp/some.txt" 2>/dev/null || powershell.exe Get-clipboard > "$tmp/some.txt" || exit 1
 else
     # file
-    [[ -f "$1" ]] || exit 1
-    cp "$1" "$tmp/some.txt"
+    [[ -f "$input" ]] || exit 1
+    cp "$input" "$tmp/some.txt"
+    # resume
+    if [[ -n $resume ]]; then
+        if [[ -f "$store/resume" ]]; then
+            jumpto="$(cat "$store/resume")"
+        fi
+        (( jumpto > 1 )) && echo "Resume from part $jumpto"
+    fi
 fi
 
 # tr remove newlines, sed add newlines where punctuations are, 
@@ -70,19 +83,23 @@ cat "some.txt" | tr '\r\n' ' ' | sed 's/[.!?]  */&\n/g' | sed 's/ \{1,\}/ /g' | 
 all="$(find . -type f -name "x*" | wc -l)"
 
 # read each
-part="1"
+part="0"
 for file in x*; do
+    ((part=part+1))
+    # resume
+    if [[ -n $resume ]]; then
+        (( part < jumpto )) && continue
+    fi
+    # print header and text part
     (( all > 1 )) && echo "($part/$all)"
     rand="(($RANDOM % ${#voices[@]}))"
     cat "$file" | fmt -w 80 | sed 's/ \{1,\}/ /g'
     echo "(voice ${voices[$rand]})"
-
     # synth
     aws polly synthesize-speech \
     --output-format ogg_vorbis \
     --voice-id "${voices[$rand]}" \
     --text "$(cat "$file")" "$tmp/pipe" | play "$tmp/pipe" 2>/dev/null || exit
-    # mp3
-    ((part=part+1))
+
     echo
 done
