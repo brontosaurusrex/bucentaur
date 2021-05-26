@@ -2,15 +2,14 @@
 
 # awsread, txt to speech using cloudy aws polly
 
-# needs aws, mpv, xclip, md5sum
+# needs aws, mpv, xclip?, md5sum, awk
 
 # usage:
 # awsread                       # will read from clipboard
 # awsreas /path/to/file.txt     # will read from file
 
-input="$1"
-
 storeInit (){
+    # hash based on file path
     hash="$(readlink -f "$input" | md5sum | awk '{print $1}')"
     store="$HOME/tmp/recAWS/${hash}/"
     mkdir -p "$store" || exit
@@ -25,6 +24,34 @@ keepAudio=""    # non-empty is true
 # split text at
 bytes="1000"
 # end config
+
+help () { 
+cat << EOF
+awsread, txt to speech using cloudy aws polly
+needs aws (free validated aws account), mpv, xclip?, md5sum, awk
+-----------------------------------------------------------------
+usage:
+awsread                     # will read from clipboard
+awsreas file.txt            # will read from file
+awsread --reset file.txt    # will reset resume position for file
+
+config:
+'resume' is enabled by default and should work for files only, 
+not for clipboard.
+'keepAudio' is disabled by default, if enabled it will keep
+ogg-vorbis audio files in configured '$store' directory.
+EOF
+}
+
+# switches
+if [ "$1" == "--reset" ] || [ "$1" == "-r" ]; then # reset resume manually
+    resume=""
+    shift
+elif [ "$1" == "--help" ] || [ "$1" == "-h" ]; then # print help
+    help
+    exit
+fi
+input="$1"
 
 storeInit
 jumpto="1" # resume initial
@@ -61,10 +88,15 @@ if [ "$#" -eq  "0" ]
 then
     # store clipboard to tmp (assuming text)
     xclip -selection clipboard -o > "$tmp/some.txt" 2>/dev/null || powershell.exe Get-clipboard > "$tmp/some.txt" || exit 1
+    base=" clipboard"
 else
     # file
     [[ -f "$input" ]] || exit 1
     cp "$input" "$tmp/some.txt"
+    # base
+    baseext=${input##*/}  # file.ext
+    base="${baseext%.*}"  # file
+    base=" ${base}"
     # resume
     if [[ -n $resume ]]; then
         if [[ -f "$store/resume" ]]; then
@@ -72,6 +104,7 @@ else
         fi
         (( jumpto > 1 )) && echo "Resume from part $jumpto"
     fi
+
 fi
 
 # tr remove newlines, sed add newlines where punctuations are, 
@@ -91,7 +124,7 @@ for file in x*; do
         (( part < jumpto )) && continue
     fi
     # print header and text part
-    (( all > 1 )) && echo "($part/$all)"
+    (( all > 1 )) && echo "(${part}/${all}${base})"
     rand="(($RANDOM % ${#voices[@]}))"
     cat "$file" | fmt -w 80 | sed 's/ \{1,\}/ /g'
     echo "(voice ${voices[$rand]})"
