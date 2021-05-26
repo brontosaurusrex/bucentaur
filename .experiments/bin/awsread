@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# awsread, txt to speech using cloudy aws polly
+
+# needs aws, mpv, xclip, md5sum
+
+# usage:
+# awsread                       # will read from clipboard
+# awsreas /path/to/file.txt     # will read from file
+
+# config
+voices=(Amy Brian Salli Joanna Matthew Kendra Joey)
+#disabled Ivy Justin Emma Kimberly 
+#aws polly describe-voices --language-code en-GB ; aws polly describe-voices --language-code en-US
+
+keepAudio="" # non-empty is true
+if [[ ! -z $keepAudio ]]; then
+    hash="$(readlink -f "$1" | md5sum | awk '{print $1}')"
+    store="/mnt/d/tmp/recAWS/${hash}/"
+    mkdir -p "$store" || exit
+fi
+# split at
+bytes="1000"
+# end config
+
+# checks
+command -v aws >/dev/null 2>&1 || { echo "I need aws cli, exiting." >&2; exit 1; }
+command -v awk >/dev/null 2>&1 || { echo "I need awk, exiting." >&2; exit 1; }
+command -v mpv >/dev/null 2>&1 || { echo "I need mpv player, exiting." >&2; exit 1; }
+command -v md5sum >/dev/null 2>&1 || { echo "I need md5sum, exiting." >&2; exit 1; }
+
+# tmp dir
+tmp="/tmp/$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1; }
+
+# named pipe
+pipe="$tmp/pipe"
+if [[ ! -p $pipe ]]; then
+    mkfifo $pipe
+fi
+
+# play
+play (){
+    if [[ ! -z $keepAudio ]]; then
+        name="$(($(date +%s%N)/1000000))" # lets name parts by epoch miliseconds
+        mpv --no-resume-playback --msg-level=all=no --no-video --record-file="${store}${name}.ogg" "$1"
+    else
+        mpv --no-resume-playback --msg-level=all=no --no-video "$1"
+    fi
+}
+
+# read clipboard or file (assuming text)
+if [ "$#" -eq  "0" ]
+then
+    # store clipboard to tmp (assuming text)
+    xclip -selection clipboard -o > "$tmp/some.txt" 2>/dev/null || powershell.exe Get-clipboard > "$tmp/some.txt" || exit 1
+else
+    # file
+    [[ -f "$1" ]] || exit 1
+    cp "$1" "$tmp/some.txt"
+fi
+
+# tr remove newlines, sed add newlines where punctuations are, 
+# sed remove double spaces, split by some bytes, keep lines
+cd "$tmp" || exit
+cat "some.txt" | tr '\r\n' ' ' | sed 's/[.!?]  */&\n/g' | sed 's/ \{1,\}/ /g' | split --line-bytes="${bytes}" || exit 1
+
+# count generated files
+all="$(find . -type f -name "x*" | wc -l)"
+
+# read each
+part="1"
+for file in x*; do
+    (( all > 1 )) && echo "($part/$all)"
+    rand="(($RANDOM % ${#voices[@]}))"
+    cat "$file" | fmt -w 80 | sed 's/ \{1,\}/ /g'
+    echo "(voice ${voices[$rand]})"
+
+    # synth
+    aws polly synthesize-speech \
+    --output-format ogg_vorbis \
+    --voice-id "${voices[$rand]}" \
+    --text "$(cat "$file")" "$tmp/pipe" | play "$tmp/pipe" 2>/dev/null || exit
+    # mp3
+    ((part=part+1))
+    echo
+done
