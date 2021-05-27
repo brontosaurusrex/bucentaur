@@ -8,13 +8,6 @@
 # awsread                       # will read from clipboard
 # awsreas /path/to/file.txt     # will read from file
 
-storeInit (){
-    # hash based on file path
-    hash="$(readlink -f "$input" | md5sum | awk '{print $1}')"
-    store="$HOME/tmp/recAWS/${hash}/"
-    mkdir -p "$store" || exit
-}
-
 # config
 voices=(Amy Brian Salli Joanna Matthew Kendra Joey)
 #disabled Ivy Justin Emma Kimberly 
@@ -24,6 +17,17 @@ keepAudio=""    # non-empty is true
 # split text at
 bytes="1000"
 # end config
+
+storeInit (){
+    # hash based on file path
+    hash="$(readlink -f "$input" | md5sum | awk '{print $1}')"
+    store="$HOME/tmp/recAWS/${hash}/"
+    mkdir -p "$store" || exit
+}
+
+resumeSave (){
+    echo "$part" > "$store/resume"
+}
 
 help () { 
 cat << EOF
@@ -64,7 +68,7 @@ command -v md5sum >/dev/null 2>&1 || { echo "I need md5sum, exiting." >&2; exit 
 
 # tmp dir
 tmp="/tmp/$RANDOM-$$"
-trap '[ -n "$tmp" ] && rm -fr "$tmp" && echo "$part" > "$store/resume"' EXIT 
+trap '[ -n "$tmp" ] && rm -fr "$tmp" && resumeSave' EXIT 
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1; }
 
 # named pipe
@@ -123,6 +127,7 @@ for file in x*; do
     if [[ -n $resume ]]; then
         (( part < jumpto )) && continue
     fi
+    resumeSave
     # print header and text part
     (( all > 1 )) && echo "(${part}/${all}${base})"
     rand="(($RANDOM % ${#voices[@]}))"
