@@ -9,13 +9,15 @@
 # awsreas /path/to/file.txt     # will read from file
 
 # config
-voices=(Amy Brian Salli Joanna Matthew Kendra Joey)
-#disabled Ivy Justin Emma Kimberly 
+voices=(Amy Brian Joanna Matthew Kendra Joey)
+#disabled Ivy Justin Emma Kimberly Salli
 #aws polly describe-voices --language-code en-GB ; aws polly describe-voices --language-code en-US
 resume="please" # non-empty is true
 keepAudio=""    # non-empty is true
-# split text at
-bytes="1000"
+# split text at (max:3000)
+bytes="600"
+# text display width in chars (50-80)
+width="50"
 # end config
 
 storeInit (){
@@ -129,15 +131,16 @@ for file in x*; do
     fi
     resumeSave
     # print header and text part
-    (( all > 1 )) && echo "(${part}/${all}${base})"
+    (( all > 1 )) && echo "(${part}/${all})"
     rand="(($RANDOM % ${#voices[@]}))"
-    cat "$file" | fmt -w 80 | sed 's/ \{1,\}/ /g'
-    echo "(voice ${voices[$rand]})"
+    cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g'
+
+    echo "─── (voice ${voices[$rand]}) ───"
     # synth
     aws polly synthesize-speech \
     --output-format ogg_vorbis \
     --voice-id "${voices[$rand]}" \
     --text "$(cat "$file")" "$tmp/pipe" | play "$tmp/pipe" 2>/dev/null || exit
-
+ 
     echo
 done
