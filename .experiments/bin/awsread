@@ -28,7 +28,11 @@ storeInit (){
 }
 
 resumeSave (){
-    echo "$part" > "$store/resume"
+    if [[ "$base" != "clipboard" ]]; then
+        echo "$part" > "$store/resume"
+        echo "$base" > "$store/name"
+        echo "$(readlink -f "$input")" >> "$store/name"
+    fi
 }
 
 help () { 
@@ -94,7 +98,7 @@ if [ "$#" -eq  "0" ]
 then
     # store clipboard to tmp (assuming text)
     xclip -selection clipboard -o > "$tmp/some.txt" 2>/dev/null || powershell.exe Get-clipboard > "$tmp/some.txt" || exit 1
-    base=" clipboard"
+    base="clipboard" 
 else
     # file
     [[ -f "$input" ]] || exit 1
@@ -102,7 +106,6 @@ else
     # base
     baseext=${input##*/}  # file.ext
     base="${baseext%.*}"  # file
-    base=" ${base}"
     # resume
     if [[ -n $resume ]]; then
         if [[ -f "$store/resume" ]]; then
@@ -121,7 +124,7 @@ cat "some.txt" | tr '\r\n' ' ' | sed 's/[.!?]  */&\n/g' | sed 's/ \{1,\}/ /g' | 
 # count generated files
 all="$(find . -type f -name "x*" | wc -l)"
 
-# read each
+# read
 part="0"
 for file in x*; do
     ((part=part+1))
