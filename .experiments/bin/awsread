@@ -25,6 +25,7 @@ storeInit (){
     hash="$(readlink -f "$input" | md5sum | awk '{print $1}')"
     store="$HOME/tmp/recAWS/${hash}/"
     mkdir -p "$store" || exit
+    touch "$store" || exit
 }
 
 resumeSave (){
@@ -43,13 +44,14 @@ needs aws (free validated aws account), mpv, xclip?, md5sum, awk
 usage:
 awsread                     # will read from clipboard
 awsreas file.txt            # will read from file
-awsread --reset file.txt    # will reset resume position for file
+awsread --reset file.txt    # or -r will reset resume position for file
+awsread --goto 100 file.txt # or -g goto page 100
 
 config:
 'resume' is enabled by default and should work for files only, 
 not for clipboard.
 'keepAudio' is disabled by default, if enabled it will keep
-ogg-vorbis audio files in configured '$store' directory.
+ogg-vorbis audio files in configured directory.
 EOF
 }
 
@@ -60,11 +62,14 @@ if [ "$1" == "--reset" ] || [ "$1" == "-r" ]; then # reset resume manually
 elif [ "$1" == "--help" ] || [ "$1" == "-h" ]; then # print help
     help
     exit
+elif [ "$1" == "--goto" ] || [ "$1" == "-g" ]; then # goto chunk
+    shift
+    jumpto="$1" # assuming --goto 120 file.txt
+    shift
 fi
 input="$1"
 
-storeInit
-jumpto="1" # resume initial
+storeInit # gets done in any case
 
 # checks
 command -v aws >/dev/null 2>&1 || { echo "I need aws cli, exiting." >&2; exit 1; }
@@ -108,8 +113,12 @@ else
     base="${baseext%.*}"  # file
     # resume
     if [[ -n $resume ]]; then
-        if [[ -f "$store/resume" ]]; then
+        if [[ -n $jumpto ]]; then # jumpto is set, assuming --goto was used
+            echo "Goto $jumpto"
+        elif [[ -f "$store/resume" ]]; then
             jumpto="$(cat "$store/resume")"
+        else
+            jumpto="1"
         fi
         (( jumpto > 1 )) && echo "Resume from part $jumpto"
     fi
