@@ -18,6 +18,8 @@ keepAudio=""    # non-empty is true
 bytes="600"
 # text display width in chars (50-80)
 width="50"
+# center text block
+centertext="" # non-empty is true
 # end config
 
 storeInit (){
@@ -33,6 +35,16 @@ resumeSave (){
         echo "$part" > "$store/resume"
         echo "$base" > "$store/name"
         echo "$(readlink -f "$input")" >> "$store/name"
+    fi
+}
+
+# padding to center
+calcPad(){
+    if [[ -n $centertext ]]; then
+        columns="$(tput cols)"
+        pad="$((( columns - width )/2))"
+    else
+        pad="0"
     fi
 }
 
@@ -142,17 +154,24 @@ for file in x*; do
         (( part < jumpto )) && continue
     fi
     resumeSave
-    # print header and text part
-    (( all > 1 )) && echo "(${part}/${all})"
-    rand="(($RANDOM % ${#voices[@]}))"
-    cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g'
-
-    echo "─── (voice ${voices[$rand]}) ───"
+    calcPad # How much to pad to center block
+    echoBlock (){
+        echo
+        # print header and text part
+        (( all > 1 )) && echo "(${part}/${all})" 
+        rand="(($RANDOM % ${#voices[@]}))"
+        cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g' 
+        #while read -r line; do
+        #    centertext "$line"
+        #done < "part.txt"
+        echo "─── (voice ${voices[$rand]}) ───" 
+    }
+    echoBlock | pr -T -o "$pad"
     # synth
     aws polly synthesize-speech \
     --output-format ogg_vorbis \
     --voice-id "${voices[$rand]}" \
     --text "$(cat "$file")" "$tmp/pipe" | play "$tmp/pipe" 2>/dev/null || exit
  
-    echo
+    
 done
