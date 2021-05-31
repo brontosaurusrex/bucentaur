@@ -19,7 +19,7 @@ bytes="600"
 # text display width in chars (50-80)
 width="50"
 # center text block
-centertext="" # non-empty is true
+centertext="mkay" # non-empty is true
 # end config
 
 storeInit (){
@@ -155,11 +155,11 @@ for file in x*; do
     fi
     resumeSave
     calcPad # How much to pad to center block
+    rand="(($RANDOM % ${#voices[@]}))"
     echoBlock (){
         echo
         # print header and text part
         (( all > 1 )) && echo "(${part}/${all})" 
-        rand="(($RANDOM % ${#voices[@]}))"
         cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g' 
         echo "─── (voice ${voices[$rand]}) ───" 
     }
@@ -170,5 +170,4 @@ for file in x*; do
     --voice-id "${voices[$rand]}" \
     --text "$(cat "$file")" "$tmp/pipe" | play "$tmp/pipe" 2>/dev/null || exit
  
-    
 done
