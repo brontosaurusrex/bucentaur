@@ -161,9 +161,6 @@ for file in x*; do
         (( all > 1 )) && echo "(${part}/${all})" 
         rand="(($RANDOM % ${#voices[@]}))"
         cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g' 
-        #while read -r line; do
-        #    centertext "$line"
-        #done < "part.txt"
         echo "─── (voice ${voices[$rand]}) ───" 
     }
     echoBlock | pr -T -o "$pad"
