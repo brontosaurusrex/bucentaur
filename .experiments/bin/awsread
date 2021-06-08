@@ -66,8 +66,9 @@ awsread --list              # or -l list over store
 awsread --random            # or -r read random page
 
 interactive keys:
-q                           # skip to next block (mpv key)
-ctrl+c                      # press just once for clear exit and to get the normal cursor back
+q                           # skip to next block (mpv)
+space                       # toggle playback (mpv)
+ctrl+c                      # press for exit and to get the normal cursor back
 
 config:
 'resume' is enabled by default and should work for files only, not for clipboard.
@@ -115,13 +116,15 @@ command -v mpv >/dev/null 2>&1 || { echo "I need mpv player, exiting." >&2; exit
 command -v md5sum >/dev/null 2>&1 || { echo "I need md5sum, exiting." >&2; exit 1; }
 
 cleanup () {
+  (( debug )) && echo "$?"
   [ -n "$tmp" ] && rm -fr "$tmp"
   tput cnorm
 }
 
 # tmp dir
 tmp="/tmp/$RANDOM-$$"
-trap cleanup EXIT 
+trap cleanup EXIT SIGTERM SIGINT 
+# https://www.gnu.org/software/libc/manual/html_node/Termination-Signals.html
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1; }
 
 # named pipe
