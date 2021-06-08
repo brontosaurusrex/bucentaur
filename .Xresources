@@ -4,7 +4,7 @@ URxvt.letterSpace: -1
 
 ! URxvt look
 ! set URxvt  bold to empty to disable bold
-URXvt.boldFont:
+URXvt.boldFont: xft:FantasqueSansMono-Regular:size=12
 URxvt*.scrollBar:           false
 
 ! URxvt size in chars
