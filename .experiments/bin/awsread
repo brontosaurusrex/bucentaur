@@ -87,11 +87,15 @@ elif [ "$1" == "--goto" ] || [ "$1" == "-g" ]; then # goto chunk
     shift
 elif [ "$1" == "--list" ] || [ "$1" == "-l" ]; then # list stored resumes/names ...
     cd "$storeroot" || exit
-    #ls -clhtr
-    for d in */ ; do
-        echo -n "hash: $d, name: "
-        tail -1 "$d/name" 2>/dev/null || echo "clipboard"
-    done
+        # sort by date horror
+        find . -type f -iname "name" -printf "%T@\t%Tc %h\n" | sort -n | cut -d " " -f 8- |\
+        while read -r path; do
+            name="$(tail -1 "$path/name")"
+            from="$(cat "$path/resume")"
+            printf -v from "% 4d" "$from" # pad with spaces
+            path="$(basename $path)" && path="${path:0:4}..." # clean and shorten path/hash
+            echo -e "$path\t$from\t$name"
+        done
     exit
 elif [ "$1" == "--random" ] || [ "$1" == "-r" ]; then # goto random chunk
     random="1" # 1 is true
