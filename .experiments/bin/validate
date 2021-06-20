@@ -1,0 +1,116 @@
+#!/bin/bash
+
+# validate string
+# Must look like
+# NAP-UPPER TITLE WITH ASCII ONLY-20210620-085-F1.mxf
+# Breakdown:
+# a. always starts with NAP-
+# b. Always has four - ?
+# c. No extra spaces 'NAP - TITLE' is wrong
+# d. title is UPPERCASE and basic ascii only
+# e. date is YYYYMMDD (Must be in the future, there could be a calc on how far away it is from current)
+# f. 085 is a number representing day of the week, valid are 081-087, 050, 060 and 090
+# g. F1 is version number, F2, F3 are also valid, also CF is valid meaning 'cleanfeed'.
+
+# global vars
+debug="0"
+globalerrors="0"
+
+# raport
+raport (){
+    if (( errors != 0 )); then
+        echo "$input ✗"
+        (( globalerrors+=1 ))
+    else
+        echo "$input ✓"
+    fi
+}
+
+# main
+while [ $# -gt 0 ]; do
+    # file path or direct string provided by user (doesn't matter)
+    input="$(readlink -f "$1")"
+    #input="$1"
+    input="${input##*/}" # base.ext
+    input="${input%.*}"  # base
+    (( debug )) && echo "$input"
+
+    errors="0"
+    # a. always starts with NAP-
+    if [[ $input != NAP-* ]]; then
+        echo "Začeti se mora na NAP-" 
+        (( errors+=1 ))
+    fi
+
+    # b. four parts delimited by -
+    delimiter="${input//[^-]}"
+    num="${#delimiter}" # Must be exactly four.
+
+    if [[ $num != 4 ]]; then
+        echo "natančno štirje pomišljaji morajo biti in to brez presledkov." 
+        (( errors+=1 ))
+        raport
+        shift
+        continue # skipping here
+    else # split into parts and fill array
+        IFS='-' read -r -a array <<< "$input"
+
+    fi
+
+    # c. already covered
+
+    # d. title is UPPERCASE and basic ascii only
+    # exactly 2nd member of array
+    (( debug )) && echo "${array[1]}" # should be title
+    if [[ ${array[1]} == *[![:ascii:]]* ]]; then
+    echo "Naslov mora biti izključno ascii"
+    (( errors+=1 ))
+    fi
+    if [[ ${array[1]} == *[[:lower:]]* ]]; then
+    echo "Naslov mora biti izključno z velikimi črkami"
+    (( errors+=1 ))
+    fi
+
+    # e. date is YYYYMMDD (Must be in the future, there could be a calc on how far away it is from current)
+    (( debug )) && echo "${array[2]}" # should be date in YYYYMMDD format
+    num2="${#array[2]}" # Must be exactly eight.
+    if [[ $num2 != 8 ]]; then
+        echo "datum mora vsebovati natančno osem znakov YYYYMMDD" 
+        (( errors+=1 ))
+    fi
+    if ! [[ ${array[2]} =~ ^[[:digit:]]+$ ]]; then
+        echo "datum mora biti zapisan numerično"
+        (( errors+=1 ))
+    fi
+    if ! date -d "${array[2]}" >/dev/null 2>&1; then
+        date -d "${array[2]}" 
+        (( errors+=1 ))
+    fi
+
+    # f. 085 is a number representing day of the week, valid are 081-087, 050, 060 and 090
+    dnevi=(081 082 083 084 085 086 087 090 060 050 090)
+    if [[ ! "${dnevi[*]}" =~ ${array[3]} ]]; then
+        # whatever you want to do when array doesn't contain value
+        echo "neveljaven dan ${array[3]}"
+        (( errors+=1 ))
+    fi
+
+    # g. F1 is version number, F2, F3 are also valid, also CF is valid meaning 'cleanfeed'.
+    version=(F1 F2 F3 F4 F5 F6 F7 F8 F9 CF)
+    if [[ ! "${version[*]}" =~ ${array[4]} ]]; then
+        # whatever you want to do when array doesn't contain value
+        echo "neveljavna verzija ${array[4]}"
+        (( errors+=1 ))
+    fi
+
+    #
+    raport
+
+    shift
+done
+
+# global = errors for all files
+if (( globalerrors != 0 )); then
+    echo "Napak = $globalerrors"
+    exit 1
+fi
