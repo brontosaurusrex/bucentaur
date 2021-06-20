@@ -82,8 +82,8 @@ while [ $# -gt 0 ]; do
         echo "datum mora biti zapisan numerično"
         (( errors+=1 ))
     fi
-    if ! date -d "${array[2]}" >/dev/null 2>&1; then
-        date -d "${array[2]}" 
+    if ! date "+%Y%m%d" --date "${array[2]}" >/dev/null 2>&1; then
+        date "+%Y%m%d" --date "${array[2]}" 
         (( errors+=1 ))
     fi
 
