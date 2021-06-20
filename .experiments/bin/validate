@@ -12,6 +12,13 @@
 # f. 085 is a number representing day of the week, valid are 081-087, 050, 060 and 090
 # g. F1 is version number, F2, F3 are also valid, also CF is valid meaning 'cleanfeed'.
 
+# usage
+# validate "string" # string
+# validate *.mxf    # or list of files
+
+# needs dateutils
+command -v dateutils.ddiff >/dev/null 2>&1 || { echo "Rabim dateutils.ddiff za primerjavo datumov, apt install dateutils." >&2; exit 1; }
+
 # global vars
 debug="0"
 globalerrors="0"
@@ -22,7 +29,28 @@ raport (){
         echo "$input ✗"
         (( globalerrors+=1 ))
     else
-        echo "$input ✓"
+        echo "$input ✓ ($razlikaDni)"
+    fi
+}
+
+# Kaj meni date (in dateutils.ddiff)
+kajMeniDate () {
+    # Kaj o zapisu datuma meni 'date'
+    if ! date "+%Y%m%d" --date "${array[2]}" >/dev/null 2>&1; then
+        date "+%Y%m%d" --date "${array[2]}" >&2
+        (( errors+=1 ))
+    else # Datum je pravilen meni 'date',
+        # preverimo še, če ni preteklik
+            datum="$(date "+%Y%m%d" --date "${array[2]}")"
+            danes="$(date "+%Y%m%d" --date Today)"
+        if (( danes > datum )); then 
+            echo "Pozor, datum je preteklik"
+            razlikaDni="pred $(dateutils.ddiff -i "%Y%m%d" "$danes" "$datum" -f "%d") dnevi"
+        elif (( danes == datum )); then
+            razlikaDni="danes"
+        else # prihodnjik, razlika? rabi dateutils
+            razlikaDni="čez $(dateutils.ddiff -i "%Y%m%d" "$danes" "$datum" -f "%d") dni"
+        fi
     fi
 }
 
@@ -81,14 +109,11 @@ while [ $# -gt 0 ]; do
     if [[ $num2 != 8 ]]; then
         >&2 echo "Datum mora vsebovati natančno osem znakov YYYYMMDD" 
         (( errors+=1 ))
-    fi
-    if ! [[ ${array[2]} =~ ^[[:digit:]]+$ ]]; then
+    elif ! [[ ${array[2]} =~ ^[[:digit:]]+$ ]]; then
         >&2 echo "Datum mora biti zapisan numerično"
         (( errors+=1 ))
-    fi
-    if ! date "+%Y%m%d" --date "${array[2]}" >/dev/null 2>&1; then
-        date "+%Y%m%d" --date "${array[2]}" >&2
-        (( errors+=1 ))
+    else # V tej točki je 8 znakovni in numerični
+        kajMeniDate
     fi
 
     # f. 085 is a number representing day of the week, valid are 081-087, 050, 060 and 090
