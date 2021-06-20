@@ -110,7 +110,7 @@ while [ $# -gt 0 ]; do
         >&2 echo "Datum mora vsebovati natančno osem znakov YYYYMMDD" 
         (( errors+=1 ))
     elif ! [[ ${array[2]} =~ ^[[:digit:]]+$ ]]; then
-        >&2 echo "Datum mora biti zapisan numerično"
+        >&2 echo "Datum mora biti zapisan numerično YYYYMMDD"
         (( errors+=1 ))
     else # V tej točki je 8 znakovni in numerični
         kajMeniDate
