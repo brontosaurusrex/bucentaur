@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# validate string
+# nada file name validator
+
+# usage
+# nada "string" # string
+# nada *.mxf    # or list of files
+
 # Must look like
 # NAP-UPPER TITLE WITH ASCII ONLY-20210620-085-F1.mxf
 # Breakdown:
@@ -12,16 +17,16 @@
 # f. 085 is a number representing day of the week, valid are 081-087, 050, 060 and 090
 # g. F1 is version number, F2, F3 are also valid, also CF is valid meaning 'cleanfeed'.
 
-# usage
-# validate "string" # string
-# validate *.mxf    # or list of files
-
 # needs dateutils
 command -v dateutils.ddiff >/dev/null 2>&1 || { echo "Rabim dateutils.ddiff za primerjavo datumov, apt install dateutils." >&2; exit 1; }
 
 # global vars
 debug="0"
 globalerrors="0"
+
+# echo err
+#echoerr() { echo -e "\e[3m$@\e[0m" >&2; }
+echoerr() { echo -e "\e[3m\e[2m$*\e[22m\e[0m" >&2; } # dim and italics
 
 # raport
 raport (){
@@ -44,7 +49,7 @@ kajMeniDate () {
             datum="$(date "+%Y%m%d" --date "${array[2]}")"
             danes="$(date "+%Y%m%d" --date Today)"
         if (( danes > datum )); then 
-            echo "Pozor, datum je preteklik"
+            echoerr "Pozor, datum je preteklik"
             razlikaDni="pred $(dateutils.ddiff -i "%Y%m%d" "$danes" "$datum" -f "%d") dnevi"
         elif (( danes == datum )); then
             razlikaDni="danes"
@@ -57,7 +62,7 @@ kajMeniDate () {
 # main
 while [ $# -gt 0 ]; do
     # file path or direct string provided by user (doesn't matter)
-    input="$(readlink -f "$1")"
+    input="$(readlink -f "$1" 2>/dev/null )" || input="$1"
     #input="$1"
     input="${input##*/}" # base.ext
     input="${input%.*}"  # base
@@ -66,7 +71,7 @@ while [ $# -gt 0 ]; do
     errors="0"
     # a. always starts with NAP-
     if [[ $input != NAP-* ]]; then
-        >&2 echo "Začeti se mora na NAP-" 
+        echoerr "Začeti se mora na NAP-" 
         (( errors+=1 ))
     fi
 
@@ -75,7 +80,7 @@ while [ $# -gt 0 ]; do
     num="${#delimiter}" # Must be exactly four.
 
     if [[ $num != 4 ]]; then
-        >&2 echo "Natančno štirje pomišljaji morajo biti in to brez presledkov." 
+        echoerr "Natančno štirje pomišljaji morajo biti in to brez presledkov." 
         (( errors+=1 ))
         raport
         shift
@@ -83,6 +88,15 @@ while [ $# -gt 0 ]; do
     else # split into parts and fill array
         IFS='-' read -r -a array <<< "$input"
 
+        # check for empty members in array
+        for i in "${!array[@]}"
+        do
+            if [[ -z "${array[$i]}" ]]; then
+                echoerr "Polje $i je prazno."
+                (( errors+=1 ))
+            fi
+        done
+   
     fi
 
     # c. each part checked separatedly
@@ -91,15 +105,15 @@ while [ $# -gt 0 ]; do
     # exactly 2nd member of array
     (( debug )) && echo "${array[1]}" # should be title
     if [[ ${array[1]} == *[![:ascii:]]* ]]; then
-        >&2 echo "Naslov mora biti izključno ascii"
+        echoerr "Naslov mora biti izključno ascii."
         (( errors+=1 ))
     fi
     if [[ ${array[1]} == *[[:lower:]]* ]]; then
-        >&2 echo "Naslov mora biti izključno z velikimi črkami"
+        echoerr "Naslov mora biti izključno z velikimi črkami."
         (( errors+=1 ))
     fi
     if [[ ${array[1]} != "$(echo "${array[1]}" | xargs)" ]]; then
-        >&2 echo "Presledki na začetku ali na koncu naslova ali pa več zaporednih v naslovu samem"
+        echoerr "Presledki na začetku ali na koncu naslova ali pa več zaporednih v naslovu samem."
         (( errors+=1 ))
     fi
 
@@ -107,10 +121,10 @@ while [ $# -gt 0 ]; do
     (( debug )) && echo "${array[2]}" # should be date in YYYYMMDD format
     num2="${#array[2]}" # Must be exactly eight.
     if [[ $num2 != 8 ]]; then
-        >&2 echo "Datum mora vsebovati natančno osem znakov YYYYMMDD" 
+        echoerr "Datum mora vsebovati natančno osem znakov YYYYMMDD" 
         (( errors+=1 ))
     elif ! [[ ${array[2]} =~ ^[[:digit:]]+$ ]]; then
-        >&2 echo "Datum mora biti zapisan numerično YYYYMMDD"
+        echoerr "Datum mora biti zapisan numerično YYYYMMDD"
         (( errors+=1 ))
     else # V tej točki je 8 znakovni in numerični
         kajMeniDate
@@ -120,11 +134,11 @@ while [ $# -gt 0 ]; do
     dnevi=(081 082 083 084 085 086 087 090 060 050 090)
     if [[ ! "${dnevi[*]}" =~ ${array[3]} ]]; then
         # whatever you want to do when array doesn't contain value
-        >&2 echo "Neveljaven dan ${array[3]}"
+        echoerr "Neveljaven dan ${array[3]}"
         (( errors+=1 ))
     fi
     if [[ ${array[3]} != "$(echo "${array[3]}" | xargs)" ]]; then
-        >&2 echo "Presledki v zapisu dneva"
+        echoerr "Presledki v zapisu dneva."
         (( errors+=1 ))
     fi
 
@@ -132,11 +146,11 @@ while [ $# -gt 0 ]; do
     version=(F1 F2 F3 F4 F5 F6 F7 F8 F9 CF)
     if [[ ! "${version[*]}" =~ ${array[4]} ]]; then
         # whatever you want to do when array doesn't contain value
-        >&2 echo "Neveljavna verzija ${array[4]}"
+        echoerr "Neveljavna verzija ${array[4]}."
         (( errors+=1 ))
     fi
     if [[ ${array[4]} != "$(echo "${array[4]}" | xargs)" ]]; then
-        >&2 echo "Presledki v zapisu verzije"
+        echoerr "Presledki v zapisu verzije."
         (( errors+=1 ))
     fi
 
@@ -148,6 +162,6 @@ done
 
 # global = errors for all files
 if (( globalerrors != 0 )); then
-    >&2 echo "Napak = $globalerrors"
+    echoerr "Napak = $globalerrors"
     exit 1
 fi
