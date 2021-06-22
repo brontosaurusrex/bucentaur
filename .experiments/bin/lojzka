@@ -15,7 +15,7 @@
 # d. title is UPPERCASE and basic ascii only
 # e. date is YYYYMMDD (Must be in the future, there could be a calc on how far away it is from current)
 # f. 085 is a number representing day of the week, valid are 081-087, 050, 060 and 090
-# g. check id 'day of week' from date equals day code
+# g. check if 'day of week' from date equals day code
 # h. F1 is version number, F2, F3 are also valid, also CF is valid meaning 'cleanfeed'.
 
 # needs dateutils
