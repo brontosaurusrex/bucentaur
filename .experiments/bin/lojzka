@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# nada file name validator
+# lojzka file name validator
 
 # usage
-# nada "string" # string
-# nada *.mxf    # or list of files
+# lojzka "string" # string
+# lojzka *.mxf    # or list of files
 
 # Must look like
 # NAP-UPPER TITLE WITH ASCII ONLY-20210620-085-F1.mxf
@@ -13,9 +13,10 @@
 # b. Always has four - ?
 # c. No extra spaces 'NAP - TITLE' is wrong
 # d. title is UPPERCASE and basic ascii only
-# e. date is YYYYMMDD (Must be in the future, there could be a calc on how far away it is from current < not implemented)
+# e. date is YYYYMMDD (Must be in the future, there could be a calc on how far away it is from current)
 # f. 085 is a number representing day of the week, valid are 081-087, 050, 060 and 090
-# g. F1 is version number, F2, F3 are also valid, also CF is valid meaning 'cleanfeed'.
+# g. check id 'day of week' from date equals day code
+# h. F1 is version number, F2, F3 are also valid, also CF is valid meaning 'cleanfeed'.
 
 # needs dateutils
 command -v dateutils.ddiff >/dev/null 2>&1 || { echo "Rabim dateutils.ddiff za primerjavo datumov, apt install dateutils." >&2; exit 1; }
@@ -41,10 +42,11 @@ raport (){
 # Kaj meni date (in dateutils.ddiff)
 kajMeniDate () {
     # Kaj o zapisu datuma meni 'date'
-    if ! date "+%Y%m%d" --date "${array[2]}" >/dev/null 2>&1; then
+    if ! date "+%Y%m%d" --date "${array[2]}" >/dev/null 2>&1; then # error
         date "+%Y%m%d" --date "${array[2]}" >&2
         (( errors+=1 ))
     else # Datum je pravilen meni 'date',
+        dateformat="1" # fine
         # preverimo še, če ni preteklik
             datum="$(date "+%Y%m%d" --date "${array[2]}")"
             danes="$(date "+%Y%m%d" --date Today)"
@@ -56,6 +58,11 @@ kajMeniDate () {
         else # prihodnjik, razlika? rabi dateutils
             razlikaDni="čez $(dateutils.ddiff -i "%Y%m%d" "$danes" "$datum" -f "%d") dni"
         fi
+    fi
+    if (( dateformat )); then # date is fine, but lets also check what day is that date
+                              # for comparision with day code (081-087)
+        day="$(date "+%u" --date "${array[2]}")"
+        # day of the week, [1-7]
     fi
 }
 
@@ -80,7 +87,7 @@ while [ $# -gt 0 ]; do
     num="${#delimiter}" # Must be exactly four.
 
     if [[ $num != 4 ]]; then
-        echoerr "Natančno štirje pomišljaji morajo biti in to brez presledkov." 
+        echoerr "Natančno štiri polja morajo biti, ločena z pomišljaji in brez presledkov." 
         (( errors+=1 ))
         raport
         shift
@@ -142,7 +149,19 @@ while [ $# -gt 0 ]; do
         (( errors+=1 ))
     fi
 
-    # g. F1 is version number, F2, F3 are also valid, also CF is valid meaning 'cleanfeed'.
+    # g. ${array[3]} = koda za dan
+    praviDnevi=(081 082 083 084 085 086 087)
+    if [[ "${praviDnevi[*]}" =~ ${array[3]} ]]; then
+        (( debug )) && echo "Pravi dan!"
+        # var $day should be valid here, from function kajMeniDate
+        daycode="${array[3]: -1}" # zadnji karakter
+        if (( day != daycode )); then
+            echoerr "Koda za dan ($day) ni enaka datumu ($daycode)."
+            (( errors+=1 ))
+        fi
+    fi
+
+    # h. F1 is version number, F2, F3 are also valid, also CF is valid meaning 'cleanfeed'.
     version=(F1 F2 F3 F4 F5 F6 F7 F8 F9 CF)
     if [[ ! "${version[*]}" =~ ${array[4]} ]]; then
         # whatever you want to do when array doesn't contain value
