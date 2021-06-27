@@ -64,6 +64,7 @@ awsreas file.txt            # will read from file
 awsread --goto 100 file.txt # or -g goto page 100, will set resume to this new entry
 awsread --list              # or -l list over store
 awsread --random            # or -r read random page
+awsread --hash ab           # or -x will read first file that includes those letters in hash
 
 interactive keys:
 q                           # skip to next block (mpv)
@@ -93,7 +94,7 @@ elif [ "$1" == "--list" ] || [ "$1" == "-l" ]; then # list stored resumes/names 
             name="$(tail -1 "$path/name")"
             from="$(cat "$path/resume")"
             printf -v from "% 4d" "$from" # pad with spaces
-            path="$(basename $path)" && path="${path:0:4}..." # clean and shorten path/hash
+            path="$(basename "$path")" #&& path="${path:0:8}..." # clean and shorten path/hash
             echo -e "$path\t$from\t$name"
         done
     exit
@@ -101,10 +102,19 @@ elif [ "$1" == "--random" ] || [ "$1" == "-r" ]; then # goto random chunk
     random="1" # 1 is true
     (( debug )) && echo "Random page requested"
     shift # assuming --random file.txt
+elif [ "$1" == "--hash" ] || [ "$1" == "-x" ]; then # find file by hash
+    shift
+    search="$1"
+    cd "$storeroot" || exit
+    cd -- "$(find . -name "*$search*" -type d | tail -1)" || exit
+    input="$(cat name | tail -1)" || exit
+    echo "$input"
+else
+    input="$1"
 fi
 
 # start
-input="$1"
+
 fullpath="$(readlink -f "$input")"
 (( debug )) && echo "$fullpath"
 
