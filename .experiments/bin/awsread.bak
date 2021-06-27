@@ -79,21 +79,14 @@ EOF
 }
 
 # switches
-# help && exit
 if [ "$1" == "--help" ] || [ "$1" == "-h" ]; then # print help
     help
     exit
-fi
-
-# goto 
-if [ "$1" == "--goto" ] || [ "$1" == "-g" ]; then # goto chunk
+elif [ "$1" == "--goto" ] || [ "$1" == "-g" ]; then # goto chunk
     shift
-    jumpto="$1" # assuming --goto 120
+    jumpto="$1" # assuming --goto 120 file.txt
     shift
-fi
-
-# list && exit
-if [ "$1" == "--list" ] || [ "$1" == "-l" ]; then # list stored resumes/names ...
+elif [ "$1" == "--list" ] || [ "$1" == "-l" ]; then # list stored resumes/names ...
     cd "$storeroot" || exit
         # sort by date horror
         find . -type f -iname "name" -printf "%T@\t%Tc %h\n" | sort -n | cut -d " " -f 8- |\
@@ -105,33 +98,23 @@ if [ "$1" == "--list" ] || [ "$1" == "-l" ]; then # list stored resumes/names ..
             echo -e "$path\t$from\t$name"
         done
     exit
-fi
-
-# random
-if [ "$1" == "--random" ] || [ "$1" == "-r" ]; then # goto random page
+elif [ "$1" == "--random" ] || [ "$1" == "-r" ]; then # goto random chunk
     random="1" # 1 is true
     (( debug )) && echo "Random page requested"
     shift # assuming --random file.txt
-fi
-
-# hash
-if [ "$1" == "--hash" ] || [ "$1" == "-x" ]; then # find file by hash
+elif [ "$1" == "--hash" ] || [ "$1" == "-x" ]; then # find file by hash
     shift
     search="$1"
     cd "$storeroot" || exit
     cd -- "$(find . -name "*$search*" -type d | tail -1)" || exit
     input="$(cat name | tail -1)" || exit
     echo "$input"
-fi
-
-# else just path to file
-if [ -f "$1" ]; then
+else
     input="$1"
-    echo "$input"
 fi
 
 # start
-# assuming we have a valid $input file path here
+
 fullpath="$(readlink -f "$input")"
 (( debug )) && echo "$fullpath"
 
