@@ -12,11 +12,13 @@
 # license: WTFPL – Do What the **** You Want to Public License
 
 # config
-chars="50"
-fil="·"
-poschar="│"
-posnum="true"   # show percent number instead of "$poschar" char
-posmute=" ___ "
+chars="20"
+fil="|"
+fil="█"
+poschar="   "
+posnum="false"   # show percent number instead of "$poschar" char
+
+posmute=" m "
 
 # debug
 debug="false"
@@ -132,7 +134,8 @@ do
     c=$(for i in $(seq 1 $postloop); do
         printf "%s" "$fil"
     done)
-    printf "$a$b$c$mode\n"
+    #printf "$a$b$c$mode\n"
+    echo "$a$b$c$mode"
 done
 
 # tint2 executor example:
