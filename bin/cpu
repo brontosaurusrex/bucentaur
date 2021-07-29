@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# cpu
+
+ps -eo fname --sort pcpu | uniq | tail -n 130 | tac | grep -Ev "cat|tac|tail|uniq|ps|grep|head|awk|bash|zsh|cpu|urxvt|sh|watch|Xorg|jfs*|chrome-s|dunst|xfs*|tmux*|gvfs*|printVol|kworker" | awk '!seen[$0]++' | head
+
+# grep holds shitlist
+# awk removes duplicates without re-sorting
