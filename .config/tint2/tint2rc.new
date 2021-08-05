@@ -177,7 +177,7 @@ task_text = 0
 task_icon = 1
 task_centered = 1
 urgent_nb_of_blink = 20
-task_maximum_size = 50 40
+task_maximum_size = 70 40
 task_padding = 2 2 2
 task_font = cuprum 8
 task_font_color = #111111 70
@@ -252,6 +252,7 @@ battery_dwheel_command =
 ac_connected_cmd = 
 ac_disconnected_cmd = 
 
+
 #-------------------------------------
 # Executor nmCont 
 execp = new
@@ -260,8 +261,6 @@ execp_interval = 0
 execp_continuous = 1
 execp_lclick_command = nm-applet
 execp_rclick_command = killall nm-applet
-
-
 execp_font = cuprum 10
 execp_font_color = #111111 40
 execp_padding = 0 0
@@ -285,7 +284,7 @@ execp_rclick_command = amixer set Master 10%+
 execp_mclick_command = amixer set Master toggle
 execp_uwheel_command = amixer set Master 1%-
 execp_dwheel_command = amixer set Master 1%+
-execp_font = cuprum 7
+execp_font = cuprum 8
 execp_font_color = #111111 40
 execp_padding = 6 0
 execp_background_id = 0
@@ -296,7 +295,8 @@ execp_icon_h = 0
 #-------------------------------------
 # Executor Time
 execp = new
-execp_command = echo -n "$(date +%H%M%^b%d%y)"
+execp_command = echo -n "$(LC_ALL=sl_SI.utf8 date +%H%M%^b%d%y)"
+# $(LC_ALL=sl_SI.utf8 date +%H%M%^b%d%y)
 execp_interval = 5
 execp_has_icon = 0
 execp_cache_icon = 0
@@ -315,6 +315,7 @@ execp_background_id = 0
 execp_centered = 1
 execp_icon_w = 0
 execp_icon_h = 0
+
 
 #-------------------------------------
 # Tooltip
