@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# rotate wallpapers
+setit (){
+    nitrogen --set-zoom-fill --set-color=#456 --random "$HOME/wallpapers"
+}
+
+# restart
+restart() {
+if pgrep -x "$1" > /dev/null
+then
+    (echo "$1 running, restarting"
+    killall -w "$1"
+    "${1}" &) &
+else
+    echo "$1 wasn't running"
+fi
+}
+
+
+# main loop 4ever
+while true
+do
+    setit && restart wbar
+    sleep 3600
+done
