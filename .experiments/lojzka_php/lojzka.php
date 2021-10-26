@@ -27,11 +27,8 @@
 
       $arr = array_filter(explode("\r\n", $_POST['input']));
 
-      //print_r(array_values($arr));
-
-     
-
-      echo "<pre>".shell_exec('/home/b/bin/lojzka '.join(' ',$arr)) ."</pre>";
+      echo "<pre>".shell_exec('/home/b/bin/lojzka '.join('\r\n',$arr)) ."</pre>";
+      //echo "<pre>".shell_exec('/home/b/bin/lojzka '.join('\n',$arr)) ."</pre>";
       //shell_exec('sh get_countries.sh '.join(' ',$array));
 
       /*foreach ($arr as &$value) {
