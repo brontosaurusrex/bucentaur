@@ -185,7 +185,9 @@ while [ $# -gt 0 ]; do
 done
 
 # global = errors for all files
-if (( globalerrors != 0 )); then
-    echoerr "Napak = $globalerrors"
-    exit 1
+if [[ -t 1 ]]; then # only if in term
+    if (( globalerrors != 0 )); then
+        echoerr "Napak = $globalerrors"
+        exit 1
+    fi
 fi
