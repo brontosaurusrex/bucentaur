@@ -27,16 +27,16 @@
 
       $arr = array_filter(explode("\r\n", $_POST['input']));
 
-      echo "<pre>".shell_exec('/home/b/bin/lojzka '.join('\r\n',$arr)) ."</pre>";
+      //echo "<pre>".shell_exec('/home/ticho/bin/lojzka '.join('\r\n',$arr)) ."</pre>";
       //echo "<pre>".shell_exec('/home/b/bin/lojzka '.join('\n',$arr)) ."</pre>";
       //shell_exec('sh get_countries.sh '.join(' ',$array));
 
-      /*foreach ($arr as &$value) {
+      foreach ($arr as &$value) {
         //echo "$value\n<br>";
        
-        echo "<pre>".shell_exec("/home/b/bin/lojzka '$value' 2>&1")."</pre>";
+        echo "<pre>".shell_exec("/home/ticho/bin/lojzka '$value' 2>&1")."</pre>";
         
-      } */
+      } 
     
     } 
 
