@@ -92,7 +92,7 @@ while [ $# -gt 0 ]; do
     num="${#delimiter}" # Must be exactly four.
 
     if [[ $num != 4 ]]; then
-        echoerr "Natančno štiri polja morajo biti, ločena z pomišljaji in brez presledkov." 
+        echoerr "Natančno štiri polja morajo biti, ločena s pomišljaji in brez presledkov." 
         (( errors+=1 ))
         raport
         shift
