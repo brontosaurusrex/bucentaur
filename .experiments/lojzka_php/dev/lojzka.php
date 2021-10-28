@@ -50,12 +50,12 @@
         
         $arr = array_filter(explode("\r\n", $_POST['input']));
         
-        echo '<div class="someMargins"><pre class="form-group form-control">';
+        echo '<div class="someMargins"><div class="form-group form-control" rows="10" style="white-space: pre;">';
         foreach ($arr as &$value) {
             $value = trim($value);
             echo shell_exec("/home/ticho/bin/lojzka '$value' 2>&1");
         }
-        echo '</pre></div>'; 
+        echo '</div></div>'; 
     
     } 
 
