@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="si">
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -7,36 +7,63 @@
     <!-- Bootstrap CSS -->
     <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
-    <title>preverba</title>
+    <title></title>
     <style>
         .someMargins {  padding: 2%; 
         padding-top: 1%;	
         padding-bottom: 1%;	}
+        
+        .lessMargins {  padding: 2%; 
+        padding-top: 0.5%;	
+        padding-bottom: 0.5%;	}
+
+        .btn {  
+        margin-top: 0.5rem;
+        opacity: 0.9;
+        }
+
+        }
     </style>
   </head>
 
   <body>
   <div class="someMargins">
+      
+    <div class="someMargins">
+    <form method="post" action="lojzka.php">
+    <div class="form-group">
+        <label for="exampleFormControlTextarea1">Vsak naslov v svojo vrstico, primer: NAP-NASLOV JE TO-20211028-084-F1</label>
+        <textarea class="form-control" name="input" id="exampleFormControlTextarea1" rows="5"><?php
+        // Always check an input variable is set before you use it
+        if (isset($_POST['input'])) {
+        
+        echo $_POST['input'];}
+        
+        ?></textarea>
+    </div>
+    <div class="form-group row"><div class="col-sm-10">
+
+        <button class="btn btn-primary" type="submit">Preveri</button>
+    </div></div>
+
+    </form>
+  </div>
    
     <?php
 
     // Always check an input variable is set before you use it
     if (isset($_POST['input'])) {
-      // Escape any html characters
-      //echo htmlentities($_POST['input']);
-
-      $arr = array_filter(explode("\r\n", $_POST['input']));
-
-      //echo "<pre>".shell_exec('/home/ticho/bin/lojzka '.join('\r\n',$arr)) ."</pre>";
-      //echo "<pre>".shell_exec('/home/b/bin/lojzka '.join('\n',$arr)) ."</pre>";
-      //shell_exec('sh get_countries.sh '.join(' ',$array));
-
-      foreach ($arr as &$value) {
-        //echo "$value\n<br>";
-       
-        echo "<pre>".shell_exec("/home/ticho/bin/lojzka '$value' 2>&1")."</pre>";
         
-      } 
+        $arr = array_filter(explode("\r\n", $_POST['input']));
+        
+        
+        foreach ($arr as &$value) {
+            echo '<div class="lessMargins"><div class="form-group form-control" rows="10" style="white-space: pre; overflow: auto;" tabindex="-1">';
+            $value = trim($value);
+            echo shell_exec("/home/ticho/bin/lojzka '$value' 2>&1");
+            echo '</div></div>';
+        }
+         
     
     } 
 
