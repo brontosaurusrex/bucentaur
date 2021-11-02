@@ -7,6 +7,9 @@ superecho() {
     notify-send -u low -t 1000 "$1"
 }
 
+# user start
+killall compton && { superecho "compton killed..."; compose="1"; }
+
 # launch
 if command -v google-chrome; then
     { google-chrome --user-data-dir=/tmp --window-size=800,800 --app="http://slither.io" &
@@ -30,3 +33,9 @@ wait # for browser to exit
 # mice to system defaults
 xset m default
 superecho "default mice active"
+
+# user end
+if (( compose )); then 
+    superecho "restarting compton..."
+    compton &
+fi
