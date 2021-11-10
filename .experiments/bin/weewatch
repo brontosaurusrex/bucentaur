@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# weewatch
+
+# mutiplex all weechat logs to one stream, as seen in sic irc client
+# usage: 
+
+#   watch -t weewatch
+
+#watch -n 7 -c -t "cat ~/.weechat/logs/* | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | tail -n 35 | cut -d' ' -f2-"
+
+cd ~/.weechat/logs/ || exit
+
+main () {
+    for log in *; do
+
+        baseext="${log##*/}"
+        base="${baseext%.*}" 
+
+        #echo "$base"
+        
+        cat "$log" | while read -r line; do
+            echo "$line ($base)"
+        done
+        
+    done
+    }
+    
+main | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | cut -d' ' -f2- | fold -s -w "$(tput cols)" | tail -n $(( $(tput lines) - 2 ))
