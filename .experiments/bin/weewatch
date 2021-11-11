@@ -1,18 +1,14 @@
 #!/bin/bash
 
-# weewatch
+# weewatch - mutiplex all weechat logs to one stream, as seen in sic irc client
 
-# mutiplex all weechat logs to one stream, as seen in sic irc client
 # usage: 
-
 #   watch -t weewatch
-
-#watch -n 7 -c -t "cat ~/.weechat/logs/* | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | tail -n 35 | cut -d' ' -f2-"
 
 cd ~/.weechat/logs/ || exit
 
 main () {
-    for log in *; do
+    for log in *.weechatlog; do
 
         baseext="${log##*/}"
         base="${baseext%.*}" 
