@@ -23,4 +23,9 @@ main () {
     done
     }
     
-main | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | cut -d' ' -f2- | fold -s -w "$(tput cols)" | tail -n $(( $(tput lines) - 2 ))
+# cover the non-interactive use as well?
+cols="$(tput cols)" || cols="85"
+lines="$(tput lines)" || lines="25" 
+
+# run
+main | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | cut -d' ' -f2- | fold -s -w "$cols" | tail -n $(( lines - 1 ))
