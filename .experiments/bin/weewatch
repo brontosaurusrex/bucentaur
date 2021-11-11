@@ -3,10 +3,16 @@
 # weewatch - mutiplex all weechat logs to one stream, as seen in sic irc client
 
 # usage: 
-#   watch -t weewatch
+#   watch -n 5 -t weewatch
 
+# tmp file
+old="/tmp/weewatchold.txt"; new="/tmp/weewatchnew.txt"
+touch "$old" "$new"
+
+# action
 cd ~/.weechat/logs/ || exit
 
+# main
 main () {
     for log in *.weechatlog; do
 
@@ -28,4 +34,10 @@ cols="$(tput cols)" || cols="85"
 lines="$(tput lines)" || lines="25" 
 
 # run
-main | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | cut -d' ' -f2- | fold -s -w "$cols" | tail -n $(( lines - 1 ))
+main | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | cut -d' ' -f2- > "$new"
+
+# print
+diff --old-line-format=' %L' --new-line-format='+%L' --unchanged-line-format=' %L' \
+"$old" "$new" | fold -s -w "$cols" | tail -n $(( lines - 1 ))
+
+cp "$new" "$old"
