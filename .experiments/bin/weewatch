@@ -40,7 +40,7 @@ main | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | cut -d' ' -f2- > "$new
 
 # print
 diff --old-line-format=' %L' --new-line-format='+%L' --unchanged-line-format=' %L' \
-"$old" "$new" | sed 's/\t/ /g' | fold -s -w "$cols" | tail -n $(( lines - 1 ))\
+"$old" "$new" | sed 's/\t/ /g' | fold -s -w "$cols" | tail -n $(( lines - 1 ))
 
 #cp "$new" "$old"
 { sleep 10; cp "$new" "$old"; } &
