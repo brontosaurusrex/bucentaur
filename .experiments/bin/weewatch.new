@@ -25,7 +25,7 @@ main () {
         
         # lets replace cat with tail for performance resons
         tail -n 100 "$log" | while read -r date clock nick line; do
-            #echo -e "$date $clock \e[34m$nick\e[22m\e[0m $line \e[90m($base)\e[22m\e[0m"
+            echo -e "$date $clock \e[34m$nick\e[22m\e[0m $line \e[90m($base)\e[22m\e[0m"
             echo "$date $clock $nick $line ($base)"
         done
         
