@@ -24,8 +24,8 @@ main () {
         #echo "$base"
         
         # lets replace cat with tail for performance resons
-        tail -n 100 "$log" | while read -r line; do
-            echo "$line ($base)"
+        tail -n 100 "$log" | while read -r date clock nick line; do
+            echo -e "$date $clock \e[34m$nick\e[22m\e[0m $line \e[90m($base)\e[22m\e[0m"
         done
         
     done
@@ -40,6 +40,6 @@ main | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | cut -d' ' -f2- > "$new
 
 # print
 diff --old-line-format=' %L' --new-line-format='+%L' --unchanged-line-format=' %L' \
-"$old" "$new" | sed 's/\t/ : /g' | fold -s -w "$cols" | tail -n $(( lines - 1 ))
+"$old" "$new" | sed 's/\t/ /g' | fold -s -w "$cols" | tail -n $(( lines - 1 ))
 
 cp "$new" "$old"
