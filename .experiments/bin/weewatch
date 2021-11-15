@@ -5,7 +5,7 @@
 # usage: 
 #   watch -n 5 -t weewatch
 # or
-#   weewatch; inotifywait --quiet --monitor --event modify ~/.weechat/logs/ | while read; do weewatch; sleep 5; done
+#   weewatch; inotifywait --quiet --monitor --event modify ~/.weechat/logs/ | while read; do weewatch; done
 
 # tmp file
 old="/tmp/weewatchold.txt"; new="/tmp/weewatchnew.txt"
@@ -42,4 +42,5 @@ main | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | cut -d' ' -f2- > "$new
 diff --old-line-format=' %L' --new-line-format='+%L' --unchanged-line-format=' %L' \
 "$old" "$new" | sed 's/\t/ /g' | fold -s -w "$cols" | tail -n $(( lines - 1 ))
 
-cp "$new" "$old"
+{ sleep 10; cp "$new" "$old"; } &
+# ^ Not sure
