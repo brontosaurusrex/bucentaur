@@ -3,8 +3,6 @@
 # weewatch - mutiplex all weechat logs to one stream, as seen in sic irc client
 
 # usage: 
-#   watch -n 5 -t weewatch
-# or
 #   weewatch; inotifywait --quiet --monitor --event modify ~/.weechat/logs/ | while read; do weewatch; done
 
 # tmp file
