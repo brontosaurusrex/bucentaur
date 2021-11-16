@@ -34,7 +34,7 @@ cols="$(tput cols)" || cols="85"
 lines="$(tput lines)" || lines="25" 
 
 # run
-main | grep -v '▬▬▶' | grep -v '◀▬▬' | sort | cut -d' ' -f2- > "$new"
+main | grep -v '▬▬▶\|◀▬▬\|-->\|<--' | sort | cut -d' ' -f2- > "$new"
 
 # print
 diff --old-line-format=' %L' --new-line-format='+%L' --unchanged-line-format=' %L' \
