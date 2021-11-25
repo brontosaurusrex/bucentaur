@@ -8,4 +8,4 @@ r=$(( ( RANDOM % 4 )  + 1 ))
 g=$(( ( RANDOM % 4 )  + 1 ))
 b=$(( ( RANDOM % 4 )  + 1 ))
 
-urxvt -bg rgb:$r/$g/$b &
+urxvt -bg rgb:$r/$g/$b -bd rgb:$r/$g/$b &
