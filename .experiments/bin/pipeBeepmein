@@ -3,7 +3,7 @@
 # pipeBeepmein
 # beepmein pipe menu for jgmenu
 
-# usage: pipeBeepmein | jgmenu --simple --icon-size=0
+# usage: pipeBeepmein | jgmenu --vsimple --at-pointer
 
 # required
 command -v at >/dev/null 2>&1 || { >&2 echo "I need at: sudo apt install --no-install-recommends at" ; exit 1; }
