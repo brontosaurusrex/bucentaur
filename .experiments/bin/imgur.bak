@@ -2,11 +2,11 @@
 
 # imgur
 
-# imgur uploader, markdown, bbcode and html generator
+# imgur uploader, markdown && bbcode generator
 
 # PNG files over X MB will be converted to JPEGs. https://0x0.st/sGED
 
-# Copyright (C) 2022 brontosaurusrex
+# Copyright (C) 2019, 2020 brontosaurusrex
 # License: GPLv3 or later.
 
 # help
@@ -90,10 +90,7 @@ mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; 
 
 # alpha?
 hasAlpha () {
-    #identify -format %A "$1" | grep -q "True"
-    echo "behaving like image never has alpha, so script will never generate custom thumbs"
-    #true
-    false
+    identify -format %A "$1" | grep -q "True"
 }
 
 # upload $1=pathToimage $2=name
@@ -186,8 +183,7 @@ while [ $# -gt 0 ]; do
     fi
     
     # weserv proxy https://images.weserv.nl/docs
-    #prefix="https://images.weserv.nl/?url="
-    prefix=""
+    prefix="https://images.weserv.nl/?url="
     link="${prefix}${link}"
     thumb="${prefix}${thumb}"
     medium="${prefix}${medium}"
@@ -196,29 +192,14 @@ while [ $# -gt 0 ]; do
     xclip -sel clip <<< "$(printf '%s' "$link")" 2> /dev/null
     
     # echo thumb and medium
-    markdown () { 
     echo
     echo "Markdown ${name%.*}"
-    echo "[![$name-$deletehash-th]($thumb)]($link)" | tee -a "$cache/thumbs_markdown.txt"
+    echo "[![$name-$deletehash-th]($thumb)]($link)" | tee -a "$cache/thumbs.txt"
     echo "[![$name-$deletehash-md]($medium)]($link)"
-    }
-
-    bbcode () {
     echo
     echo "bbcode ${name%.*}"
-    echo "[url=$link#$deletehash][img]${thumb}[/img][/url]" | tee -a "$cache/thumbs_bbcode.txt"
+    echo "[url=$link#$deletehash][img]${thumb}[/img][/url]"
     echo "[url=$link#$deletehash][img]${medium}[/img][/url]"
-    }
-
-    html () {
-    echo "html ${name%.*}"
-    echo "<a href=\"$link#$deletehash\" rel=\"noreferrer\"><img src=\"${thumb}\"></a>" | tee -a "$cache/thumbs_html.txt"
-    echo "<a href=\"$link#$deletehash\" rel=\"noreferrer\"><img src=\"${medium}\"></a>"
-    }
-
-markdown
-bbcode
-html
     
 shift
 done
