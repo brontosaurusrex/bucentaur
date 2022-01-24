@@ -1,0 +1,2 @@
+# clipboard to file
+xclip -o -selection clipboard > ~/copyPaste.txt
