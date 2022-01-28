@@ -17,6 +17,15 @@ mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; 
 # dos2unix
 dos2unix -n "$1" "$tmp/file.txt"
 
+# check if it is allready unicode, otherwise assume 1250 and convert to utf
+if [[ $(file "$tmp/file.txt" | grep UTF) ]]; then
+     echo "is utf"
+     mv "$tmp/file.txt" "$tmp/file_utf.txt"
+else
+     echo "not utf, assuming cp1250"
+     iconv -f cp1250 -t utf8 "$tmp/file.txt" > "$tmp/file_utf.txt"
+fi
+
 # var
 count="1"
 
@@ -26,7 +35,7 @@ calc () {
 }
 
 # action
-cat "$tmp/file.txt" | while read -r line; do
+cat "$tmp/file_utf.txt" | while read -r line; do
 
     
     # if it looks like timecode line then 
@@ -85,4 +94,3 @@ exit
 #00:00:53:04  00:00:56:08
 #Ex ea commodi consequatur? 
 #-Velit esse.
-
