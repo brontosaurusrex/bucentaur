@@ -2,4 +2,4 @@
 
 # pick color and set that as wallpaper
 
-var="$(gpick -p -s -o)" && echo "$var" && convert -size 1x1 xc:${var} ~/.1x1.png && nitrogen --save --set-zoom-fill ~/.1x1.png
+var="$(gpick -p -s -o)" && echo "$var" && convert -size 1x1 xc:"${var}" ~/.1x1.png && nitrogen --save --set-zoom-fill ~/.1x1.png
