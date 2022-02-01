@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# wallcolGradient
+
+# pick two color and set that gradient as wallpaper
+
+one="$(gpick -p -s -o)"
+two="$(gpick -p -s -o)"
+
+res="$(xdpyinfo | awk '/dimensions/{print $2}')"
+
+doit () {
+    echo "$one > $two @ $res"
+    convert -size "${res}" gradient:"${one}-${two}" -channel RGB -separate -dither FloydSteinberg -colors 256 -combine -depth 8 ~/.gradient.png && \
+    nitrogen --save --set-centered ~/.gradient.png
+}
+
+[[ "$one" && "$two" && "$res" ]] && doit
