@@ -2,7 +2,7 @@
 
 # wallcolGradient
 
-# pick two color and set that gradient as wallpaper
+# pick two colors and set that gradient as wallpaper
 
 one="$(gpick -p -s -o)"
 two="$(gpick -p -s -o)"
