@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# wallcol2DGradient
+
+# pick four colors and set that gradient as wallpaper
+
+  one="$(gpick -p -s -o)"
+  two="$(gpick -p -s -o)"
+three="$(gpick -p -s -o)"
+ four="$(gpick -p -s -o)"
+
+res="$(xdpyinfo | awk '/dimensions/{print $2}')"
+
+doit () {
+    
+    # info
+    echo "$one > $two > $three > $four @ $res"
+    
+    # make gradient
+    # https://legacy.imagemagick.org/Usage/canvas/#gradient_colorspace
+    convert \( xc:"${one}" xc:"${two}" +append \) \
+          \( xc:"${three}" xc:"${four}" +append \) -append \
+          -size "${res}" xc: +swap  -fx 'v.p{i/(w-1),j/(h-1)}' \
+          -channel RGB -separate -dither FloydSteinberg -colors 256 -combine -depth 8 ~/.gradient.png || exit
+          
+    # if there is ~/.noise.png, lets overlay that automagically
+    if [[ -f ~/.noise.png ]]; then
+        composite -alpha off -compose overlay ~/.noise.png ~/.gradient.png /tmp/tmpout.png
+        mv /tmp/tmpout.png ~/.gradient.png
+    fi 
+    
+    # set wallpaper
+    nitrogen --save --set-centered ~/.gradient.png
+
+}
+
+[[ "$one" && "$two" && "$three" && "$four" && "$res" ]] && doit
