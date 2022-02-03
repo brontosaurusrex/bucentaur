@@ -25,7 +25,7 @@ doit () {
           
     # if there is ~/.noise.png, lets overlay that automagically
     if [[ -f ~/.noise.png ]]; then
-        composite -alpha off -compose overlay ~/.noise.png ~/.gradient.png /tmp/tmpout.png
+        composite -tile -alpha off -compose overlay ~/.noise.png ~/.gradient.png /tmp/tmpout.png
         mv /tmp/tmpout.png ~/.gradient.png
     fi 
     

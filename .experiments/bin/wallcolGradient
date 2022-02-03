@@ -17,11 +17,15 @@ doit () {
     # make gradient
     convert -size "${res}" gradient:"${one}-${two}" -channel RGB -separate -dither FloydSteinberg -colors 256 -combine -depth 8 ~/.gradient.png || exit
     
+     # -set colorspace HSB -colorspace RGB
+    
     # if there is ~/.noise.png, lets overlay that automagically
     if [[ -f ~/.noise.png ]]; then
-        composite -alpha off -compose overlay ~/.noise.png ~/.gradient.png /tmp/tmpout.png
+        composite -tile -alpha off -compose overlay ~/.noise.png ~/.gradient.png /tmp/tmpout.png
         mv /tmp/tmpout.png ~/.gradient.png
     fi 
+    
+   
     
     # set wallpaper
     nitrogen --save --set-centered ~/.gradient.png
