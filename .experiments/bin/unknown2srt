@@ -19,10 +19,10 @@ dos2unix -n "$1" "$tmp/file.txt"
 
 # check if it is allready unicode, otherwise assume 1250 and convert to utf
 if [[ $(file "$tmp/file.txt" | grep UTF) ]]; then
-     echo "is utf"
+     #echo "is utf"
      mv "$tmp/file.txt" "$tmp/file_utf.txt"
 else
-     echo "not utf, assuming cp1250"
+     #echo "not utf, assuming cp1250"
      iconv -f cp1250 -t utf8 "$tmp/file.txt" > "$tmp/file_utf.txt"
 fi
 
