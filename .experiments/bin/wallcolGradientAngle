@@ -13,7 +13,7 @@ two="$(gpick -p -s -o)"
 res="$(xdpyinfo | awk '/dimensions/{print $2}')"
 
 # pick angle
-# gpick uses as blocker, similar to click-release event
+# gpick used as blocker, similar to click-release event
 gpick -p -s && eval "$(xdotool getmouselocation --shell)" 
 X1="$X" && Y1="$Y"
 gpick -p -s && eval "$(xdotool getmouselocation --shell)" 
