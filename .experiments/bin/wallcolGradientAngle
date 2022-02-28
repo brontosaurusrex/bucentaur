@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# wallcolGradientAngle
+
+# pick two colors and 
+# pick two points for angle and
+# set that gradient as wallpaper
+
+# pick colors
+one="$(gpick -p -s -o)"
+two="$(gpick -p -s -o)"
+
+res="$(xdpyinfo | awk '/dimensions/{print $2}')"
+
+# pick angle
+# gpick uses as blocker, similar to click-release event
+gpick -p -s && eval "$(xdotool getmouselocation --shell)" 
+X1="$X" && Y1="$Y"
+gpick -p -s && eval "$(xdotool getmouselocation --shell)" 
+X2="$X" && Y2="$Y"
+
+angleInDegrees() {
+    
+    #                                                                          ˇ imagemagick friendly 90 degrees
+    angle="$(bc -l <<< "(a (($Y2 - $Y1) / ($X2 - $X1))) * 180 / (4 * a (1)) + 90")"
+
+}
+if (( X2 != X1 )); then # avoid division by zero
+    angleInDegrees
+else
+    X2="$(( X2 + 1 ))" && angleInDegrees
+fi
+
+doit () {
+    
+    # info
+    echo "$one > $two @ $res / $angle"
+    
+    # make gradient
+    convert -size "${res}" -define gradient:angle="${angle}" gradient:"${one}-${two}" -channel RGB -separate -dither FloydSteinberg -colors 256 -combine -depth 8 ~/.gradient.png || exit
+    
+     # -set colorspace HSB -colorspace RGB
+    
+    # if there is ~/.noise.png, lets overlay that automagically
+    if [[ -f ~/.noise.png ]]; then
+        composite -tile -alpha off -compose overlay ~/.noise.png ~/.gradient.png /tmp/tmpout.png
+        mv /tmp/tmpout.png ~/.gradient.png
+    fi 
+    
+   
+    
+    # set wallpaper
+    nitrogen --save --set-centered ~/.gradient.png
+
+}
+
+[[ "$one" && "$two" && "$res" ]] && doit
