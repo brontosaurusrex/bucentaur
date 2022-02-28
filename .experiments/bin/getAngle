@@ -2,7 +2,7 @@
 
 # getAngle # between two points on screen
 
-# gpick uses as blocker, similar to click-release event
+# gpick used as blocker, similar to click-release event
 # read -r x y w h < <(slop -c 0.5,0.8,0.5,0.8 -f "%x %y %w %h")
 
 gpick -p -s && read -r X1 Y1 _ < <(xdotool getmouselocation) || exit
