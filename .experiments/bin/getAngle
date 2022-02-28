@@ -2,19 +2,26 @@
 
 # getAngle # between two points on screen
 
-gpick -p -s && eval "$(xdotool getmouselocation --shell)" 
-X1="$X" && Y1="$Y"
-echo "$X1 $Y1"
+# gpick uses as blocker, similar to click-release event
+# read -r x y w h < <(slop -c 0.5,0.8,0.5,0.8 -f "%x %y %w %h")
 
-gpick -p -s && eval "$(xdotool getmouselocation --shell)" 
-X2="$X" && Y2="$Y"
-echo "$X2 $Y2"
+gpick -p -s && read -r X1 Y1 _ < <(xdotool getmouselocation) || exit
+gpick -p -s && read -r X2 Y2 _ < <(xdotool getmouselocation) || exit
+X1="${X1//[^0-9]/}"; X2="${X2//[^0-9]/}"; Y1="${Y1//[^0-9]/}"; Y2="${Y2//[^0-9]/}"
+
+angleInDegrees() {
+    
+    angle="$(bc -l <<< "(a (($Y2 - $Y1) / ($X2 - $X1))) * 180 / (4 * a (1))")"
+    
+}
 
 if (( X2 != X1 )); then # avoid division by zero
-    angle="$(bc -l <<< "(a (($Y2 - $Y1) / ($X2 - $X1))) * 180 / (4 * a (1))")"
+    angleInDegrees
 else
-    angle="0"
+    X2="$(( X2 + 1 ))" && angleInDegrees
 fi
 
+echo "$X1 $Y1"
+echo "$X2 $Y2"
 echo "$angle" # in degrees
 
