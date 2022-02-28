@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# getAngle # between two points on screen
+
+gpick -p -s && eval "$(xdotool getmouselocation --shell)" 
+X1="$X" && Y1="$Y"
+echo "$X1 $Y1"
+
+gpick -p -s && eval "$(xdotool getmouselocation --shell)" 
+X2="$X" && Y2="$Y"
+echo "$X2 $Y2"
+
+if (( X2 != X1 )); then # avoid division by zero
+    angle="$(bc -l <<< "(a (($Y2 - $Y1) / ($X2 - $X1))) * 180 / (4 * a (1))")"
+else
+    angle="0"
+fi
+
+echo "$angle" # in degrees
+
