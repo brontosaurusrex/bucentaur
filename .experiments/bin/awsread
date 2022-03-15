@@ -60,6 +60,7 @@ needs aws (free validated aws account), mpv, xclip?, md5sum, awk
 -----------------------------------------------------------------
 usage:
 awsread                     # will read from clipboard
+awsread "one two three"     # will read written
 awsreas file.txt            # will read from file
 awsread --goto 100 file.txt # or -g goto page 100, will set resume to this new entry
 awsread --list              # or -l list over store
@@ -175,14 +176,12 @@ play (){
 }
 
 # read clipboard or file (assuming text)
-if [ "$#" -eq  "0" ]
-then
+if [ "$#" -eq  "0" ]; then # is clipboard
     # store clipboard to tmp (assuming text)
     xclip -selection clipboard -o > "$tmp/some.txt" 2>/dev/null || powershell.exe Get-clipboard > "$tmp/some.txt" || exit 1
     base="clipboard" 
-else
+elif [[ -f "$input" ]]; then # is file
     # file
-    [[ -f "$input" ]] || exit 1
     cp "$input" "$tmp/some.txt"
     # base
     baseext=${input##*/}  # file.ext
@@ -198,6 +197,10 @@ else
         fi
         (( jumpto > 1 )) && echo "Resume from part $jumpto"
     fi
+else # assume string
+    # store parameters to tmp
+    echo "$@" > "$tmp/some.txt" || exit 1
+    base="clipboard"
 
 fi
 
