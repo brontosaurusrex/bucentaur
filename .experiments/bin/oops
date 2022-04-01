@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# oops
+
+# from sox.pdf (http://sox.sourceforge.net/sox.pdf):
+# 'oops Out Of Phase Stereo effect. Mixes stereo to twin-mono where each mono channel contains the difference between the left and right stereo channels. This is sometimes known as the ‘karaoke’ effect as it often has the effect of removing most or all of the vocals from a recording. It is equivalent to remix 1,2i 1,2i.'
+
+
+# main loop
+while [ $# -gt 0 ]; do
+
+    file=$(readlink -f "$1")
+    baseext=$(basename "${1}")      # file.ext
+
+    echo "$baseext"
+    sox "$file" -n oops stat 2>&1 | grep "Maximum amplitude:\|FAIL"
+
+shift
+done
