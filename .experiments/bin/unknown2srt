@@ -26,6 +26,16 @@ else
      iconv -f cp1250 -t utf8 "$tmp/file.txt" > "$tmp/file_utf.txt"
 fi
 
+handleItalics () {
+    # NEW - handling italics
+    # replace * and * to <i> and </i>
+    cat "$tmp/file_utf.txt" | awk -F '*' '{for (i=1; i<NF; i++) {OFS=c%2?"</i>":FS; printf "%s%s", $i, OFS; c++} print $NF}' | sed -s 's/*/<i>/g' > "$tmp/file_utf2.txt"
+    mv "$tmp/file_utf2.txt" "$tmp/file_utf.txt"
+    # ^ still not good enough for premiere pro 2022, it expects <i>closing tags on the same line</i>.
+    # disabled
+}
+#handleItalics
+
 # var
 count="1"
 
@@ -53,8 +63,6 @@ cat "$tmp/file_utf.txt" | while read -r line; do
         fin="${in:9:2}"; fout="${out:9:2}"       # just frames part
         hmsin="${in:0:8}" ; hmsout="${out:0:8}"  # hh:mm:ss part
         
-        
-        
         msin="$(calc "$fin"*40)"   # frames to miliseconds
         msout="$(calc "$fout"*40)" # frames to miliseconds
         
@@ -63,7 +71,6 @@ cat "$tmp/file_utf.txt" | while read -r line; do
         
         echo "$hmsin,$msin --> $hmsout,$msout"
 
-        
         count="$(( count + 1 ))"
         
     else
@@ -71,8 +78,6 @@ cat "$tmp/file_utf.txt" | while read -r line; do
         echo "$line"
         
     fi
-    
-    
     
 done
 
