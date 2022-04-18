@@ -24,7 +24,7 @@ if [ -f "$file" ]; then
     echo "already there"
     # just edit with something
     # configure this next line 
-    geany -l 8 "$post" &
+    vim "$post" 
     echo "just opening file"
     exit 0
 fi
@@ -33,7 +33,9 @@ echo "---" > "$post"
 echo "published: true" >> "$post"
 echo "layout: post" >> "$post"
 
-jdate=$(date +"%Y-%m-%d %H:%M")
+# now in utc, due to netifly 
+# Universal Time is often called “Greenwich Mean Time” (GMT) for historical reasons.
+jdate=$(date -u +"%Y-%m-%d %H:%M")
 
 # date: '2018-03-02 16:54 +0100'
 
@@ -66,7 +68,7 @@ echo "---" >> "$post"
 
 # edit with something
 # configure this next line 
-geany -l 8 "$post" &
+vim "$post" 
 
 exit
 
