@@ -11,13 +11,17 @@
 # checks
 command -v convert >/dev/null 2>&1 || { echo "I need imagemagick convert, exiting." >&2; exit 1; }
 command -v nitrogen >/dev/null 2>&1 || { echo "I need nitrogen, exiting." >&2; exit 1; }
+command -v xrandr >/dev/null 2>&1 || { echo "I need xrandr, exiting." >&2; exit 1; }
 
 # store for single image
 file="$HOME/.noise.png"
 touch "$file" || exit
 
 # resolution
-mx=1920; my=1200
+#mx=500; my=500
+# Lets get that exact, since there can be ~/.logo.png to be superimposed over it (centralized)
+mx=$(xrandr --current | grep '\*' | uniq | awk '{print $1}' | cut -d 'x' -f1)
+my=$(xrandr --current | grep '\*' | uniq | awk '{print $1}' | cut -d 'x' -f2)
 
 # help
 if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
@@ -30,23 +34,22 @@ Order of parameters does matter:
 
 examples:
 
-    noise                           # default
-    noise ++ -p                     # brighter and make permanent wall
-    noise deep                      # with color preset 'deep'
-    noise deep +                    # with color preset 'deep' and 10% brighter
-    noise - +++                     # default, but 10% darker and 30% more saturated
-    noise deep _ +++++ _ + ---      # preset 'deep' and more saturated,
-                                    # slightly more dynamics and darker level start.
-    noise deep -- ++ -------------- # A lil green
-    noise -- +++++++++++++++++      # darker but more colorful
-    
-alias examples:    
-    
-    alias green='noise deep -- ++ --------------'
-    alias blue='noise deep - ++++++++++ _ + --'
-    alias bluedark='noise -- +++++++++++++++++'
-    alias pink='noise deep _ + ++++++++++++++++++++++++++++ _ +++'
-    alias night='noise - +++ +++++++ +++ ---'
+    noise                         # default
+    noise ++ -p                   # brighter and make permanent wall
+    noise deep                    # with color preset 'deep'
+    noise deep +                  # with color preset 'deep' and 10% brighter
+    noise - +++                   # default, but 10% darker and 30% more saturated
+    noise deep _ +++++ _ + ---    # preset 'deep' and more saturated,
+                                  # slightly more dynamics and darker level start.
+
+presets:
+
+	tilix="#263945" ; crunch="#222D32" ; deep="#0D314D" ;
+	royal="#2842B3" ; deep2="#192F49" ; night="#1C2E7D"
+
+update 2022: If ~/.logo.png is found (with alpha),
+it will be composed over generated noise
+
 EOF
 
 exit 
@@ -59,7 +62,7 @@ if [ "${!#}" == "-p" ] || [ "$1" == "--perm" ]; then
 fi
 
 # fill colors
-tilix="#263945" ; crunch="#222D32" ; deep="#0D314D" ; royal="#2842B3" ; adapta="#222D32" ; deep2="#192F49" ; night="#1C2E7D"
+tilix="#263945" ; crunch="#222D32" ; deep="#0D314D" ; royal="#2842B3" ; deep2="#192F49" ; night="#1C2E7D"
 
 case "$1" in
      tilix)          
@@ -76,10 +79,6 @@ case "$1" in
           ;; 
      royal)
           color="$royal"
-          shift
-          ;;
-     adapta)
-          color="$adapta"
           shift
           ;;
      deep2)
@@ -167,10 +166,21 @@ convert -size "${mx}x${my}" xc:"gray(50%)" -seed "${RANDOM}" -attenuate 2 +noise
 # -sharpen 0x1
 # -modulate bright,color,hue
 
+# if there is ~/.logo.png with alpha then compose that first
+logo () {
+    if [[ -f ~/.logo.png ]]; then
+        composite -gravity center -compose Pegtop_light "$HOME/.logo.png" "$file" /tmp/tmpout.png
+        mv /tmp/tmpout.png "$file"
+    else
+       echo "no ~/.logo.png found, skipping"
+    fi 
+}
+
 # nitrogen, set wall
 setwall () {
     #nitrogen "${save}" --set-tiled "$file" || echo "nitrogen failed"
-    nitrogen "${save}" --set-centered "$file" --set-color="#394A55" --head=0 || echo "nitrogen failed"
+    #nitrogen "${save}" --set-centered "$file" --set-color="#394A55" --head=0 || echo "nitrogen failed"
+    nitrogen "${save}" --set-tiled "$file" --set-color="#394A55" --head=0 || echo "nitrogen failed"
 }
 
 # restart wbar
@@ -188,5 +198,6 @@ fi
 # action
 set -x
 noise
+logo 
 setwall
 restart wbar > /dev/null 2>&1
