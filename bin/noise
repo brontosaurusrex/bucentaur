@@ -20,8 +20,13 @@ touch "$file" || exit
 # resolution
 #mx=500; my=500
 # Lets get that exact, since there can be ~/.logo.png to be superimposed over it (centralized)
-mx=$(xrandr --current | grep '\*' | uniq | awk '{print $1}' | cut -d 'x' -f1)
+mx=$(xrandr --current | grep '\*' | uniq | awk '{print $1}' | cut -d 'x' -f1) && \
 my=$(xrandr --current | grep '\*' | uniq | awk '{print $1}' | cut -d 'x' -f2)
+# resolution checks
+if [[ -z "$mx" ]] ; then
+    echo "auto resolution detection failed, setting resolution to 1920x1080"
+    mx="1920" ; my="1080"
+fi
 
 # help
 if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
