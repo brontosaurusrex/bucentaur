@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# changeres2022
+
+if systemd-detect-virt -q ; then 
+
+count="0"
+
+	(xprop -root -spy _NET_DESKTOP_GEOMETRY) |
+	while read -r
+	do
+		if [[ $count -gt 0 ]]; then
+			echo "$count resolution change!"
+			nitrogen --restore
+		fi
+		(( count ++ ))
+	done
+fi
