@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# HNyoutubes
+
+# get youtube links and stuff from some web page
+# usage example:
+#   HNyoutubes "https://youtube/somelink/to/video"
+# if no arguments, use default url
+
+# config
+final="/mnt/d/tmp/final.md"
+touch "${final}" || { echo "Configure output dir/file.md in script itself." ; exit 1; }
+
+# required
+command -v yt-dlp >/dev/null 2>&1 || { >&2 echo "yt-dlp: see https://github.com/yt-dlp/yt-dlp#installation" ; exit 1; }
+command -v curl >/dev/null 2>&1 || { >&2 echo "I need curl" ; exit 1; }
+
+if [ $# -eq 0 ]
+  then
+    echo "No argument supplied, using default url"
+    url="https://news.ycombinator.com/item?id=32220192"
+    echo "$url"
+else
+    url="$1"
+fi
+
+# tmp dir
+tmp="/tmp/$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
+# get page to disk
+curl "https://news.ycombinator.com/item?id=32220192" --output "${tmp}/page".htm
+# filter stuff to only youtube like urls
+cat "${tmp}/page".htm | grep -Po '(?<=href=\")[^\"]*(?=\")' | grep "\.you" | sed 's/&#x2F;/\//g' | sort -u | tee "${tmp}/page".txt
+echo; echo
+
+# tmp debug, lets just take first 10 urls for testing
+#tail -30 "${tmp}/page".txt > "${tmp}/page10".txt
+#cp "${tmp}/page10".txt "${tmp}/page".txt
+
+# tmp debug
+#cp -v "${tmp}/page".txt "/mnt/d/tmp/page.txt"
+
+# get some meta and generate simple markdown?
+# yt-dlp --get-title --get-description --get-thumbnail --playlist-end 1 https://m.youtube.com/c/BranchEducation/videos
+
+superecho () {
+    echo "## $title"
+    echo "[![$line]($thumbnail)]($line)  "
+    echo "${description}..." | while read -r desc; do
+        if [[ ${#desc} -gt 20 ]] ; then
+            echo "> $desc"
+        fi
+    done
+    echo; echo;
+}
+
+while read -r line; do
+
+    #yt-dlp --dump-json --playlist-end 1 "$line"
+    #yt-dlp --get-title --get-description --get-thumbnail --playlist-end 1 "$line" | head -5
+    title="$(yt-dlp --get-title --playlist-end 1 "$line")"
+    description="$(yt-dlp --get-description --playlist-end 1 "$line" | head -c500)"
+    thumbnail="$(yt-dlp --get-thumbnail --playlist-end 1 "$line")"
+    wait
+   
+    superecho | tee -a "${tmp}/final".md
+    
+
+done < "${tmp}/page".txt
+
+# final copy
+cp -v "${tmp}/final".md "${final}"
