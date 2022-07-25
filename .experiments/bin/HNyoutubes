@@ -9,12 +9,15 @@
 
 # config
 final="/mnt/d/tmp/final.md"
+
+# config test
 touch "${final}" || { echo "Configure output dir/file.md in script itself." ; exit 1; }
 
 # required
 command -v yt-dlp >/dev/null 2>&1 || { >&2 echo "yt-dlp: see https://github.com/yt-dlp/yt-dlp#installation" ; exit 1; }
 command -v curl >/dev/null 2>&1 || { >&2 echo "I need curl" ; exit 1; }
 
+# if no argument, use default url
 if [ $# -eq 0 ]
   then
     echo "No argument supplied, using default url"
