@@ -8,14 +8,17 @@
 # if no arguments, use default url
 
 # config
-final="/mnt/d/tmp/final.md"
+rnd="$RANDOM"
+final="/mnt/d/tmp/final${rnd}.md"
+debuglist="/mnt/d/tmp/page${rnd}.txt"
 
 # config test
 touch "${final}" || { echo "Configure output dir/file.md in script itself." ; exit 1; }
 
 # required
 command -v yt-dlp >/dev/null 2>&1 || { >&2 echo "yt-dlp: see https://github.com/yt-dlp/yt-dlp#installation" ; exit 1; }
-command -v curl >/dev/null 2>&1 || { >&2 echo "I need curl" ; exit 1; }
+command -v curl >/dev/null 2>&1 || { >&2 echo "I need curl (in repos)" ; exit 1; }
+command -v jq >/dev/null 2>&1 || { >&2 echo "I need jq (in repos)" ; exit 1; }
 
 # if no argument, use default url
 if [ $# -eq 0 ]
@@ -35,7 +38,10 @@ mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; 
 # get page to disk
 curl "https://news.ycombinator.com/item?id=32220192" --output "${tmp}/page".htm
 # filter stuff to only youtube like urls
-cat "${tmp}/page".htm | grep -Po '(?<=href=\")[^\"]*(?=\")' | grep "\.you" | sed 's/&#x2F;/\//g' | sort -u | tee "${tmp}/page".txt
+cat "${tmp}/page".htm | grep -Po '(?<=href=\")[^\"]*(?=\")' | grep "\.you" | sed 's/&#x2F;/\//g' | sed 's:/*$::' | sort -u | tee "${tmp}/page".txt
+
+# how many lines
+wc -l "${tmp}/page".txt
 echo; echo
 
 # tmp debug, lets just take first 10 urls for testing
@@ -43,13 +49,11 @@ echo; echo
 #cp "${tmp}/page10".txt "${tmp}/page".txt
 
 # tmp debug
-#cp -v "${tmp}/page".txt "/mnt/d/tmp/page.txt"
+cp "${tmp}/page".txt "${debuglist}"
 
-# get some meta and generate simple markdown?
-# yt-dlp --get-title --get-description --get-thumbnail --playlist-end 1 https://m.youtube.com/c/BranchEducation/videos
-
+# print func
 superecho () {
-    echo "## $title"
+    echo "## $title  [$count]"
     echo "[![$line]($thumbnail)]($line)  "
     echo "${description}..." | while read -r desc; do
         if [[ ${#desc} -gt 20 ]] ; then
@@ -59,19 +63,19 @@ superecho () {
     echo; echo;
 }
 
+# main
+count="1"
 while read -r line; do
 
-    #yt-dlp --dump-json --playlist-end 1 "$line"
-    #yt-dlp --get-title --get-description --get-thumbnail --playlist-end 1 "$line" | head -5
-    title="$(yt-dlp --get-title --playlist-end 1 "$line")"
-    description="$(yt-dlp --get-description --playlist-end 1 "$line" | head -c500)"
-    thumbnail="$(yt-dlp --get-thumbnail --playlist-end 1 "$line")"
-    wait
-   
-    superecho | tee -a "${tmp}/final".md
+    yt-dlp --no-abort-on-error --get-title --get-thumbnail --get-description --playlist-end 1 "$line" > "${tmp}/meta".txt
+    title="$(sed -n '1p' "${tmp}/meta".txt)" # assumes title is on single line
+    thumbnail="$(sed -n '2p' "${tmp}/meta".txt)" # assumes thumb url is on single line
+    description="$(sed -e '1,3d' "${tmp}/meta".txt | head -c500)"
     
+    [[ -n "$title" ]] && superecho | tee -a "${final}"
+
+    (( count ++ ))    
 
 done < "${tmp}/page".txt
 
-# final copy
-cp -v "${tmp}/final".md "${final}"
+echo "file ${final} is where the newly generated markdown is."
