@@ -4,7 +4,7 @@
 
 # multiline text file
 data="$HOME/bin/data.txt" || exit
-count="0" # shall be used to get uniq filenames if needed
+count="0" # padded with zeroes can be used as tmp filenames
 
 # subloop on array
 doer () {
