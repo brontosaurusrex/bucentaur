@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# multiprocConcept
+
+# multiline text file
+data="$HOME/bin/data.txt" || exit
+count="0" # shall be used to get uniq filenames if needed
+
+# subloop on array
+doer () {
+
+    for member in "${a[@]}"; do
+            (( count++ ))
+            #echo "debug $count"
+            countpad="$(printf "%05d\n" "$count")"
+            echo "$countpad $member" & # so multi!
+    done
+
+    wait
+
+}
+
+# main loop
+while read -r line; do
+    # populate array until members=3 
+    # (or whatever number of multiprocesses is required)
+    if [[ -n "$line" ]]; then # skip empty lines
+        a+=("$line" )
+    fi
+    if [[ ${#a[@]} -eq 3 ]]; then
+        
+        echo "three in array"
+        doer        
+        # empty array
+        unset a
+    
+    fi
+done < "$data"
+
+# in case if array is not empty,
+# do doer again
+if (( ${#a[@]} )); then
+    echo "some still left in array"
+    doer
+fi
