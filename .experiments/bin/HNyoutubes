@@ -18,7 +18,7 @@ touch "${final}" || { echo "Configure output dir/file.md in script itself." ; ex
 # required
 command -v yt-dlp >/dev/null 2>&1 || { >&2 echo "yt-dlp: see https://github.com/yt-dlp/yt-dlp#installation" ; exit 1; }
 command -v curl >/dev/null 2>&1 || { >&2 echo "I need curl (in repos)" ; exit 1; }
-command -v jq >/dev/null 2>&1 || { >&2 echo "I need jq (in repos)" ; exit 1; }
+#command -v jq >/dev/null 2>&1 || { >&2 echo "I need jq (in repos)" ; exit 1; }
 
 # if no argument, use default url
 if [ $# -eq 0 ]
