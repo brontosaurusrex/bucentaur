@@ -37,8 +37,9 @@ mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; 
 
 # get page to disk
 curl "https://news.ycombinator.com/item?id=32220192" --output "${tmp}/page".htm
-# filter stuff to only youtube like urls
-cat "${tmp}/page".htm | grep -Po '(?<=href=\")[^\"]*(?=\")' | grep "\.you" | sed 's/&#x2F;/\//g' | sed 's:/*$::' | sort -u | tee "${tmp}/page".txt
+# filter stuff to only youtube like urls and remove duplicates (magic awk) without sorting
+#cat "${tmp}/page".htm | grep -Po '(?<=href=\")[^\"]*(?=\")' | grep "\.you" | sed 's/&#x2F;/\//g' | sed 's:/*$::' | sort -u | tee "${tmp}/page".txt
+cat "${tmp}/page".htm | grep -Po '(?<=href=\")[^\"]*(?=\")' | grep "\.you" | sed 's/&#x2F;/\//g' | sed 's:/*$::' | awk '!x[$0]++' | tee "${tmp}/page".txt
 
 # how many lines
 wc -l "${tmp}/page".txt
