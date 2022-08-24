@@ -9,6 +9,7 @@
 # Must look like
 # NAP-UPPER TITLE WITH ASCII ONLY-20210620-085-F1.mxf
 # Breakdown:
+# 0. check if extension is singular and not .mxf.mxf
 # a. always starts with NAP-
 # b. Always has four - ?
 # c. No extra spaces 'NAP - TITLE' is wrong
@@ -26,13 +27,7 @@ debug="0"
 globalerrors="0"
 
 # echo err
-#echoerr() { echo -e "\e[3m$@\e[0m" >&2; }
-echoerr() { 
-    if [[ -t 1 ]]; then
-        echo -e "\e[3m\e[2m$*\e[22m\e[0m" >&2; # when in term
-    else
-        echo -e "<small>$*</small>" # when from php and such
-    fi } # dim and italics
+echoerr() { echo -e "\e[3m\e[2m$*\e[22m\e[0m" >&2; } # dim and italics
 
 # raport
 raport (){
@@ -75,12 +70,20 @@ kajMeniDate () {
 while [ $# -gt 0 ]; do
     # file path or direct string provided by user (doesn't matter)
     input="$(readlink -f "$1" 2>/dev/null )" || input="$1"
-    #input="$1"
     input="${input##*/}" # base.ext
+    dots="$(echo "$input" | grep -o "\." | wc -l)" # num of dots in filename, to check for bad extensions, like .mxf.mxf
     input="${input%.*}"  # base
     (( debug )) && echo "$input"
 
     errors="0"
+
+    # 0. check if ext is ok, no more than one dot is allowed
+    #echo "$dots"
+    if (( dots > 1 )); then
+        echoerr "preveč pikic v imenu ($dots)"
+        (( errors+=1 ))
+    fi
+
     # a. always starts with NAP-
     if [[ $input != NAP-* ]]; then
         echoerr "Začeti se mora na NAP-" 
@@ -92,7 +95,7 @@ while [ $# -gt 0 ]; do
     num="${#delimiter}" # Must be exactly four.
 
     if [[ $num != 4 ]]; then
-        echoerr "Natančno pet polj mora biti, ločeni so s pomišljaji in brez presledkov." 
+        echoerr "Natančno štiri polja morajo biti, ločena z pomišljaji in brez presledkov." 
         (( errors+=1 ))
         raport
         shift
@@ -185,9 +188,7 @@ while [ $# -gt 0 ]; do
 done
 
 # global = errors for all files
-if [[ -t 1 ]]; then # only if in term
-    if (( globalerrors != 0 )); then
-        echoerr "Napak = $globalerrors"
-        exit 1
-    fi
+if (( globalerrors != 0 )); then
+    echoerr "Napak = $globalerrors"
+    exit 1
 fi
