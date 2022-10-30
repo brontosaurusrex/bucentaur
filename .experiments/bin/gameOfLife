@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# game of life
+
+# var
+# world size
+width="10"; height="10"
+dead="⬜"
+life="⬛"
+declare -A grid
+declare -A newgrid
+
+# 'seed' could be user input to get to the same configuration 
+seed="$RANDOM$RANDOM$RANDOM$RANDOM" 
+#seed=42 #debug
+RANDOM="$seed"
+echo "seed $seed "
+
+# populate array named grid
+for (( x = 0; x < height; x++ ))
+do
+    for (( y = 0; y < width; y++ ))
+    do
+        grid[${x},${y}]="$(( RANDOM % 2 ))"
+        #echo -n "${grid[${x},${y}]}" #debug
+    done
+    #echo
+done
+
+draw () {
+# echo grid array
+for (( x = 0; x < height; x++ ))
+do
+    for (( y = 0; y < width; y++ ))
+    do        
+        tmp="${grid[${x},${y}]}"
+        if [ $tmp == "1" ]; then
+            echo -n "$life"
+        else
+            echo -n "$dead"
+        fi
+    done
+    echo
+done
+}
+draw
+
+
