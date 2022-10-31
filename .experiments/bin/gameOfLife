@@ -2,23 +2,77 @@
 
 # game of life
 
-# zsh test
-# clear; repeat 20 (tput cup 0 0; gameOfLife; sleep 0.1)
+# usage:
 
-clear
+#    gameOfLife     # 5x5 
+#    gameOfLife +   # 10x10
+#    gameOfLife ++  # 20x20
+#    gameOfLife +++ # 20x20
+
+if [[ "$*" == "-h" ]] || [[ "$*" == "--help" ]]; then
+
+cat <<EOF
+Examples:
+
+    gameOfLife      # 5x5 
+    gameOfLife +    # 10x10
+    gameOfLife ++   # 20x20
+    gameOfLife +++  # 20x20
+
+    --noscroll      # will clear screen and refresh on the face of the place
+    -h or --help    # this screen
+
+Other, zsh:
+
+    repeat 150 gameOfLife + --noscroll
+
+Other, tee:
+
+    gameOfLife | tee -a output.txt
+EOF
+
+exit 
+
+fi
 
 # var
-width="15"; height="15"
+width="5"; height="5"
+gen="50"
+if [[ $1 == "+" ]]; then width="10"; height="10"; fi
+if [[ $1 == "++" ]]; then width="20"; height="20"; gen="100"; fi
+if [[ $1 == "+++" ]]; then width="30"; height="30"; gen="150"; fi
+if [[ $1 == "++++" ]]; then width="40"; height="40"; gen="150"; fi
+if [[ $1 == "+++++" ]]; then width="40"; height="40"; gen="200"; fi
+
+if [[ "$*" == *"--noscroll"* ]]
+then
+    scroll="0"
+    tput civis
+else
+    scroll="1"
+    tput cnorm
+fi
+function cleanup() {
+    tput cnorm
+}
+trap cleanup EXIT
+
 dead="⬜"
 #dead="  "
 life="⬛"
+
+
 sleep="0.1"
 debug="0"
 declare -A grid
 declare -A grid2
 declare -A drawarr
 
-
+if (( scroll )); then 
+    echo
+else
+    clear
+fi
 
 # 'seed' could be user input to get to the same configuration 
 seed="$RANDOM$RANDOM$RANDOM$RANDOM" 
@@ -61,8 +115,11 @@ for key in "${!grid[@]}"; do
 done
 
 draw # first random population
-#tput cup 0 0
-echo
+if (( scroll )); then 
+    echo
+else
+    tput cup 0 0
+fi
 sleep "$sleep"
 
 
@@ -89,7 +146,8 @@ fixborders () {
 
 # main loop
 gridalive="0"
-for i in {1..100}; do # how many generations
+for i in $(seq $gen); do
+    #echo "$i" # gen
     # game
     for (( x = 1; x <= width; x++ ))
     do
@@ -209,6 +267,13 @@ for i in {1..100}; do # how many generations
         exit
     fi
 
+    # if same as old one, also exit
+
+    if [[ "${grid[*]}" == "${grid2[*]}" ]]; then 
+        break
+    fi
+
+
     # copy grid2 back to grid
     for key in "${!grid2[@]}"; do
         grid[$key]="${grid2[$key]}"
@@ -216,8 +281,24 @@ for i in {1..100}; do # how many generations
     done
 
     draw
-    #tput cup 0 0
-    echo # empty line
+    if (( scroll )); then 
+        echo
+    else
+        tput cup 0 0
+    fi
     sleep "$sleep"
 
+    # if no ones, then exit
+    { echo "${grid[@]}" | grep 1 || break; } >/dev/null
+
+
 done 
+
+
+# defeat tput cup clearin the screen on last draw
+if (( scroll )); then 
+    echo
+else
+    draw # Once more to defeat the 'tput cut' clearing the screen 
+fi
+
