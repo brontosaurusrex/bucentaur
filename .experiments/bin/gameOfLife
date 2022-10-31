@@ -42,7 +42,7 @@ if [[ $1 == "+" ]]; then width="10"; height="10"; fi
 if [[ $1 == "++" ]]; then width="20"; height="20"; gen="100"; fi
 if [[ $1 == "+++" ]]; then width="30"; height="30"; gen="150"; fi
 if [[ $1 == "++++" ]]; then width="40"; height="40"; gen="150"; fi
-if [[ $1 == "+++++" ]]; then width="40"; height="40"; gen="200"; fi
+if [[ $1 == "+++++" ]]; then width="50"; height="50"; gen="200"; fi
 
 if [[ "$*" == *"--noscroll"* ]]
 then
