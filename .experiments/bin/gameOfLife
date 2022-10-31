@@ -43,6 +43,7 @@ if [[ $1 == "++" ]]; then width="20"; height="20"; gen="100"; fi
 if [[ $1 == "+++" ]]; then width="30"; height="30"; gen="150"; fi
 if [[ $1 == "++++" ]]; then width="40"; height="40"; gen="150"; fi
 if [[ $1 == "+++++" ]]; then width="50"; height="50"; gen="200"; fi
+if [[ $1 == "++++++" ]]; then width="100"; height="100"; gen="200"; fi
 
 if [[ "$*" == *"--noscroll"* ]]
 then
@@ -60,7 +61,13 @@ trap cleanup EXIT
 dead="⬜"
 #dead="  "
 life="⬛"
+life="🟩"
+life="🟦"
 
+dead="■ "
+life="██"
+dead="⬜"
+life="⬛"
 
 sleep="0.1"
 debug="0"
@@ -68,17 +75,15 @@ declare -A grid
 declare -A grid2
 declare -A drawarr
 
-if (( scroll )); then 
-    echo
-else
+if [[ ! $scroll -eq 1 ]]; then
     clear
+    tput cup 0 0
 fi
 
 # 'seed' could be user input to get to the same configuration 
 seed="$RANDOM$RANDOM$RANDOM$RANDOM" 
 #seed=2347830414377713346 #debug
 RANDOM="$seed"
-
 
 # populate array named grid
 for (( x = 1; x <= width; x++ ))
@@ -115,10 +120,10 @@ for key in "${!grid[@]}"; do
 done
 
 draw # first random population
-if (( scroll )); then 
-    echo
-else
+if [[ ! $scroll -eq 1 ]]; then
     tput cup 0 0
+else
+    echo
 fi
 sleep "$sleep"
 
@@ -281,10 +286,10 @@ for i in $(seq $gen); do
     done
 
     draw
-    if (( scroll )); then 
-        echo
-    else
+    if [[ ! $scroll -eq 1 ]]; then
         tput cup 0 0
+    else
+        echo
     fi
     sleep "$sleep"
 
@@ -296,9 +301,6 @@ done
 
 
 # defeat tput cup clearin the screen on last draw
-if (( scroll )); then 
-    echo
-else
-    draw # Once more to defeat the 'tput cut' clearing the screen 
+if [[ ! $scroll -eq 1 ]]; then
+    draw # Once more to defeat the 'tput cup' clearing the screen 
 fi
-
