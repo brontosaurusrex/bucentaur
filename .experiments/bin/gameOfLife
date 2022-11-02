@@ -2,12 +2,7 @@
 
 # game of life
 
-# usage:
-
-#    gameOfLife     # 5x5 
-#    gameOfLife +   # 10x10
-#    gameOfLife ++  # 20x20
-#    gameOfLife +++ # 20x20
+# usage: see --help
 
 if [[ "$*" == "-h" ]] || [[ "$*" == "--help" ]]; then
 
@@ -59,17 +54,9 @@ function cleanup() {
 trap cleanup EXIT
 
 dead="⬜"
-#dead="  "
-life="⬛"
-life="🟩"
-life="🟦"
-
-dead="■ "
-life="██"
-dead="⬜"
 life="⬛"
 
-sleep="0.1"
+sleep="0"
 debug="0"
 declare -A grid
 declare -A grid2
@@ -82,7 +69,7 @@ fi
 
 # 'seed' could be user input to get to the same configuration 
 seed="$RANDOM$RANDOM$RANDOM$RANDOM" 
-#seed=2347830414377713346 #debug
+seed="1" #debug
 RANDOM="$seed"
 
 # populate array named grid
@@ -129,122 +116,64 @@ sleep "$sleep"
 
 
 fixborders () {
-        # borders
-        #xtmp="$x"; ytmp="$y"
-        
-
-        if (( xtmp < 1 )); then # left
-            xtmp="$(( width ))"
-        fi
-        if (( ytmp < 1 )); then # top
-            ytmp="$(( height ))"
-        fi
-        if (( xtmp > width )); then # right
-            xtmp="1"
-        fi
-        if (( ytmp > height )); then # bottom
-            ytmp="1"
-        fi
-
-        
+    xtmp="$1"; ytmp="$2" # global
+    if (( xtmp < 1 )); then # left
+        xtmp="$(( width ))"
+    fi
+    if (( ytmp < 1 )); then # top
+        ytmp="$(( height ))"
+    fi
+    if (( xtmp > width )); then # right
+        xtmp="1"
+    fi
+    if (( ytmp > height )); then # bottom
+        ytmp="1"
+    fi        
 }
+
+# alive?
+alive () {
+    if [[ ${grid[${xtmp},${ytmp}]} == "1" ]]; then
+    ((neighbours+=1)) # global, one more live neighbour
+    fi
+}
+
 
 # main loop
 gridalive="0"
 for i in $(seq $gen); do
     #echo "$i" # gen
-    # game
     for (( x = 1; x <= width; x++ ))
     do
         for (( y = 1; y <= height; y++ ))
         do
-                # 8 possible neighbours
-                neighbours="0"
-                # top left
-                xtmp=$(( x - 1 )); ytmp=$(( y - 1 ))
-                
-                fixborders
-                if [[ ${grid[${xtmp},${ytmp}]} == "1" ]]; then
-                    ((neighbours+=1))# one more live neigbour
-                    
-                fi
-                (( debug )) && echo "$x $y $xtmp $ytmp top left=${grid[${xtmp},${ytmp}]}"
-                # bottom left
-                xtmp=$(( x - 1 )); ytmp=$(( y + 1 ))
-                
-                fixborders
-                if [[ ${grid[${xtmp},${ytmp}]} == "1" ]]; then
-                    ((neighbours+=1))# one more live neigbour
-                    
-                fi
-                (( debug )) && echo "$x $y $xtmp $ytmp bottom left=${grid[${xtmp},${ytmp}]}"
-                # bottom right
-                xtmp=$(( x + 1 )); ytmp=$(( y + 1 ))
-                
-                fixborders
-                if [[ ${grid[${xtmp},${ytmp}]} == "1" ]]; then
-                    ((neighbours+=1))# one more live neigbour
-                    
-                fi
-                (( debug )) && echo "$x $y $xtmp $ytmp bottom right=${grid[${xtmp},${ytmp}]}"
-                # top center
-                xtmp=$(( x )); ytmp=$(( y - 1 ))
-                
-                fixborders
-                if [[ ${grid[${xtmp},${ytmp}]} == "1" ]]; then
-                    ((neighbours+=1))# one more live neigbour
-                    
-                fi
-                (( debug )) && echo "$x $y $xtmp $ytmp top center=${grid[${xtmp},${ytmp}]}"
+            # 8 possible neighbours
+            neighbours="0"
+            # top left
+            fixborders "$(( x - 1 ))" "$(( y - 1 ))"; alive
+            # bottom left
+            fixborders "$(( x - 1 ))" "$(( y + 1 ))"; alive
+            # bottom right
+            fixborders "$(( x + 1 ))" "$(( y + 1 ))"; alive
+            # top center
+            fixborders "$(( x ))" "$(( y - 1 ))"; alive
+            # top right
+            fixborders "$(( x + 1 ))" "$(( y - 1 ))"; alive
+            # left
+            fixborders "$(( x - 1 ))" "$(( y ))"; alive
+            # right
+            fixborders "$(( x + 1 ))" "$(( y ))"; alive
+            # bottom center
+            fixborders "$(( x ))" "$(( y + 1 ))"; alive 
 
-                # top right
-                xtmp=$(( x + 1 )); ytmp=$(( y - 1 ))
-                
-                fixborders
-                if [[ ${grid[${xtmp},${ytmp}]} == "1" ]]; then
-                    ((neighbours+=1))# one more live neigbour
-                    
-                fi
-                (( debug )) && echo "$x $y $xtmp $ytmp top right=${grid[${xtmp},${ytmp}]}"
-                # left
-                xtmp=$(( x - 1 )); ytmp=$(( y ))
-                
-                fixborders
-                if [[ ${grid[${xtmp},${ytmp}]} == "1" ]]; then
-                    ((neighbours+=1))# one more live neigbour
-                    
-                fi
-                (( debug )) && echo "$x $y $xtmp $ytmp left=${grid[${xtmp},${ytmp}]}"
-                # right
-                xtmp=$(( x + 1 )); ytmp=$(( y ))
-                
-                fixborders
-                if [[ ${grid[${xtmp},${ytmp}]} == "1" ]]; then
-                    ((neighbours+=1))# one more live neigbour
-                    
-                fi
-                (( debug )) && echo "$x $y $xtmp $ytmp right=${grid[${xtmp},${ytmp}]}"
-
-                # bottom center
-                xtmp=$(( x )); ytmp=$(( y + 1 ))
-                
-                fixborders
-                if [[ ${grid[${xtmp},${ytmp}]} == "1" ]]; then
-                    ((neighbours+=1))# one more live neigbour
-                    
-                fi
-                (( debug )) && echo "$x $y $xtmp $ytmp bottom center=${grid[${xtmp},${ytmp}]}"
-
-
-                (( debug )) && echo "$x $y alive neighbours $neighbours"
-                (( debug )) && echo "--------"
-
+            (( debug )) && echo "$x $y $xtmp $ytmp bottom center=${grid[${xtmp},${ytmp}]}"
+            (( debug )) && echo "$x $y alive neighbours $neighbours"
+            (( debug )) && echo "--------"
             # rules can be condensed into the following:
             # 1 - Any live cell with two or three live neighbours survives.
             # 2 - Any dead cell with three live neighbours becomes a live cell.
             # 3 - All other live cells die in the next generation. 
             #     Similarly, all other dead cells stay dead.
-            
             
             # if alive and neigbours are 2 or 3
             if [[ ${grid[${x},${y}]} == "1" ]]; then # alive at the moment
@@ -262,9 +191,8 @@ for i in $(seq $gen); do
                     grid2[${x},${y}]="0"
                 fi
             fi
-
         done
-    
+
     done
 
     # if all dead, then exit
@@ -273,11 +201,9 @@ for i in $(seq $gen); do
     fi
 
     # if same as old one, also exit
-
     if [[ "${grid[*]}" == "${grid2[*]}" ]]; then 
         break
     fi
-
 
     # copy grid2 back to grid
     for key in "${!grid2[@]}"; do
@@ -296,9 +222,7 @@ for i in $(seq $gen); do
     # if no ones, then exit
     { echo "${grid[@]}" | grep 1 || break; } >/dev/null
 
-
-done 
-
+done # end for loop
 
 # defeat tput cup clearin the screen on last draw
 if [[ ! $scroll -eq 1 ]]; then
