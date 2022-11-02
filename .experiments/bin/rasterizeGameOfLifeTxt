@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
     while read -r line; do
 
         if [[ -z "$line" ]] ; then # if empty line
-            (( c=c+1 )); printf -v ccc "%03d" "$c"
+            (( c=c+1 )); printf -v ccc "%05d" "$c"
             echo "frame ${hash}-${ccc}.png"
             # --background=transparent # also an option
             pango-view --background=white --antialias=none --font=mono \
