@@ -9,14 +9,15 @@ if [[ "$*" == "-h" ]] || [[ "$*" == "--help" ]]; then
 cat <<EOF
 Examples:
 
-    gameOfLife             # 5x5    - 50 gen
-    gameOfLife +           # 10x10  - 50 gen
-    gameOfLife ++          # 20x20  - 100 gen 
-    gameOfLife +++         # 30x30  - 150 gen
-    gameOfLife ++++        # 40x40  - 150 gen
-    gameOfLife +++++       # 50x50  - 200 gen
-    gameOfLife ++++++      # 160x90 - 300 gen
+    gameOfLife             # 5x5   
+    gameOfLife +           # 10x10 
+    gameOfLife ++          # 20x20  
+    gameOfLife +++         # 30x30 
+    gameOfLife ++++        # 40x40 
+    gameOfLife +++++       # 50x50 
+    gameOfLife ++++++      # 160x90
 
+    gen="200" gameOfLife   # user defined maximum generations (default=100)
     seed="123" gameOfLife  # user defined seed for first random population
     sleep="0.3" gameOfLife # user defined sleep between refresh
 
@@ -39,7 +40,7 @@ fi
 
 # var
 width="5"; height="5"
-gen="50"
+
 dead="⬜"
 life="⬛"
 
@@ -50,12 +51,14 @@ debug="0"
 declare -A grid
 declare -A grid2
 
+[[ -z "$gen" ]] && gen="100"
+
 if [[ $1 == "+" ]]; then width="10"; height="10"; fi
-if [[ $1 == "++" ]]; then width="20"; height="20"; gen="100"; fi
-if [[ $1 == "+++" ]]; then width="30"; height="30"; gen="150"; fi
-if [[ $1 == "++++" ]]; then width="40"; height="40"; gen="150"; fi
-if [[ $1 == "+++++" ]]; then width="50"; height="50"; gen="200"; fi
-if [[ $1 == "++++++" ]]; then width="90"; height="160"; gen="300"; fi
+if [[ $1 == "++" ]]; then width="20"; height="20"; fi
+if [[ $1 == "+++" ]]; then width="30"; height="30"; fi
+if [[ $1 == "++++" ]]; then width="40"; height="40"; fi
+if [[ $1 == "+++++" ]]; then width="50"; height="50"; fi
+if [[ $1 == "++++++" ]]; then width="90"; height="160"; fi
 
 if [[ "$*" == *"--noscroll"* ]]
 then
