@@ -18,8 +18,8 @@ Examples:
     gameOfLife ++++++      # 160x90
 
     gen="200" gameOfLife   # user defined maximum generations (default=100)
-    seed="123" gameOfLife  # user defined seed for first random population
-    sleep="0.3" gameOfLife # user defined sleep between refresh
+    seed="123" gameOfLife  # user defined seed for first random population (otherwise random)
+    sleep="0.3" gameOfLife # user defined sleep between refresh (default=0)
 
     --noscroll             # will clear screen and refresh on the face of the place
     -h or --help           # this screen
