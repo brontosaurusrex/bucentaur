@@ -18,7 +18,7 @@ Examples:
     gameOfLife ++++++      # 160x90 - 300 gen
 
     seed="123" gameOfLife  # user defined seed for first random population
-    sleep="0.3" gameOfLife # sleep between refresh
+    sleep="0.3" gameOfLife # user defined sleep between refresh
 
     --noscroll             # will clear screen and refresh on the face of the place
     -h or --help           # this screen
@@ -224,5 +224,5 @@ done # end for loop
 
 # defeat tput cup clearin the screen on last draw
 if [[ ! $scroll -eq 1 ]]; then
-    draw # Once more to defeat the 'tput cup' clearing the screen 
+    draw
 fi
