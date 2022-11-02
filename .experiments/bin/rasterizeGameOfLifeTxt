@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# rasterizeGameOfLifeTxt: rasterize text blocks into png images
+
+# usage: rasterizeGameOfLifeTxt 50.txt
+
+# needs: pango-view
+
+# root frame storage
+frames="$HOME/tmp/frames"
+mkdir -p "$frames" || exit
+
+storeInit () {
+# hash based on file path
+hash="$(readlink -f "$file" | md5sum | awk '{print $1}')"
+#(( debug )) && echo "$hash"
+store="${frames}/${hash}/"
+mkdir -p "$store" || exit
+}
+
+# main file by file
+while [ $# -gt 0 ]; do
+
+    file="$1" && storeInit
+
+    # line by line, empty line is separator
+    c="0"
+    while read -r line; do
+
+        if [[ -z "$line" ]] ; then # if empty line
+            (( c=c+1 )); printf -v ccc "%03d" "$c"
+            echo "frame ${hash}-${ccc}.png"
+            # --background=transparent # also an option
+            pango-view --background=white --antialias=none --font=mono \
+            -qo "${store}/${hash}-${ccc}.png" "$store/frame.txt"   
+            rm "$store/frame.txt"
+        else
+            #echo "$line" | tee -a "$store/frame.txt"
+            echo "$line" >> "$store/frame.txt"
+        fi
+
+    done < "$file"
+
+shift
+done
