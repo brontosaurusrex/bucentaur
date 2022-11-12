@@ -1,0 +1,235 @@
+#!/bin/bash
+
+# game of life
+
+# usage: see --help
+
+if [[ "$*" == "-h" ]] || [[ "$*" == "--help" ]]; then
+
+cat <<EOF
+Examples:
+
+    gameOfLife             # 5x5   
+    gameOfLife +           # 10x10 
+    gameOfLife ++          # 20x20  
+    gameOfLife +++         # 30x30 
+    gameOfLife ++++        # 40x40 
+    gameOfLife +++++       # 50x50 
+    gameOfLife ++++++      # 160x90
+
+    gen="200" gameOfLife   # user defined maximum generations (default=100)
+    seed="123" gameOfLife  # user defined seed for first random population (otherwise random)
+    sleep="0.3" gameOfLife # user defined sleep between refresh (default=0)
+
+    --noscroll             # will clear screen and refresh on the face of the place
+    -h or --help           # this screen
+
+Other, zsh:
+
+    repeat 150 gameOfLife + --noscroll
+
+Other, store output using tee:
+
+    gameOfLife | tee -a output.txt
+
+EOF
+
+exit 
+
+fi
+
+# var
+width="5"; height="5"
+
+dead="⬜"
+life="⬛"
+
+[[ -z "$sleep" ]] && sleep="0"
+
+debug="0"
+
+declare -A grid
+declare -A grid2
+
+
+[[ -z "$gen" ]] && gen="100"
+
+if [[ $1 == "+" ]]; then width="10"; height="10"; fi
+if [[ $1 == "++" ]]; then width="20"; height="20"; fi
+if [[ $1 == "+++" ]]; then width="30"; height="30"; fi
+if [[ $1 == "++++" ]]; then width="40"; height="40"; fi
+if [[ $1 == "+++++" ]]; then width="50"; height="50"; fi
+if [[ $1 == "++++++" ]]; then width="90"; height="160"; fi
+
+if [[ "$*" == *"--noscroll"* ]]
+then
+    scroll="0"
+    tput civis
+else
+    scroll="1"
+    tput cnorm
+fi
+
+function cleanup() {
+    tput cnorm
+}
+trap cleanup EXIT
+
+if [[ ! $scroll -eq 1 ]]; then
+    clear
+    tput cup 0 0
+fi
+
+# 'seed' is user input or random
+[[ -z "$seed" ]] && seed="$RANDOM$RANDOM$RANDOM$RANDOM" 
+RANDOM="$seed"
+
+# populate array named grid
+for (( x = 1; x <= width; x++ ))
+do
+    for (( y = 1; y <= height; y++ ))
+    do
+        grid[${x},${y}]="$(( RANDOM % 2 ))"
+        #echo -n "${grid[${x},${y}]}" #debug
+    done
+    #echo
+done
+
+draw () {
+    # echo grid array
+    #echo "1 2 3 4 5 6 7 8 9 10"
+    for (( x = 1; x <= width; x++ ))
+    do
+        for (( y = 1; y <= height; y++ ))
+        do     
+            tmp="${grid[${x},${y}]}"
+            (( tmp )) && echo -n "$life" || echo -n "$dead"
+        done
+        echo
+    done
+    #echo "$seed "
+}
+draw # first random population
+
+if [[ ! $scroll -eq 1 ]]; then
+    tput cup 0 0
+else
+    echo
+fi
+sleep "$sleep"
+
+alive () {
+
+    # fix borders, make it tile
+    local xtmp="$1"; local ytmp="$2" # local
+
+    if (( xtmp < 1 )); then # left
+        xtmp="$(( width ))"
+    fi
+    if (( ytmp < 1 )); then # top
+        ytmp="$(( height ))"
+    fi
+    if (( xtmp > width )); then # right
+        xtmp="1"
+    fi
+    if (( ytmp > height )); then # bottom
+        ytmp="1"
+    fi   
+
+    # check if neighbour is alive
+    if [[ ${grid[${xtmp},${ytmp}]} == "1" ]]; then
+    (( count[${x},${y}] += 1 )) # global count array, one more live neighbour
+    fi     
+
+}
+
+# main loop
+gridalive="0"
+for i in $(seq $gen); do
+    declare -A count
+    #echo "$i" # gen
+    for (( x = 1; x <= width; x++ ))
+    do
+        for (( y = 1; y <= height; y++ ))
+        do
+            # 8 possible neighbours
+            # top left
+            alive "$(( x - 1 ))" "$(( y - 1 ))" &
+            # bottom left
+            alive "$(( x - 1 ))" "$(( y + 1 ))" &
+            # bottom right
+            alive "$(( x + 1 ))" "$(( y + 1 ))" &
+            # top center
+            alive "$(( x ))" "$(( y - 1 ))" &
+            # top right
+            alive "$(( x + 1 ))" "$(( y - 1 ))" & 
+            # left
+            alive "$(( x - 1 ))" "$(( y ))" &
+            # right
+            alive "$(( x + 1 ))" "$(( y ))" &
+            # bottom center
+            alive "$(( x ))" "$(( y + 1 ))" &
+
+            wait
+
+            # rules can be condensed into the following:
+            # 1 - Any live cell with two or three live neighbours survives.
+            # 2 - Any dead cell with three live neighbours becomes a live cell.
+            # 3 - All other live cells die in the next generation. 
+            #     Similarly, all other dead cells stay dead.
+            
+            # if alive and neigbours are 2 or 3
+            if [[ ${grid[${x},${y}]} == "1" ]]; then # alive at the moment
+                if (( count[${x},${y}] > 1 && count[${x},${y}] < 4 )); then # stays alive
+                    grid2[${x},${y}]="1"; (( gridalive+=1 ))
+                else # dies
+                    grid2[${x},${y}]="0"
+                fi
+            fi
+            # if dead and neigbours are 3
+            if [[ ${grid[${x},${y}]} == "0" ]]; then # dead at the moment
+                if (( count[${x},${y}] == 3 )); then # becomes alive
+                    grid2[${x},${y}]="1"; (( gridalive+=1 ))
+                else # dies
+                    grid2[${x},${y}]="0"
+                fi
+            fi
+        done
+
+    done
+
+    # reset count array
+    unset count
+
+    # if all dead, then exit
+    if (( gridalive == 0 )); then
+        exit
+    fi
+
+    # if same as old one, also exit
+    if [[ "${grid[*]}" == "${grid2[*]}" ]]; then 
+        break
+    fi
+
+    # copy grid2 back to grid (the big swap)
+    for key in "${!grid2[@]}"; do
+        grid[$key]="${grid2[$key]}"
+    done
+
+    draw
+    if [[ ! $scroll -eq 1 ]]; then
+        tput cup 0 0
+    else
+        echo
+    fi
+    sleep "$sleep"
+
+    # if no ones, then exit
+    { echo "${grid[@]}" | grep 1 || break; } >/dev/null
+
+done # end for loop
+
+# defeat tput cup clearin the screen on last draw
+if [[ ! $scroll -eq 1 ]]; then
+    draw
+fi
