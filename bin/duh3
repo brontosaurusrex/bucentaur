@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# duh3 - check disk space used
+# with parallel
+# the way linux caching works, this may be actually slower than duh2 in certain cases
+
+# tests
+command -v du >/dev/null 2>&1 || { echo "I need 'du', exiting." >&2; exit 1; }
+command -v sed >/dev/null 2>&1 || { echo "I need 'sed', exiting." >&2; exit 1; }
+command -v tee >/dev/null 2>&1 || { echo "I need 'tee', exiting." >&2; exit 1; }
+command -v parallel >/dev/null 2>&1 || { echo "I need 'parallel', exiting." >&2; exit 1; }
+
+# tmp dir http://mywiki.wooledge.org/BashFAQ/062
+tmpdir="/tmp/$RANDOM-$$"
+trap '[ -n "$tmpdir" ] && rm -fr "$tmpdir"' EXIT
+mkdir -m 700 "$tmpdir" || { echo '!! unable to create a tmpdir' >&2; tmpdir=; exit 1; }
+
+# action
+#du -ha --max-depth=1 "$@" | tee "$tmpdir/dir.txt"
+fdfind -H -d 1 "$@" | parallel du -ha --max-depth=0  | tee "$tmpdir/dir.txt"
+echo 
+
+sort -h "$tmpdir/dir.txt" | sed 's/.\///'
