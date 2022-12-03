@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# roundbox, draw round box around single line test
+# usage: roundbox woot
+#   ╭──────╮
+#   │ woot │
+#   ╰──────╯
+
+# https://dirask.com/posts/Bash-repeat-a-character-N-times-prz6rp
+function repeat()
+{
+    local count="$1"
+    local character="$2"
+
+    for (( i = 0; i < "$count"; ++i )); do
+        echo -n "$character"
+    done
+}
+
+border()
+{
+    text="$*"
+    char="─"
+    len="${#text}"
+    len="$(( len + 2 ))"
+
+    topedge="$(repeat "$len" "$char")"
+
+    botedge="╰$topedge╯"
+    topedge="╭$topedge╮"
+    middle="│ $text │"
+    
+    echo -e "$topedge\n$middle\n$botedge"
+
+}
+
+border "$*"
