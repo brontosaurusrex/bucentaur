@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# multibox, writen by chatgpt 2023 with this prompt:
+# "Can you write a bash script that would take any lenght multiline text as input and then draw rounded box around it and display that to the user"
+
+# with explanation given:
+# AI: This script uses the printf command to format the text so that it is left-aligned within the box. The %-${max_length}s format specifier is used to left-align the text and pad it with spaces as necessary to achieve the desired width.
+
+# There was some human intervention.
+# usage example:
+# echo "woot\nwoot" | multibox
+
+input_text=$(cat)
+
+max_length=0
+
+while read -r line; do
+  length=${#line}
+  if [[ length -gt max_length ]]; then
+    max_length="$length"
+  fi
+done <<< "$input_text"
+
+echo "╭$(printf -- '─%.0s' $(seq 1 "$(( max_length + 2))"))╮" # human adds 2
+while read -r line; do
+  printf "│ %-${max_length}s │\n" "$line"
+done <<< "$input_text"
+echo "╰$(printf -- '─%.0s' $(seq 1 "$(( max_length + 2))"))╯" # human adds 2
