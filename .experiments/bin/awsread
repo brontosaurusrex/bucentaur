@@ -60,7 +60,6 @@ needs aws (free validated aws account), mpv, xclip?, md5sum, awk
 -----------------------------------------------------------------
 usage:
 awsread                     # will read from clipboard
-awsread "one two three"     # will read written
 awsreas file.txt            # will read from file
 awsread --goto 100 file.txt # or -g goto page 100, will set resume to this new entry
 awsread --list              # or -l list over store
@@ -122,19 +121,21 @@ if [ "$1" == "--hash" ] || [ "$1" == "-x" ]; then # find file by hash
     cd "$storeroot" || exit
     cd -- "$(find . -name "*$search*" -type d | tail -1)" || exit
     input="$(cat name | tail -1)" || exit
-    echo "$input"
 fi
 
 # else just path to file
 if [ -f "$1" ]; then
     input="$1"
-    echo "$input"
 fi
 
 # start
-# assuming we have a valid $input file path here
-fullpath="$(readlink -f "$input")"
-(( debug )) && echo "$fullpath"
+# assuming we have a valid $input file path here, lets check again
+if [ -f "$input" ]; then
+    echo "$input"
+    fullpath="$(readlink -f "$input")"
+    (( debug )) && echo "$fullpath"
+    # else its probably clipboard, checked again later in the code ˇ
+fi
 
 # storeInit
 storeInit # gets done in any case
@@ -176,12 +177,14 @@ play (){
 }
 
 # read clipboard or file (assuming text)
-if [ "$#" -eq  "0" ]; then # is clipboard
+if [ "$#" -eq  "0" ]
+then
     # store clipboard to tmp (assuming text)
     xclip -selection clipboard -o > "$tmp/some.txt" 2>/dev/null || powershell.exe Get-clipboard > "$tmp/some.txt" || exit 1
     base="clipboard" 
-elif [[ -f "$input" ]]; then # is file
+else
     # file
+    [[ -f "$input" ]] || exit 1
     cp "$input" "$tmp/some.txt"
     # base
     baseext=${input##*/}  # file.ext
@@ -197,10 +200,6 @@ elif [[ -f "$input" ]]; then # is file
         fi
         (( jumpto > 1 )) && echo "Resume from part $jumpto"
     fi
-else # assume string
-    # store parameters to tmp
-    echo "$@" > "$tmp/some.txt" || exit 1
-    base="clipboard"
 
 fi
 
@@ -238,6 +237,10 @@ for file in x*; do
         echo "─── (voice ${voices[$rand]}) ───" 
     }
     echoBlock | pr -T -o "$pad"
+
+    # replace text that is ofen read wrong, like 'dr.'
+    sed -i 's/Dr./Doctor/' "$file"
+
     # synth
     aws polly synthesize-speech \
     --output-format ogg_vorbis \
