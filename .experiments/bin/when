@@ -9,5 +9,7 @@ cd "$dir" ||  { echo "can't go to fodler $dir" ; exit 1; }
 inotifywait -r -m --format '%T %f %e' --timefmt '%H:%M' -e modify -e create -e delete "$dir" | \
 while read -r time file what; do
     echo "beep $time $file $what $dir"
-    #sleep 1
+    # here could be a command to play some sound (in background),
+    # and timer to limit the amount of how many
+    # times that sound is player
 done
