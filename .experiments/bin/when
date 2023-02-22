@@ -12,4 +12,5 @@ while read -r time file what; do
     # here could be a command to play some sound (in background),
     # and timer to limit the amount of how many
     # times that sound is player
+    echo -n -e "\a" # send bell character
 done
