@@ -3,14 +3,31 @@
 # Print some info when files in directory change, run 4ever
 # example: when /path/to/fodler
 
+refresh="120"
+
 dir="$(readlink -f "$1")"
 cd "$dir" ||  { echo "can't go to fodler $dir" ; exit 1; }
+
+# info
+echo "watching $dir"
+
+# force refresh from time to time
+# https://superuser.com/questions/702402/how-do-i-refresh-directory-in-bash
+refresh () { 
+    while : # 4ever
+    do
+        #echo "forcing refresh $dir every $refresh seconds"
+        cd "$dir" ||  { echo "can't go to fodler $dir" ; exit 1; } # supposed refresh 
+        sleep "$refresh"
+    done
+}
+refresh &
 
 inotifywait -r -m --format '%T %f %e' --timefmt '%H:%M' -e modify -e create -e delete "$dir" | \
 while read -r time file what; do
     echo "beep $time $file $what $dir"
     # here could be a command to play some sound (in background),
     # and timer to limit the amount of how many
-    # times that sound is player
+    # times that sound is played, but instead just the bell char will do for now.
     echo -n -e "\a" # send bell character
 done
