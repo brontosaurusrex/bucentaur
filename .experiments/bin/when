@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Print some info when files in directory change, run 4ever
+# example: when /path/to/fodler
+
+dir="$(readlink -f "$1")"
+cd "$dir" ||  { echo "can't go to fodler $dir" ; exit 1; }
+
+inotifywait -r -m --format '%T %f %e' --timefmt '%H:%M' -e modify -e create -e delete "$dir" | \
+while read -r time file what; do
+    echo "beep $time $file $what $dir"
+    #sleep 1
+done
