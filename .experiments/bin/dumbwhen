@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Print some info when files in directory change, run 4ever
+# example: dumbwhen /path/to/fodler
+
+# tmp dir
+tmp="/tmp/$RANDOM-$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
+refresh="69"
+
+dir="$(readlink -f "$1")"
+cd "$dir" ||  { echo "can't go to fodler $dir" ; exit 1; }
+
+snapshot (){
+    ls -tlhar > "$tmp/snap1.txt"
+    sleep "$refresh"
+    ls -tlhar > "$tmp/snap2.txt"
+}
+
+
+while : 
+do
+   
+    snapshot
+
+    # compare
+    if diff -u "$tmp/snap1.txt" "$tmp/snap2.txt" | grep "^[+]"; then
+
+        # there is a difference
+        echo "difference!"
+        snapshot
+
+    else
+
+        # repeat wait and snapshot just the 2nd one
+        sleep "$refresh"
+        ls -tlhar > "$tmp/snap1.txt"
+        echo " no difference ..."
+    
+    fi
+
+
+
+done
