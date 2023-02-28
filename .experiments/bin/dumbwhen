@@ -8,7 +8,7 @@ tmp="/tmp/$RANDOM-$$"
 trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
 
-refresh="69"
+refresh="6" # seconds
 
 dir="$(readlink -f "$1")"
 cd "$dir" ||  { echo "can't go to fodler $dir" ; exit 1; }
@@ -19,17 +19,18 @@ snapshot (){
     ls -tlhar > "$tmp/snap2.txt"
 }
 
-
 while : 
 do
    
     snapshot
 
     # compare
-    if diff -u "$tmp/snap1.txt" "$tmp/snap2.txt" | grep "^[+]"; then
+    
+    if diff -u "$tmp/snap1.txt" "$tmp/snap2.txt" | grep "^[+-]"; then # line starts with '+' or '-'
 
         # there is a difference
         echo "difference!"
+        echo -n -e "\a" # send bell character
         snapshot
 
     else
@@ -37,10 +38,8 @@ do
         # repeat wait and snapshot just the 2nd one
         sleep "$refresh"
         ls -tlhar > "$tmp/snap1.txt"
-        echo " no difference ..."
+        echo "no difference ..."
     
     fi
-
-
 
 done
