@@ -18,6 +18,7 @@ refresh () {
     do
         #echo "forcing refresh $dir every $refresh seconds"
         cd "$dir" ||  { echo "can't go to fodler $dir" ; exit 1; } # supposed refresh 
+        find . -maxdepth 1 > /dev/null                             # supposed refresh 2
         sleep "$refresh"
     done
 }
