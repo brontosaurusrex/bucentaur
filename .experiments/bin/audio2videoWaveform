@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# There are some problems with sync when using m4a directly, lets decode to wav first
+ffmpeg -y  -loglevel panic  -i "$1" music.wav
+#faad "$1" -o music.wav
+
+# uhd waveform picture
+ffmpeg -y  -loglevel panic  -i "music.wav" -filter_complex "aformat=channel_layouts=mono,showwavespic=s=7680x4320:colors=999999" -frames:v 1 waveformbig.png 
+
+# scale down picture
+ffmpeg -y  -loglevel panic  -i waveformbig.png -vf "scale=w=1920:h=1080:flags=lanczos" waveform.png
+
+# compose with custom background picture, make sure bg is also 1920x1080
+ffmpeg -y  -loglevel panic  -i bg.png -i waveform.png -filter_complex "overlay" comp.png || cp waveform.png comp.png
+
+# get the duration into variable
+duration="$(ffprobe -i music.wav -show_entries format=duration -v quiet -of csv="p=0")"
+
+# get the composed image to be the same leght as audio
+ffmpeg -y  -loglevel panic -r 100 -loop 1 -i comp.png -i "music.wav" -to "$duration" tmp.mp4 || exit
+
+# ffmpeg -y  -loglevel panic , generate 2x500 px line
+ffmpeg -y  -loglevel panic  -f lavfi -i color=c=white:s=2x500 -frames:v 1 overlay.png
+
+# Last
+ffmpeg -y  -loglevel panic  -i tmp.mp4 -i overlay.png -filter_complex "[0:v][1:v]overlay=x='if(gte(t,0), -w+(t)*(main_w-overlay_w)/$duration, NAN)':y='(main_h-overlay_h)/2'" -c:a copy final.mp4
+
+echo $duration
