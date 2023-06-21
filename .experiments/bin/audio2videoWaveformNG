@@ -31,8 +31,9 @@ isAAC() {
 file="$1"
 
 # image: make waveform picture (make it longer than higher) 5840x1080
-# Error here, somehow the right part of a waveform is clipped
-waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,showwavespic=s=5840x1080:colors=999999, format=rgba" -frames:v 1 "$tmp/waveform.png")
+# Error here, somehow the right part of a waveform is clipped, maybe sox instead
+#  sox music_01_short.wav -n remix 1 spectrogram -r -h -x 2000 -y 400 -o sox.png 
+waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,showwavespic=s=wqsxga:colors=999999, format=rgba" -frames:v 1 "$tmp/waveform.png")
 echo "waveform pic: ${pre[*]} ${waveformPic[*]}" && ("${pre[@]}" "${waveformPic[@]}") # exe
 
 # image: make line to be used as head
