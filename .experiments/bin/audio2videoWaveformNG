@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# audio2videoWaveform
+
+# Make head moving over waveform video for any audio file, 
+# overlay over user selected image that must be in the same fodler as audio file, named
+# like the audio file in question (takes higher order) or generic name like cover.png
+# If m4a/mp4 just mux the the video with audio (avoid transcoding) - if audio is AAC
+# for anything else, transcode audio?
+
+# required
+command -v ffmpeg >/dev/null 2>&1 || { >&2 echo "I need ffmpeg" ; exit 1; }
+command -v ffprobe >/dev/null 2>&1 || { >&2 echo "I need ffprobe" ; exit 1; }
+
+# tmp dir
+tmp="/tmp/waveform_$RANDOM-$$"
+#trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+
+# How the command should start every time
+pre=(ffmpeg_new
+    -loglevel error
+    -stats)
+
+isAAC() { 
+    ffprobe "$1" 2>&1 | grep "Audio: aac"
+    }
+
+# loop
+
+file="$1"
+
+# image: make waveform picture (make it longer than higher) 5840x1080
+# Error here, somehow the right part of a waveform is clipped
+waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,showwavespic=s=5840x1080:colors=999999, format=rgba" -frames:v 1 "$tmp/waveform.png")
+echo "waveform pic: ${pre[*]} ${waveformPic[*]}" && ("${pre[@]}" "${waveformPic[@]}") # exe
+
+# image: make line to be used as head
+line=(-f lavfi -i color=c=white:s=2x1000 -frames:v 1 "$tmp/line.png")
+echo "make line: ${pre[*]} ${line[*]}" && ("${pre[@]}" "${line[@]}") # exe
+
+# get the duration into variable
+duration="$(ffprobe -i "$file" -show_entries format=duration -v quiet -of csv="p=0")"
+
+# video: get the composed image to be the same lenght as audio, also encode audio to aac (default)
+# ffmpeg -i input.mov -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le output.mov
+#video1=(-r 25 -loop 1 -i "$tmp/waveform.png" -i "$file" -to "$duration" "$tmp/waveform.mp4")
+video1=(-r 25 -loop 1 -i "$tmp/waveform.png" -i "$file" -to "$duration" -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/waveform.mov")
+echo "video1: ${pre[*]} ${video1[*]}" && ("${pre[@]}" "${video1[@]}") # exe
+
+# video2: overlay animated head
+video2=(-i "$tmp/waveform.mov" -i "$tmp/line.png" -filter_complex "[0:v][1:v]overlay=x='if(gte(t,0), -w+(t)*(main_w-overlay_w)/$duration, NAN)':y='(main_h-overlay_h)/2'" -c:a copy -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/head.mov")
+echo "video2: ${pre[*]} ${video2[*]}" && ("${pre[@]}" "${video2[@]}") # exe
+
+# find cover if any, either filebase.png or generic cover.png
+    filename="$(readlink -f "$file")"   # absolute
+    baseext=$(basename "${filename}")   # file.ext
+    base="${baseext%.*}"                # file
+    dir="$(dirname "${filename}")"      # dir
+
+    path1="$dir/${base}.png"
+    path2="$dir/cover.png"
+    if [ -f "$path1" ]; then
+        cover="$path1"
+    elif [ -f "$path2" ]; then
+        cover="$path2"
+    else
+        cover="none"
+    fi
+
+    #cover="$dir/${base}.png" || cover="$dir/cover.png"
+
+# fit to fill cover to 1920x1080
+# if there is no cover defined, skip this step
+if [[ "$cover" != "none" ]]; then
+    coverfit=(-i "$cover" -vf "scale=-1:1080,crop=1920:1080" "$tmp/cover.png")
+    echo "coverfit: ${pre[*]} ${coverfit[*]}" && ("${pre[@]}" "${coverfit[@]}") # exe
+
+    # overlay animation over the cover
+    overlay=(-i "$tmp/cover.png" -i "$tmp/head.mov" -filter_complex "color=black@0:1920x1080,setsar=1 [base];[1:v]scale=1920:-1[scaled];[base][scaled] overlay=(W-w)/2:(H-h)/2[padded];[0:v][padded]overlay=format=auto" -to "$duration" -c:v prores_ks -profile:v 4444 "$tmp/headcover.mov")
+    # ffmpeg -i input.mp4 -vf "color=black@0:1920x1080,setsar=1 [base]; [base][scaled] overlay=(W-w)/2:(H-h)/2" -c:a copy output.mp4
+    echo "overlay: ${pre[*]} ${overlay[*]}" && ("${pre[@]}" "${overlay[@]}") # exe
+
+else # fit to fill to black bg
+    echo "boo"
+fi
+
+
+
