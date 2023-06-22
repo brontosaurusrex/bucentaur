@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# offset calcualtion from audio duration to image padding
+
+calc () {
+     bc <<< "scale=5; $*"
+}
+round () {
+    awk 'BEGIN{printf "%."'$1'"f\n", "'$2'"}'
+}
+
+# var
+# audio
+duration="1" # seconds
+offset="0.1" # seconds
+# image
+width="1000" # pixels
+
+# get me how much pixles i need to pad image with $width, round to whole number
+offsetPercents="$(calc "($offset/($duration+$offset))*100")"
+echo "offsetPercents: $offsetPercents (%)"
+padded_width="$(calc "($offsetPercents/100)*$width+$width")"
+padded_width="$(round "0" "$padded_width")"
+echo "padded_width: $padded_width (pixels)"
+
+# The actual png image padding, according to chatgpt
+
+#   ffmpeg -i input.png -vf "pad=iw+<padded_width>:ih:color=none" output.png
+
+# where
+# ih: Maintains the original height of the image (ih).
+# color=none: Indicates that the added padding should be transparent (alpha channel).
