@@ -38,8 +38,8 @@ wave_w="3200" # px < tmp image width
 wave_h="2048" # px < tmp image height
 # final res is hardcoded to 1920x1080
 line_size=(2x600) # moving head graphics size
-line_color="cccccc"
-waveform_color="004010"
+line_color="00A060"
+waveform_color="009050"
 fps="50" # frames per second
 
 
