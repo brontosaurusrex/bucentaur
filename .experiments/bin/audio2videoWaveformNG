@@ -11,47 +11,78 @@
 # required
 command -v ffmpeg >/dev/null 2>&1 || { >&2 echo "I need ffmpeg" ; exit 1; }
 command -v ffprobe >/dev/null 2>&1 || { >&2 echo "I need ffprobe" ; exit 1; }
+command -v lolcat >/dev/null 2>&1 || { >&2 echo "I need lolcat" ; exit 1; }
 
 # tmp dir
-tmp="/tmp/waveform_$RANDOM-$$"
+tmp="/tmp/waveform_$RANDOM$$"
 #trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
 
-# How the command should start every time
-pre=(ffmpeg_new
+# functions
+# isAAC() { 
+#     ffprobe "$1" 2>&1 | grep "Audio: aac"
+#     }
+calc () {
+     bc <<< "scale=5; $*"
+}
+round () {
+    awk 'BEGIN{printf "%."'$1'"f\n", "'$2'"}'
+}
+
+# variables
+pre=(ffmpeg6
     -loglevel error
-    -stats)
+    -stats)   # How the ffmpeg command should start every time
+debug="1"     # echo various debug/info messages
+offset="0.1"  # seconds < to correct for the ffmpeg cliping the right side of the waveform slightly
+wave_w="3200" # px < tmp image width
+wave_h="2048" # px < tmp image height
+# final res is hardcoded to 1920x1080
+line_size=(2x1000) # moving head graphics size
+fps=25 # frames per second video
 
-isAAC() { 
-    ffprobe "$1" 2>&1 | grep "Audio: aac"
-    }
 
-# loop
+# loop here
 
 file="$1"
 
-# image: make waveform picture (make it longer than higher) 5840x1080
-# Error here, somehow the right part of a waveform is clipped, maybe sox instead
-#  sox music_01_short.wav -n remix 1 spectrogram -r -h -x 2000 -y 400 -o sox.png 
-waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,showwavespic=s=wqsxga:colors=999999, format=rgba" -frames:v 1 "$tmp/waveform.png")
-echo "waveform pic: ${pre[*]} ${waveformPic[*]}" && ("${pre[@]}" "${waveformPic[@]}") # exe
-
-# image: make line to be used as head
-line=(-f lavfi -i color=c=white:s=2x1000 -frames:v 1 "$tmp/line.png")
-echo "make line: ${pre[*]} ${line[*]}" && ("${pre[@]}" "${line[@]}") # exe
-
 # get the duration into variable
 duration="$(ffprobe -i "$file" -show_entries format=duration -v quiet -of csv="p=0")"
+(( debug )) && echo "duration: $duration (seconds)"
 
-# video: get the composed image to be the same lenght as audio, also encode audio to aac (default)
-# ffmpeg -i input.mov -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le output.mov
-#video1=(-r 25 -loop 1 -i "$tmp/waveform.png" -i "$file" -to "$duration" "$tmp/waveform.mp4")
-video1=(-r 25 -loop 1 -i "$tmp/waveform.png" -i "$file" -to "$duration" -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/waveform.mov")
-echo "video1: ${pre[*]} ${video1[*]}" && ("${pre[@]}" "${video1[@]}") # exe
+# image: make waveform picture (make it longer than higher) 'wave_w * wave_h'
 
-# video2: overlay animated head
-video2=(-i "$tmp/waveform.mov" -i "$tmp/line.png" -filter_complex "[0:v][1:v]overlay=x='if(gte(t,0), -w+(t)*(main_w-overlay_w)/$duration, NAN)':y='(main_h-overlay_h)/2'" -c:a copy -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/head.mov")
-echo "video2: ${pre[*]} ${video2[*]}" && ("${pre[@]}" "${video2[@]}") # exe
+# image offset: get me how much pixles i need to pad image with $width, round to whole number
+offsetPercents="$(calc "($offset/($duration+$offset))*100")"
+(( debug )) && echo "offsetPercents: $offsetPercents (%)"
+padded_width="$(calc "($offsetPercents/100)*$wave_w+$wave_w")"
+padded_width="$(round "0" "$padded_width")"
+(( debug )) && echo "padded_width: $padded_width (pixels)"
+
+# image: waveform without padding
+waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,showwavespic=s=${wave_w}x${wave_h}:colors=999999, format=rgba" -frames:v 1 "$tmp/waveform_one.png")
+echo "waveform pic: ${pre[*]} ${waveformPic[*]}" | lolcat
+("${pre[@]}" "${waveformPic[@]}") || exit # exe
+# image: waveform add padding
+# ffmpeg -i input.png -vf "pad=iw+<padded_width>:ih:color=none" output.png
+waveformPicPad=(-i "$tmp/waveform_one.png" -vf "pad=${padded_width}:ih:color=black@0" "$tmp/waveform_padded.png")
+echo "waveform pic padded: ${pre[*]} ${waveformPicPad[*]}" | lolcat
+("${pre[@]}" "${waveformPicPad[@]}") || exit # exe
+
+# image: make line to be used as head
+line=(-f lavfi -i color=c=white:s="${line_size[@]}" -frames:v 1 "$tmp/line.png")
+echo "make line: ${pre[*]} ${line[*]}" | lolcat 
+("${pre[@]}" "${line[@]}") || exit # exe
+
+# video: get the composed image to be the same lenght as audio
+video1=(-r "${fps}" -loop 1 -i "$tmp/waveform_padded.png" -i "$file" -to "$duration" -an -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/waveform_tri.mov")
+echo "video1: ${pre[*]} ${video1[*]}" | lolcat
+("${pre[@]}" "${video1[@]}") || exit # exe
+
+# video2: overlay animated head, fat file
+video2=(-i "$tmp/waveform_tri.mov" -i "$tmp/line.png" -filter_complex "[0:v][1:v]overlay=x='if(gte(t,0), -w+(t)*(main_w-overlay_w)/$duration, NAN)':y='(main_h-overlay_h)/2'" -c:a copy -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/waveform_head.mov")
+echo "video2: ${pre[*]} ${video2[*]}" | lolcat 
+("${pre[@]}" "${video2[@]}") || exit # exe
 
 # find cover if any, either filebase.png or generic cover.png
     filename="$(readlink -f "$file")"   # absolute
@@ -65,26 +96,33 @@ echo "video2: ${pre[*]} ${video2[*]}" && ("${pre[@]}" "${video2[@]}") # exe
         cover="$path1"
     elif [ -f "$path2" ]; then
         cover="$path2"
-    else
-        cover="none"
+    else # make some image for cover
+        makeblack=(-f lavfi -i color=c=black:s=1920x1080 -frames:v 1 "$tmp/black.png")
+        echo "no cover found, making some black: ${pre[*]} ${video2[*]}" | lolcat 
+        ("${pre[@]}" "${makeblack[@]}") || exit # exe
+        cover="$tmp/black.png"
     fi
 
-    #cover="$dir/${base}.png" || cover="$dir/cover.png"
+(( debug )) && echo "cover=$cover"
 
 # fit to fill cover to 1920x1080
-# if there is no cover defined, skip this step
-if [[ "$cover" != "none" ]]; then
-    coverfit=(-i "$cover" -vf "scale=-1:1080,crop=1920:1080" "$tmp/cover.png")
-    echo "coverfit: ${pre[*]} ${coverfit[*]}" && ("${pre[@]}" "${coverfit[@]}") # exe
+coverfit=(-i "$cover" -vf "scale=-1:1080,crop=1920:1080" "$tmp/cover.png")
+echo "coverfit: ${pre[*]} ${coverfit[*]}" | lolcat
+("${pre[@]}" "${coverfit[@]}") # exe
 
-    # overlay animation over the cover
-    overlay=(-i "$tmp/cover.png" -i "$tmp/head.mov" -filter_complex "color=black@0:1920x1080,setsar=1 [base];[1:v]scale=1920:-1[scaled];[base][scaled] overlay=(W-w)/2:(H-h)/2[padded];[0:v][padded]overlay=format=auto" -to "$duration" -c:v prores_ks -profile:v 4444 "$tmp/headcover.mov")
-    # ffmpeg -i input.mp4 -vf "color=black@0:1920x1080,setsar=1 [base]; [base][scaled] overlay=(W-w)/2:(H-h)/2" -c:a copy output.mp4
-    echo "overlay: ${pre[*]} ${overlay[*]}" && ("${pre[@]}" "${overlay[@]}") # exe
+# overlay animation over the cover
+overlay=(-i "$tmp/cover.png" -i "$tmp/waveform_head.mov" -filter_complex "color=black@0:1920x1080,setsar=1 [base];[1:v]scale=1920:-1[scaled];[base][scaled] overlay=(W-w)/2:(H-h)/2[padded];[0:v][padded]overlay=format=auto" -to "$duration" -c:v prores_ks -profile:v 4444 "$tmp/headcover.mov")
+echo "overlay: ${pre[*]} ${overlay[*]}" | lolcat 
+("${pre[@]}" "${overlay[@]}") || exit # exe
 
-else # fit to fill to black bg
-    echo "boo"
-fi
+# find nice filename for output
+baseout="${base}_waveform"
+while [ -f "$dir/${baseout}.mkv" ] ; do
+    baseout="${base}_waveform.$RANDOM"
+done
+(( debug )) && echo "filename: ${baseout}.mkv"
 
-
-
+# encode to avc and mux with audio to mkv
+final_mux=(-i "$tmp/headcover.mov" -i "$file" -c:v libx264 -c:a copy "${dir}/${baseout}.mkv")
+echo "final_mux: ${pre[*]} ${final_mux[*]}" | lolcat 
+("${pre[@]}" "${final_mux[@]}") || exit # exe
