@@ -39,7 +39,7 @@ wave_w="3200" # px < tmp image width
 wave_h="2048" # px < tmp image height
 # final res is hardcoded to 1920x1080
 line_size=(2x1000) # moving head graphics size
-fps=25 # frames per second video
+fps=25 # frames per second
 
 
 # loop here
@@ -60,7 +60,7 @@ padded_width="$(round "0" "$padded_width")"
 (( debug )) && echo "padded_width: $padded_width (pixels)"
 
 # image: waveform without padding
-waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,showwavespic=s=${wave_w}x${wave_h}:colors=999999, format=rgba" -frames:v 1 "$tmp/waveform_one.png")
+waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,compand,showwavespic=s=${wave_w}x${wave_h}:colors=999999, format=rgba" -frames:v 1 "$tmp/waveform_one.png")
 echo "waveform pic: ${pre[*]} ${waveformPic[*]}" | lolcat
 ("${pre[@]}" "${waveformPic[@]}") || exit # exe
 # image: waveform add padding
