@@ -13,20 +13,12 @@ command -v lolcat >/dev/null 2>&1 || { >&2 echo "I need lolcat" ; exit 1; }
 command -v convert >/dev/null 2>&1 || { >&2 echo "I need imagemagick convert" ; exit 1; }
 command -v composite >/dev/null 2>&1 || { >&2 echo "I need imagemagick composite" ; exit 1; }
 
-# tmp dir
-tmp="/mnt/d/tmp/waveform_$RANDOM$$"
-#trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
-mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
-
 # functions
-# isAAC() { 
-#     ffprobe "$1" 2>&1 | grep "Audio: aac"
-#     }
 calc () {
      bc <<< "scale=5; $*"
 }
-round () {
-    awk 'BEGIN{printf "%."'$1'"f\n", "'$2'"}'
+round () { 
+    awk 'BEGIN{printf "%."'"$1"'"f\n", "'"$2"'"}'
 }
 
 # variables
@@ -41,13 +33,21 @@ wave_h="1340" # px < tmp image height
 w="1920"      # px < final width
 h="1080"      # px < final height
 h="804"      # px < final height
-
 line_size=(2x600) # moving head graphics size
 line_color="ccffcc"
 waveform_color="bbeebb"
-fps="50" # frames per second
+font_color="#${waveform_color}"
+font_size="$(calc ${w}/100)" && font_size="$(round 0 "${font_size}")"
+fps="25" # frames per second
+tmpdir_root="/tmp"
 
+(( debug )) && echo "font size: $font_size"
 
+# tmp dir
+tmp="${tmpdir_root}/waveform_$RANDOM$$"
+trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+(( debug )) && echo "tmp dir is $tmp"
 
 # main
 
@@ -94,47 +94,33 @@ while [ $# -gt 0 ]; do
 
     (( debug )) && echo "cover=$cover"
 
-    # fit to fill cover to final width * height
-    
-    #coverfit=(-i "$cover" -vf "scale=-1:${h},crop=${w}:${h}" "$tmp/cover.png")
-    #echo "coverfit: ${pre[*]} ${coverfit[*]}" | lolcat
-    #("${pre[@]}" "${coverfit[@]}") # exe
-
     # image magick instead of ffmpeg maybe
     coverfit=(convert "$cover" -resize "${w}"x"${h}"^ -gravity center -extent "${w}"x"${h}" "$tmp/cover.png")
     echo "coverfit: ${coverfit[*]}" | lolcat
     ${coverfit[*]} || exit # exe
 
-    # image: scale down, maybe not needed
-    #scaleDown=(-i "$tmp/waveform_padded.png" -vf "scale=-1:${h}" "$tmp/waveform_padded_small.png")
-    #echo "scale down: ${pre[*]} ${scaleDown[*]}" | lolcat 
-    #("${pre[@]}" "${scaleDown[@]}") || exit # exe
-
     # composite waveform over cover
     #composite -gravity center -compose screen -resize 1920x804 waveform_padded_small.png cover.png out.png
-    covercomp=(composite -gravity center -compose screen -resize "${w}"x"${h}" "$tmp/waveform_padded.png" "$tmp/cover.png" "$tmp/composite.png")
+    covercomp=(composite -gravity center -compose screen -resize "${w}"x"${h}" "$tmp/waveform_padded.png" "$tmp/cover.png" "$tmp/composite_pre.png")
     echo "covercomp: ${covercomp[*]}" | lolcat
     ${covercomp[*]} || exit # exe
-   
+
+    # add text title
+    (( debug )) && echo "base: $base"
+    echo "$base" > "$tmp/text.txt"
+    set -x
+    convert "${tmp}/composite_pre.png" -family "Roboto Condensed" -fill "$font_color" -pointsize "$font_size" -compose screen -gravity north -annotate +20+10 @"$tmp/text.txt" "${tmp}/composite.png" || exit
+    set +x
+
     # image: make line to be used as head
     line=(-f lavfi -i color=c="${line_color}":s="${line_size[@]}" -frames:v 1 "$tmp/line.png")
     echo "make line: ${pre[*]} ${line[*]}" | lolcat 
     ("${pre[@]}" "${line[@]}") || exit # exe
 
-    # video: get the composed image to be the same lenght as audio
-    #video1=(-r "${fps}" -loop 1 -i "$tmp/waveform_padded_small.png" -i "$file" -to "$duration" -an -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/waveform_tri.mov")
-    #echo "video1: ${pre[*]} ${video1[*]}" | lolcat
-    #("${pre[@]}" "${video1[@]}") || exit # exe
-
-    # video2: overlay animated head, fat file
-    video2=(-r "${fps}" -loop 1 -i "$tmp/composite.png" -i "$tmp/line.png" -filter_complex "[0:v][1:v]overlay=x='if(gte(t,0), -w+(t)*(main_w-overlay_w)/$duration, NAN)':y='(main_h-overlay_h)/2'" -c:a copy -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le -to "$duration" "$tmp/waveform_head.mov")
+    # video2: overlay animated head
+    video2=(-r "${fps}" -loop 1 -i "$tmp/composite.png" -i "$tmp/line.png" -i "$file" -filter_complex "[0:v][1:v]overlay=x='if(gte(t,0), -w+(t)*(main_w-overlay_w)/$duration, NAN)':y='(main_h-overlay_h)/2'" -c:v libx264 -preset veryfast -crf 21 -c:a copy -to "$duration" "$tmp/waveform_head.mkv")
     echo "video2: ${pre[*]} ${video2[*]}" | lolcat 
     ("${pre[@]}" "${video2[@]}") || exit # exe
-
-    # overlay animation over the cover (this was the place where framerate got borked, but i fixed it somehow...)
-    #overlay=(-r "${fps}" -i "$tmp/waveform_head.mov" -r "${fps}" -loop 1 -i "$tmp/cover.png" -filter_complex "color=black@0:${w}x${h}:r=${fps},setsar=1 [base];[0:v]scale=${w}:-1[scaled];[base][scaled]overlay=(W-w)/2:(H-h)/2[padded];[1:v][padded]overlay=format=auto" -to "$duration" -c:v prores_ks -profile:v 4444 "$tmp/headcover.mov")
-    #echo "overlay: ${pre[*]} ${overlay[*]}" | lolcat 
-    #("${pre[@]}" "${overlay[@]}") || exit # exe
 
     # find nice filename for output
     baseout="${base}_waveform"
@@ -143,10 +129,9 @@ while [ $# -gt 0 ]; do
     done
     (( debug )) && echo "filename: ${baseout}.mkv"
 
-    # encode to avc and mux with audio to mkv
-    final_mux=(-i "$tmp/waveform_head.mov" -i "$file" -c:v libx264 -c:a copy "${dir}/${baseout}.mkv")
-    echo "final_mux: ${pre[*]} ${final_mux[*]}" | lolcat 
-    ("${pre[@]}" "${final_mux[@]}") || exit # exe
+    # mv to destination
+    echo "${dir}/${baseout}.mkv" | lolcat
+    mv "$tmp/waveform_head.mkv" "${dir}/${baseout}.mkv"
 
 shift
 done
