@@ -14,7 +14,7 @@ command -v ffprobe >/dev/null 2>&1 || { >&2 echo "I need ffprobe" ; exit 1; }
 command -v lolcat >/dev/null 2>&1 || { >&2 echo "I need lolcat" ; exit 1; }
 
 # tmp dir
-tmp="/tmp/waveform_$RANDOM$$"
+tmp="/mnt/f/tmp/waveform_$RANDOM$$"
 #trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
 
@@ -35,9 +35,9 @@ pre=(ffmpeg6
     -stats)   # How the ffmpeg command should start every time
 #pre=(ffmpeg6)   # How the ffmpeg command should start every time
 debug="1"     # echo various debug/info messages
-offset="0.0001"  # seconds < to correct for the ffmpeg cliping the right side of the waveform slightly
-wave_w="3200" # px < tmp image width
-wave_h="2048" # px < tmp image height
+offset="0.001"  # seconds < to correct for the ffmpeg cliping the right side of the waveform slightly
+wave_w="10200" # px < tmp image width
+wave_h="5048" # px < tmp image height
 # final res is hardcoded to 1920x1080
 line_size=(2x600) # moving head graphics size
 fps="50" # frames per second
@@ -51,8 +51,6 @@ file="$1"
 duration="$(ffprobe -i "$file" -show_entries format=duration -v quiet -of csv="p=0")"
 (( debug )) && echo "duration: $duration (seconds)"
 
-# image: make waveform picture (make it longer than higher) 'wave_w * wave_h'
-
 # image offset: get me how much pixles i need to pad image with $width, round to whole number
 offsetPercents="$(calc "($offset/($duration+$offset))*100")"
 (( debug )) && echo "offsetPercents: $offsetPercents (%)"
@@ -61,7 +59,7 @@ padded_width="$(round "0" "$padded_width")"
 (( debug )) && echo "padded_width: $padded_width (pixels)"
 
 # image: waveform without padding
-waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,compand,showwavespic=s=${wave_w}x${wave_h}:colors=999999, format=rgba" -frames:v 1 "$tmp/waveform_one.png")
+waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,compand,showwavespic=s=${wave_w}x${wave_h}:colors=cccccc, format=rgba" -frames:v 1 "$tmp/waveform_one.png")
 echo "waveform pic: ${pre[*]} ${waveformPic[*]}" | lolcat
 ("${pre[@]}" "${waveformPic[@]}") || exit # exe
 # image: waveform add padding
