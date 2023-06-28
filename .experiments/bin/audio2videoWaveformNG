@@ -9,7 +9,7 @@
 # for anything else, transcode audio?
 
 # required
-command -v ffmpeg >/dev/null 2>&1 || { >&2 echo "I need ffmpeg" ; exit 1; }
+command -v ffmpeg6 >/dev/null 2>&1 || { >&2 echo "I need ffmpeg" ; exit 1; }
 command -v ffprobe >/dev/null 2>&1 || { >&2 echo "I need ffprobe" ; exit 1; }
 command -v lolcat >/dev/null 2>&1 || { >&2 echo "I need lolcat" ; exit 1; }
 
@@ -33,13 +33,14 @@ round () {
 pre=(ffmpeg6
     -loglevel error
     -stats)   # How the ffmpeg command should start every time
+#pre=(ffmpeg6)   # How the ffmpeg command should start every time
 debug="1"     # echo various debug/info messages
-offset="0.1"  # seconds < to correct for the ffmpeg cliping the right side of the waveform slightly
+offset="0.0001"  # seconds < to correct for the ffmpeg cliping the right side of the waveform slightly
 wave_w="3200" # px < tmp image width
 wave_h="2048" # px < tmp image height
 # final res is hardcoded to 1920x1080
-line_size=(2x1000) # moving head graphics size
-fps=25 # frames per second
+line_size=(2x600) # moving head graphics size
+fps="50" # frames per second
 
 
 # loop here
@@ -64,10 +65,14 @@ waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,compand,sh
 echo "waveform pic: ${pre[*]} ${waveformPic[*]}" | lolcat
 ("${pre[@]}" "${waveformPic[@]}") || exit # exe
 # image: waveform add padding
-# ffmpeg -i input.png -vf "pad=iw+<padded_width>:ih:color=none" output.png
 waveformPicPad=(-i "$tmp/waveform_one.png" -vf "pad=${padded_width}:ih:color=black@0" "$tmp/waveform_padded.png")
 echo "waveform pic padded: ${pre[*]} ${waveformPicPad[*]}" | lolcat
 ("${pre[@]}" "${waveformPicPad[@]}") || exit # exe
+
+# image: scale down
+scaleDown=(-i "$tmp/waveform_padded.png" -vf "scale=-1:1080" "$tmp/waveform_padded_small.png")
+echo "scale down: ${pre[*]} ${scaleDown[*]}" | lolcat 
+("${pre[@]}" "${scaleDown[@]}") || exit # exe
 
 # image: make line to be used as head
 line=(-f lavfi -i color=c=white:s="${line_size[@]}" -frames:v 1 "$tmp/line.png")
@@ -75,12 +80,12 @@ echo "make line: ${pre[*]} ${line[*]}" | lolcat
 ("${pre[@]}" "${line[@]}") || exit # exe
 
 # video: get the composed image to be the same lenght as audio
-video1=(-r "${fps}" -loop 1 -i "$tmp/waveform_padded.png" -i "$file" -to "$duration" -an -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/waveform_tri.mov")
+video1=(-r "${fps}" -loop 1 -i "$tmp/waveform_padded_small.png" -i "$file" -to "$duration" -an -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/waveform_tri.mov")
 echo "video1: ${pre[*]} ${video1[*]}" | lolcat
 ("${pre[@]}" "${video1[@]}") || exit # exe
 
 # video2: overlay animated head, fat file
-video2=(-i "$tmp/waveform_tri.mov" -i "$tmp/line.png" -filter_complex "[0:v][1:v]overlay=x='if(gte(t,0), -w+(t)*(main_w-overlay_w)/$duration, NAN)':y='(main_h-overlay_h)/2'" -c:a copy -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/waveform_head.mov")
+video2=(-r "${fps}" -i "$tmp/waveform_tri.mov" -i "$tmp/line.png" -filter_complex "[0:v][1:v]overlay=x='if(gte(t,0), -w+(t)*(main_w-overlay_w)/$duration, NAN)':y='(main_h-overlay_h)/2'" -c:a copy -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le "$tmp/waveform_head.mov")
 echo "video2: ${pre[*]} ${video2[*]}" | lolcat 
 ("${pre[@]}" "${video2[@]}") || exit # exe
 
@@ -110,8 +115,8 @@ coverfit=(-i "$cover" -vf "scale=-1:1080,crop=1920:1080" "$tmp/cover.png")
 echo "coverfit: ${pre[*]} ${coverfit[*]}" | lolcat
 ("${pre[@]}" "${coverfit[@]}") # exe
 
-# overlay animation over the cover
-overlay=(-i "$tmp/cover.png" -i "$tmp/waveform_head.mov" -filter_complex "color=black@0:1920x1080,setsar=1 [base];[1:v]scale=1920:-1[scaled];[base][scaled] overlay=(W-w)/2:(H-h)/2[padded];[0:v][padded]overlay=format=auto" -to "$duration" -c:v prores_ks -profile:v 4444 "$tmp/headcover.mov")
+# overlay animation over the cover (this was the place where framerate got borked, but i fixed it somehow...)
+overlay=(-r "${fps}" -i "$tmp/waveform_head.mov" -r "${fps}" -loop 1 -i "$tmp/cover.png" -filter_complex "color=black@0:1920x1080:r=${fps},setsar=1 [base];[0:v]scale=1920:-1[scaled];[base][scaled]overlay=(W-w)/2:(H-h)/2[padded];[1:v][padded]overlay=format=auto" -to "$duration" -c:v prores_ks -profile:v 4444 "$tmp/headcover.mov")
 echo "overlay: ${pre[*]} ${overlay[*]}" | lolcat 
 ("${pre[@]}" "${overlay[@]}") || exit # exe
 
