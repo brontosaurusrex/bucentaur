@@ -36,8 +36,8 @@ pre=(ffmpeg6
 #pre=(ffmpeg6)   # How the ffmpeg command should start every time
 debug="1"     # echo various debug/info messages
 offset="0.001"  # seconds < to correct for the ffmpeg cliping the right side of the waveform slightly
-wave_w="10200" # px < tmp image width
-wave_h="5048" # px < tmp image height
+wave_w="3200" # px < tmp image width
+wave_h="2048" # px < tmp image height
 # final res is hardcoded to 1920x1080
 line_size=(2x600) # moving head graphics size
 fps="50" # frames per second
@@ -88,23 +88,22 @@ echo "video2: ${pre[*]} ${video2[*]}" | lolcat
 ("${pre[@]}" "${video2[@]}") || exit # exe
 
 # find cover if any, either filebase.png or generic cover.png
-    filename="$(readlink -f "$file")"   # absolute
-    baseext=$(basename "${filename}")   # file.ext
-    base="${baseext%.*}"                # file
-    dir="$(dirname "${filename}")"      # dir
-
-    path1="$dir/${base}.png"
-    path2="$dir/cover.png"
-    if [ -f "$path1" ]; then
-        cover="$path1"
-    elif [ -f "$path2" ]; then
-        cover="$path2"
-    else # make some image for cover
-        makeblack=(-f lavfi -i color=c=black:s=1920x1080 -frames:v 1 "$tmp/black.png")
-        echo "no cover found, making some black: ${pre[*]} ${video2[*]}" | lolcat 
-        ("${pre[@]}" "${makeblack[@]}") || exit # exe
-        cover="$tmp/black.png"
-    fi
+filename="$(readlink -f "$file")"   # absolute
+baseext=$(basename "${filename}")   # file.ext
+base="${baseext%.*}"                # file
+dir="$(dirname "${filename}")"      # dir
+path1="$dir/${base}.png"
+path2="$dir/cover.png"
+if [ -f "$path1" ]; then
+    cover="$path1"
+elif [ -f "$path2" ]; then
+    cover="$path2"
+else # make some image for cover
+    makeblack=(-f lavfi -i color=c=black:s=1920x1080 -frames:v 1 "$tmp/black.png")
+    echo "no cover found, making some black: ${pre[*]} ${video2[*]}" | lolcat 
+    ("${pre[@]}" "${makeblack[@]}") || exit # exe
+    cover="$tmp/black.png"
+fi
 
 (( debug )) && echo "cover=$cover"
 
