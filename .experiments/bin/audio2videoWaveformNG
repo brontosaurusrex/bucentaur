@@ -94,15 +94,21 @@ while [ $# -gt 0 ]; do
     (( debug )) && echo "cover=$cover"
 
     # image magick instead of ffmpeg maybe
-    coverfit=(convert "$cover" -resize "${w}"x"${h}"^ -gravity center -extent "${w}"x"${h}" "$tmp/cover.png")
-    echo "coverfit: ${coverfit[*]}" | lolcat
-    ${coverfit[*]} || exit # exe
+    #coverfit=(convert "$cover" -resize "${w}"x"${h}"^ -gravity center -extent "${w}"x"${h}" "$tmp/cover.png")
+    #echo "coverfit: ${coverfit[*]}" | lolcat
+    #${coverfit[*]} || exit # exe
+    set -x
+    convert "$cover" -resize "${w}"x"${h}"^ -gravity center -extent "${w}"x"${h}" "$tmp/cover.png" || exit
+    set +x 
 
     # composite waveform over cover
     #composite -gravity center -compose screen -resize 1920x804 waveform_padded_small.png cover.png out.png
-    covercomp=(composite -gravity center -compose screen -resize "${w}"x"${h}" "$tmp/waveform_padded.png" "$tmp/cover.png" "$tmp/composite_pre.png")
-    echo "covercomp: ${covercomp[*]}" | lolcat
-    ${covercomp[*]} || exit # exe
+    #covercomp=(composite -gravity center -compose screen -resize "${w}"x"${h}" "$tmp/waveform_padded.png" "$tmp/cover.png" "$tmp/composite_pre.png")
+    #echo "covercomp: ${covercomp[*]}" | lolcat
+    #${covercomp[*]} || exit # exe
+    set -x
+    composite -gravity center -compose screen -resize "${w}"x"${h}" "$tmp/waveform_padded.png" "$tmp/cover.png" "$tmp/composite_pre.png" || exit
+    set +x
 
     # add text title
     (( debug )) && echo "base: $base"
