@@ -24,22 +24,21 @@ round () {
 # variables
 pre=(ffmpeg -y
     -loglevel error
-    -stats)   # How the ffmpeg command should start every time
-#pre=(ffmpeg6)   # How the ffmpeg command should start every time
-debug="1"     # echo various debug/info messages
-offset="0.001"  # seconds < to correct for the ffmpeg cliping the right side of the waveform slightly
-wave_w="3200" # px < tmp image width
-wave_h="1340" # px < tmp image height
-w="1920"      # px < final width
-h="1080"      # px < final height
-h="804"      # px < final height
-line_size=(2x600) # moving head graphics size
-line_color="ccffcc"
-waveform_color="bbeebb"
-font_color="#${waveform_color}"
-font_size="$(calc ${w}/100)" && font_size="$(round 0 "${font_size}")"
-fps="25" # frames per second
-tmpdir_root="/tmp"
+    -stats)         # How the ffmpeg command should start every time
+debug="1"           # echo various debug/info messages
+offset="0.001"      # seconds < to correct for the ffmpeg cliping the right side of the waveform slightly
+wave_w="3200"       # px < tmp image width
+wave_h="1340"       # px < tmp image height
+w="1920"            # px < final width
+h="1080"            # px < final height
+h="804"             # px < final height
+line_size=(2x450)   # moving head graphics size
+line_color="ccffcc" # hex
+waveform_color="bbeebb" # hex
+font_color="#${waveform_color}" # #hex
+font_size="$(calc ${w}/100)" && font_size="$(round 0 "${font_size}")" # font size as ratio of final_width
+fps="25"            # frames per second
+tmpdir_root="/tmp"  # place where script will put tmp files
 
 (( debug )) && echo "font size: $font_size"
 
@@ -118,7 +117,7 @@ while [ $# -gt 0 ]; do
     ("${pre[@]}" "${line[@]}") || exit # exe
 
     # video2: overlay animated head
-    video2=(-r "${fps}" -loop 1 -i "$tmp/composite.png" -i "$tmp/line.png" -i "$file" -filter_complex "[0:v][1:v]overlay=x='if(gte(t,0), -w+(t)*(main_w-overlay_w)/$duration, NAN)':y='(main_h-overlay_h)/2'" -c:v libx264 -preset veryfast -crf 21 -c:a copy -to "$duration" "$tmp/waveform_head.mkv")
+    video2=(-r "${fps}" -loop 1 -i "$tmp/composite.png" -i "$tmp/line.png" -i "$file" -filter_complex "[0:v][1:v]overlay=x='if(gte(t,0), -w+(t)*(main_w-overlay_w)/$duration, NAN)':y='(main_h-overlay_h)/2',avgblur=5:5" -c:v libx264 -preset veryfast -crf 21 -c:a copy -to "$duration" "$tmp/waveform_head.mkv")
     echo "video2: ${pre[*]} ${video2[*]}" | lolcat 
     ("${pre[@]}" "${video2[@]}") || exit # exe
 
