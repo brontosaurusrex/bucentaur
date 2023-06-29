@@ -33,11 +33,14 @@ w="1920"            # px < final width
 h="1080"            # px < final height
 h="804"             # px < final height
 line_size=(2x450)   # moving head graphics size
-line_color="ccffcc" # hex
-waveform_color="bbeebb" # hex
-font_color="#${waveform_color}" # #hex
+#line_color="ccffcc" # hex
+line_color="bbeebb" # hex
+#waveform_color="bbeebb" # hex
+waveform_color="3ba67d" # hex
+font_color="#bbeebb" # #hex
+font_family="Roboto Condensed"  # convert -list font | grep FontName # < to check
 font_size="$(calc ${w}/100)" && font_size="$(round 0 "${font_size}")" # font size as ratio of final_width
-fps="250"            # frames per second
+fps="100"            # frames per second
 tmpdir_root="/tmp"  # place where script will put tmp files
 
 (( debug )) && echo "font size: $font_size"
@@ -94,18 +97,11 @@ while [ $# -gt 0 ]; do
     (( debug )) && echo "cover=$cover"
 
     # image magick instead of ffmpeg maybe
-    #coverfit=(convert "$cover" -resize "${w}"x"${h}"^ -gravity center -extent "${w}"x"${h}" "$tmp/cover.png")
-    #echo "coverfit: ${coverfit[*]}" | lolcat
-    #${coverfit[*]} || exit # exe
     set -x
     convert "$cover" -resize "${w}"x"${h}"^ -gravity center -extent "${w}"x"${h}" "$tmp/cover.png" || exit
     set +x 
 
     # composite waveform over cover
-    #composite -gravity center -compose screen -resize 1920x804 waveform_padded_small.png cover.png out.png
-    #covercomp=(composite -gravity center -compose screen -resize "${w}"x"${h}" "$tmp/waveform_padded.png" "$tmp/cover.png" "$tmp/composite_pre.png")
-    #echo "covercomp: ${covercomp[*]}" | lolcat
-    #${covercomp[*]} || exit # exe
     set -x
     composite -gravity center -compose screen -resize "${w}"x"${h}" "$tmp/waveform_padded.png" "$tmp/cover.png" "$tmp/composite_pre.png" || exit
     set +x
@@ -114,7 +110,7 @@ while [ $# -gt 0 ]; do
     (( debug )) && echo "base: $base"
     echo "$base" > "$tmp/text.txt"
     set -x
-    convert "${tmp}/composite_pre.png" -family "Roboto Condensed" -fill "$font_color" -pointsize "$font_size" -compose screen -gravity north -annotate +20+10 @"$tmp/text.txt" "${tmp}/composite.png" || exit
+    convert "${tmp}/composite_pre.png" -family "$font_family" -fill "$font_color" -pointsize "$font_size" -compose screen -gravity north -annotate +20+10 @"$tmp/text.txt" "${tmp}/composite.png" || exit
     set +x
 
     # image: make line to be used as head
