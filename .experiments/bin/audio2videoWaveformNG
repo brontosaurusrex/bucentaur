@@ -6,6 +6,9 @@
 # overlay over image that must be in the same fodler as audio file, named
 # like the audio file in question (takes higher order) or generic name like cover.png
 
+# usage example:
+#   audio2videoWaveformNG file.flac
+
 # required
 command -v ffmpeg >/dev/null 2>&1 || { >&2 echo "I need ffmpeg" ; exit 1; }
 command -v ffprobe >/dev/null 2>&1 || { >&2 echo "I need ffprobe" ; exit 1; }
@@ -26,11 +29,10 @@ pre=(ffmpeg -y
     -loglevel error
     -stats)         # How the ffmpeg command should start every time
 debug="1"           # echo various debug/info messages
-offset="0.001"      # seconds < to correct for the ffmpeg cliping the right side of the waveform slightly
+offset="0.005"      # seconds < to correct for the ffmpeg cliping the right side of the waveform slightly, pure guesswork.
 wave_w="3200"       # px < tmp image width
-wave_h="1340"       # px < tmp image height
-w="1920"            # px < final width
-h="1080"            # px < final height
+wave_h="940"       # px < tmp image height
+w="1920"            # px < final width, 1920x804 is 21:9 ar.
 h="804"             # px < final height
 line_size=(2x450)   # moving head graphics size
 #line_color="ccffcc" # hex
@@ -38,8 +40,9 @@ line_color="bbeebb" # hex
 #waveform_color="bbeebb" # hex
 waveform_color="3ba67d" # hex
 font_color="#bbeebb" # #hex
-font_family="Roboto Condensed"  # convert -list font | grep FontName # < to check
-font_size="$(calc ${w}/100)" && font_size="$(round 0 "${font_size}")" # font size as ratio of final_width
+#font_family="Roboto Condensed"  # convert -list font | grep FontName # < to check
+font_family="Agdasima"  # convert -list font | grep FontName # < to check
+font_size="$(calc ${w}/70)" && font_size="$(round 0 "${font_size}")" # font size as ratio of final_width
 fps="100"            # frames per second
 tmpdir_root="/tmp"  # place where script will put tmp files
 
@@ -75,7 +78,7 @@ while [ $# -gt 0 ]; do
     (( debug )) && echo "padded_width: $padded_width (pixels)"
 
     # image: waveform without padding
-    waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,compand,showwavespic=s=${wave_w}x${wave_h}:colors=${waveform_color}, format=rgba" -frames:v 1 "$tmp/waveform_one.png")
+    waveformPic=(-i "$file" -filter_complex "aformat=channel_layouts=mono,showwavespic=s=${wave_w}x${wave_h}:colors=${waveform_color}, format=rgba" -frames:v 1 "$tmp/waveform_one.png")
     echo "waveform pic: ${pre[*]} ${waveformPic[*]}" | lolcat
     ("${pre[@]}" "${waveformPic[@]}") || exit # exe
     # image: waveform add padding
