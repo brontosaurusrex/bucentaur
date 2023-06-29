@@ -56,6 +56,13 @@ mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; 
 # main loop
 while [ $# -gt 0 ]; do
     file="$1"
+
+    # info
+    if type roundbox >/dev/null
+    then roundbox "$file" | lolcat
+    else echo "$file" | lolcat
+    fi
+
     # get the duration into variable
     duration="$(ffprobe -i "$file" -show_entries format=duration -v quiet -of csv="p=0")"
     (( debug )) && echo "duration: $duration (seconds)"
