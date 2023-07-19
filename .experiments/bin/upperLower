@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# upperLower
+# will upper, lower or capital 1st letter of X selection and return the result
+# not usable from cli
+
+string="$(echo "$(xsel)")"
+# https://github.com/jordansissel/xdotool/issues/49 = setxkbmap behaviour
+setxkbmap
+
+# openbox example and disable running from cli
+if [[ "$1" == "--openbox" ]] || [[ -t 0 ]] ; then 
+
+cat <<EOF
+    # change selected text to lowercase, upercase or capital first letter in each word
+    <keybind key="C-A-l">
+        <action name="Execute">
+            <command>upperLower -l</command>
+        </action>
+    </keybind>
+    <keybind key="C-A-u">
+        <action name="Execute">
+            <command>upperLower -u</command>
+        </action>
+    </keybind>
+    <keybind key="C-A-p">
+        <action name="Execute">
+            <command>upperLower -p</command>
+        </action>
+    </keybind>
+EOF
+exit
+fi
+
+# main
+if [[ "$1" == "-l" ]]; then # lower
+    clip="${string,,}"; xdotool type --clearmodifiers -- "$clip"
+elif [[ "$1" == "-u" ]]; then # upper
+    clip="${string^^}"; xdotool type --clearmodifiers -- "$clip"
+elif [[ "$1" == "-p" ]]; then # capital 1st
+    clip="${string,,}"; IFS=" "; read -r -a array <<< "$clip"; cliparr=( "${array[@]^*}" ); xdotool type --clearmodifiers -- "${cliparr[*]}"
+fi
