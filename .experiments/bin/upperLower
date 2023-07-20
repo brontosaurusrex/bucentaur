@@ -2,7 +2,7 @@
 
 # upperLower
 
-# This doesn't behave as expected, but keeping it in git for now.
+# THIS DOESN'T BEHAVE AS EXPECTED, BUT KEEPING IT IN GIT FOR NOW.
 
 # will upper, lower or capital 1st letter of X selection and return the result
 # not usable from cli
