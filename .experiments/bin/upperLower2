@@ -2,7 +2,8 @@
 
 # upperLower2
 
-# needs: xsel, notify-send
+# needs: xsel, awk 
+# likes: notify-send
 
 # will upper, lower or capital 1st letter of X selection 
 # and return the result to clipboard, removing xdotool completely
@@ -33,7 +34,9 @@ elif [[ "$1" == "-u" ]]; then # upper
     clip="${string^^}"; backToClipboard "$clip"
     superecho "$clip is back in clipboard, press ctrl+v"
 elif [[ "$1" == "-p" ]]; then # capital 1st
-    clip="${string,,}"; clip=$(echo "$clip" | sed -E 's/(^| )(.)/\U\2/g'); backToClipboard "$clip"
+    clip="${string,,}"
+    clip="$(echo "$clip" | awk '{for(i=1;i<=NF;i++){$i=toupper(substr($i,1,1)) substr($i,2)}}1')"
+    backToClipboard "$clip"
     superecho "$clip is back in clipboard, press ctrl+v"
 fi
 
