@@ -1,6 +1,9 @@
 #!/bin/bash
 
 # upperLower
+
+# This doesn't behave as expected, but keeping it in git for now.
+
 # will upper, lower or capital 1st letter of X selection and return the result
 # not usable from cli
 
