@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# upperLower2
+
+# needs: xsel, notify-send
+
+# will upper, lower or capital 1st letter of X selection 
+# and return the result to clipboard, removing xdotool completely
+
+# superecho
+superecho () {
+    local msg="$1"
+    if [[ -t 0 ]] ; then
+        echo "$msg"
+    else
+        notify-send -t 3500 "$msg"
+    fi
+}
+
+# get string from clipboard
+string="$(xsel)"
+
+# return changed string to clipboard
+backToClipboard () {
+    echo "$1" | xsel --clipboard
+}
+
+# main
+if [[ "$1" == "-l" ]]; then # lower
+    clip="${string,,}"; backToClipboard "$clip"
+    superecho "$clip is back in clipboard, press ctrl+v"
+elif [[ "$1" == "-u" ]]; then # upper
+    clip="${string^^}"; backToClipboard "$clip"
+    superecho "$clip is back in clipboard, press ctrl+v"
+elif [[ "$1" == "-p" ]]; then # capital 1st
+    clip="${string,,}"; clip=$(echo "$clip" | sed -E 's/(^| )(.)/\U\2/g'); backToClipboard "$clip"
+    superecho "$clip is back in clipboard, press ctrl+v"
+fi
+
+# openbox example 
+if [[ "$1" == "--openbox" ]]; then 
+
+cat <<EOF
+    # change selected text to lowercase, upercase or capital first letter in each word
+    # openbox rc.xml example
+    <keybind key="C-A-l">
+        <action name="Execute">
+            <command>upperLower2 -l</command>
+        </action>
+    </keybind>
+    <keybind key="C-A-u">
+        <action name="Execute">
+            <command>upperLower2 -u</command>
+        </action>
+    </keybind>
+    <keybind key="C-A-p">
+        <action name="Execute">
+            <command>upperLower2 -p</command>
+        </action>
+    </keybind>
+EOF
+fi
