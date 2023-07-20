@@ -22,7 +22,7 @@ string="$(xsel)"
 
 # return changed string to clipboard
 backToClipboard () {
-    echo "$1" | xsel --clipboard
+    echo -n "$1" | xsel --clipboard
 }
 
 # main
