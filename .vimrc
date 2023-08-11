@@ -22,3 +22,13 @@ nmap <F10> $
 " http://vim.wikia.com/wiki/Accessing_the_system_clipboard
 " ... to obtain clipboard support install the packages vim-gtk or vim-gnome 
 set clipboard=unnamedplus
+
+" colores
+colorscheme angr
+
+" persistent undo
+silent !mkdir -p "$HOME/.vim/undo"
+set undofile
+set undodir=$HOME/.vim/undo
+set undolevels=1000
+set undoreload=10000
