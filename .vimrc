@@ -33,7 +33,7 @@ set undodir=$HOME/.vim/undo
 set undolevels=1000
 set undoreload=10000
 
-" file manager sort order
+" :Ex file manager sort order
 let g:netrw_sort_by = "time"
 let g:netrw_sort_direction = "reverse"
 
