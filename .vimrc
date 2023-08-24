@@ -36,3 +36,23 @@ set undoreload=10000
 " file manager sort order
 let g:netrw_sort_by = "time"
 let g:netrw_sort_direction = "reverse"
+
+" fzf
+" https://dev.to/pbnj/interactive-fuzzy-finding-in-vim-without-plugins-4kkj
+" press <leader> + ff or type :Files to open fzf file search 
+let mapleader = "," " default leader is \
+function! FZF() abort
+    let l:tempname = tempname()
+    " fzf | awk '{ print $1":1:0" }' > file
+    execute 'silent !fzf --multi ' . '| awk ''{ print $1":1:0" }'' > ' . fnameescape(l:tempname)
+    try
+        execute 'cfile ' . l:tempname
+        redraw!
+    finally
+        call delete(l:tempname)
+    endtry
+endfunction
+" :Files
+command! -nargs=* Files call FZF()
+" \ff
+nnoremap <leader>ff :Files<cr>
