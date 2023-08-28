@@ -24,7 +24,8 @@ nmap <F10> $
 set clipboard=unnamedplus
 
 " colores
-"colorscheme angr
+" https://github.com/flazz/vim-colorschemes
+colorscheme angr
 
 " persistent undo
 silent !mkdir -p "$HOME/.vim/undo"
@@ -56,3 +57,10 @@ endfunction
 command! -nargs=* Files call FZF()
 " \ff
 nnoremap <leader>ff :Files<cr>
+
+" Move visually selected lines up or down in visual or normal mode (shift + k or j)
+" https://www.youtube.com/watch?v=gNyNm5DsQ88
+nnoremap K :m .-2<cr>==
+nnoremap J :m .+1<cr>==
+vnoremap K :m '<-2<cr>gv=gv
+vnoremap J :m '>+1<cr>gv=gv
