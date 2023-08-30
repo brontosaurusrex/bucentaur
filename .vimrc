@@ -64,3 +64,7 @@ nnoremap K :m .-2<cr>==
 nnoremap J :m .+1<cr>==
 vnoremap K :m '<-2<cr>gv=gv
 vnoremap J :m '>+1<cr>gv=gv
+
+" from /etc/vim/vimrc
+" Uncomment the following to have Vim jump to the last position when reopening a file
+au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
