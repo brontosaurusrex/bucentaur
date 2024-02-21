@@ -9,7 +9,7 @@
 # awsreas /path/to/file.txt     # will read from file
 
 # config
-voices=(Amy Brian Joanna Matthew Kendra Joey)
+voices=(Amy Brian Joanna Matthew Kendra Joey Ivy Justin Emma Kimberly Salli)
 #disabled Ivy Justin Emma Kimberly Salli
 #aws polly describe-voices --language-code en-GB ; aws polly describe-voices --language-code en-US
 resume="please" # non-empty is true
@@ -51,6 +51,13 @@ calcPad(){
     else
         pad="0"
     fi
+}
+
+# calc percentage (will need perc2 script to actually display that?)
+perc () {
+    local tmp
+    tmp="$(bc -l <<< "$1/$2*100")"
+    awk 'BEGIN{printf "%."'"2"'"f\n", "'"$tmp"'"}'
 }
 
 help () { 
@@ -234,9 +241,11 @@ for file in x*; do
         # print header and text part
         (( all > 1 )) && echo "(${part}/${all})" 
         cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g' 
-        echo "─── (voice ${voices[$rand]}) ───" 
+        echo "─── (voice ${voices[$rand]}) ─── ${perc}%" 
     }
+    perc="$( perc "$part" "$all" )"
     echoBlock | pr -T -o "$pad"
+    # perc2 "$perc" # < to much stuff on screen
 
     # replace text that is ofen read wrong, like 'dr.'
     sed -i 's/Dr./Doctor/' "$file"
