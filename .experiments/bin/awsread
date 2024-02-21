@@ -9,7 +9,7 @@
 # awsreas /path/to/file.txt     # will read from file
 
 # config
-voices=(Amy Brian Joanna Matthew Kendra Joey Ivy Justin Emma Kimberly Salli)
+voices=(Amy Brian Joanna Matthew Kendra Joey)
 #disabled Ivy Justin Emma Kimberly Salli
 #aws polly describe-voices --language-code en-GB ; aws polly describe-voices --language-code en-US
 resume="please" # non-empty is true
