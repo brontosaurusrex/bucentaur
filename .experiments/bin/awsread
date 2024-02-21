@@ -248,7 +248,7 @@ for file in x*; do
     # perc2 "$perc" # < to much stuff on screen
 
     # replace text that is ofen read wrong, like 'dr.'
-    sed -i 's/Dr./Doctor/' "$file"
+    sed -i 's/Dr\./Doctor/' "$file"
 
     # synth
     aws polly synthesize-speech \
