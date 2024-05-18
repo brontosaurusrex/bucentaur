@@ -1,28 +1,48 @@
 #!/bin/bash
 
-# imgbox 
+# imgbox
+# chatgpt with minor help from brex - 2024
 
-# (brex & chatgpt 2024)
 # Convert imgbox.com provided HTML into a more friendly version
-# where thumbs link directly to images, echo it to stdout
+# where thumbs link directly to images, echo it to stdout and copy to clipboard
 
-# usage: 
-# imgbox in.htm
+# usage: imgbox [input_file]
+# If no input_file is provided, read from windows (WSL) clipboard.
 
-input="$1"
-
-# Ensure the input file exists
-if [[ ! -f "$input" ]]; then
-  echo "File not found: $input"
-  exit 1
-fi
-
-# Extract URLs ending with .png or .jpg and process them
-grep -oP '(?<=src=")[^"]*\.(png|jpg)' "$input" | while IFS= read -r line; do
+# Function to process HTML content
+process_html() {
+  local input="$1"
+  
+  echo "$input" | grep -oP '(?<=src=")[^"]*\.(png|jpg)' | while IFS= read -r line; do
     # Perform replacements to convert thumb URLs to full image URLs
     newline="${line/thumbs2/images2}"
     newline="${newline/_t./_o.}"
 
-    # Output the modified HTML line
-    echo "<a href=\"$newline\" target=\"_blank\"><img src=\"$line\" alt=\"image\"></a>"
-done
+    # Construct the modified HTML line
+    echo "<a href=\"$newline\" target=\"_blank\"><img src=\"$line\" alt=\"image\"/></a>"
+  done
+}
+
+# Check if an input file is provided
+if [[ -n "$1" ]]; then
+  if [[ -f "$1" ]]; then
+    # Read from file
+    input=$(cat "$1")
+  else
+    echo "File not found: $1"
+    exit 1
+  fi
+else
+  # Read from clipboard
+  echo "readin and writing from/to clipboard"
+  input=$(powershell.exe Get-Clipboard | tr -d '\r')
+fi
+
+# Process the input
+output=$(process_html "$input")
+
+# Output to stdout
+echo "$output"
+
+# Copy the result to the clipboard
+echo "$output" | clip.exe
