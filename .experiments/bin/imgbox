@@ -9,12 +9,6 @@
 # usage: 
 # imgbox in.htm
 
-# Check if input file is provided
-if [[ -z "$1" ]]; then
-  echo "Usage: $0 input_file"
-  exit 1
-fi
-
 input="$1"
 
 # Ensure the input file exists
@@ -30,5 +24,5 @@ grep -oP '(?<=src=")[^"]*\.(png|jpg)' "$input" | while IFS= read -r line; do
     newline="${newline/_t./_o.}"
 
     # Output the modified HTML line
-    echo "<a href=\"$newline\" target=\"_blank\"><img src=\"$line\" alt=\"image\"/></a>"
+    echo "<a href=\"$newline\" target=\"_blank\"><img src=\"$line\" alt=\"image\"></a>"
 done
