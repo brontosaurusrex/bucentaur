@@ -29,7 +29,7 @@ voices=(*.onnx)
 resume="please" # non-empty is true
 keepAudio=""    # non-empty is true
 # split text at (max:3000)
-bytes="1000"
+bytes="600"
 # text display width in chars (50-80)
 width="50"
 # center text block
