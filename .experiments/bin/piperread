@@ -1,27 +1,41 @@
 #!/bin/bash
 
-# awsread, txt to speech using cloudy aws polly
+# piperread
 
-# needs aws, mpv, xclip?, md5sum, awk
+# txt to speech using local
+# txt2speach called piper
+# based on awsread
+
+# needs piper, mpv, xclip?, md5sum, awk
 
 # usage:
-# awsread                       # will read from clipboard
-# awsreas /path/to/file.txt     # will read from file
+# piperread                       # will read from clipboard
+# piperread /path/to/file.txt     # will read from file
 
 # config
-voices=(Amy Brian Joanna Matthew Kendra Joey)
-#disabled Ivy Justin Emma Kimberly Salli
-#aws polly describe-voices --language-code en-GB ; aws polly describe-voices --language-code en-US
+
+piperpath="$HOME/piper"  # where is the exe
+if [ -d "$piperpath" ] ; then
+    PATH="$piperpath:$PATH"
+fi
+voicespath="$HOME/piper" # where are the onnx and json files
+cd "$voicespath" || exit
+# loop over onnx files and populate array
+# Populate the array with .onnx files
+voices=(*.onnx)
+
+#voices=(alan.onnx en_GB-alba-medium.onnx en_GB-cori-high.onnx en_GB-jenny_dioco-medium.onnx en_GB-semaine-medium.onnx en_US-libritts-high.onnx en_US-ryan-high.onnx)
+
 resume="please" # non-empty is true
 keepAudio=""    # non-empty is true
 # split text at (max:3000)
-bytes="600"
+bytes="1000"
 # text display width in chars (50-80)
 width="50"
 # center text block
 centertext="mkay" # non-empty is true
 # storeroot
-storeroot="$HOME/tmp/recAWS"
+storeroot="$HOME/tmp/recPIPERREAD"
 mkdir -p "$storeroot" || exit
 # debug 1 is true
 debug="0"
@@ -63,16 +77,16 @@ perc () {
 
 help () { 
 cat << EOF
-awsread, txt to speech using cloudy aws polly
-needs aws (free validated aws account), mpv, xclip?, md5sum, awk
+piperread, txt to speech 
+needs piper, mpv, xclip?, md5sum, awk
 -----------------------------------------------------------------
 usage:
-awsread                     # will read from clipboard
-awsreas file.txt            # will read from file
-awsread --goto 100 file.txt # or -g goto page 100, will set resume to this new entry
-awsread --list              # or -l list over store
-awsread --random            # or -r read random page
-awsread --hash ab           # or -x will read first file that includes those letters in hash
+piperread                     # will read from clipboard
+piperread file.txt            # will read from file
+piperread --goto 100 file.txt # or -g goto page 100, will set resume to this new entry
+piperread --list              # or -l list over store
+piperread --random            # or -r read random page
+piperread --hash ab           # or -x will read first file that includes those letters in hash
 
 interactive keys:
 q                           # skip to next block (mpv)
@@ -151,7 +165,7 @@ storeInit # gets done in any case
 tput civis
 
 # checks
-command -v aws >/dev/null 2>&1 || { echo "I need aws cli, exiting." >&2; exit 1; }
+command -v piper >/dev/null 2>&1 || { echo "I need piper on path, exiting." >&2; exit 1; }
 command -v awk >/dev/null 2>&1 || { echo "I need awk, exiting." >&2; exit 1; }
 command -v mpv >/dev/null 2>&1 || { echo "I need mpv player, exiting." >&2; exit 1; }
 command -v md5sum >/dev/null 2>&1 || { echo "I need md5sum, exiting." >&2; exit 1; }
@@ -178,7 +192,7 @@ fi
 play (){
     if [[ -n $keepAudio ]]; then
         name="$(($(date +%s%N)/1000000))" # lets name parts by epoch miliseconds
-        mpv --no-resume-playback --msg-level=all=no --no-video --record-file="${store}${name}.ogg" "$1"
+        mpv --no-resume-playback --msg-level=all=no --no-video --record-file="${store}${name}.wav" "$1"
     else
         mpv --no-resume-playback --msg-level=all=no --no-video "$1"
     fi
@@ -254,9 +268,8 @@ for file in x*; do
     sed -i 's/Ms\./Miss/' "$file"
 
     # synth
-    aws polly synthesize-speech \
-    --output-format ogg_vorbis \
-    --voice-id "${voices[$rand]}" \
-    --text "$(cat "$file")" "$tmp/pipe" | play "$tmp/pipe" 2>/dev/null || exit
+    #echo "$file"
+    #echo "$tmp"
+    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output_file "$tmp/pipe" 2>/dev/null  | play "$tmp/pipe" 2>/dev/null  || exit
  
 done
