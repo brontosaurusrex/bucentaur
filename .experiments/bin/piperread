@@ -6,7 +6,7 @@
 # txt2speach called piper
 # based on awsread
 
-# needs piper, mpv, xclip?, md5sum, awk
+# needs piper, aplay, xclip?, md5sum, awk
 
 # usage:
 # piperread                       # will read from clipboard
@@ -22,16 +22,14 @@ if [ -d "$piperpath" ] ; then
 fi
 voicespath="$HOME/piper" # where are the onnx and json files
 cd "$voicespath" || exit
-ls *.onnx
 
 # loop over onnx files and populate array
 # Populate the array with .onnx files
 voices=(*.onnx)
 (( ${#voices[@]} )) || { echo "No voices (*.onnx) found in $voicespath"; exit 1; }
-#voices=(alan.onnx en_GB-alba-medium.onnx en_GB-cori-high.onnx en_GB-jenny_dioco-medium.onnx en_GB-semaine-medium.onnx en_US-libritts-high.onnx en_US-ryan-high.onnx)
 
 resume="please" # non-empty is true
-keepAudio=""    # non-empty is true
+#keepAudio=""    # non-empty is true
 # split text at (max:3000)
 bytes="600"
 # text display width in chars (50-80)
@@ -171,13 +169,14 @@ tput civis
 # checks
 command -v piper >/dev/null 2>&1 || { echo "I need piper on path, exiting." >&2; exit 1; }
 command -v awk >/dev/null 2>&1 || { echo "I need awk, exiting." >&2; exit 1; }
-command -v mpv >/dev/null 2>&1 || { echo "I need mpv player, exiting." >&2; exit 1; }
+command -v aplay >/dev/null 2>&1 || { echo "I need aplay, exiting." >&2; exit 1; }
 command -v md5sum >/dev/null 2>&1 || { echo "I need md5sum, exiting." >&2; exit 1; }
 
 cleanup () {
   (( debug )) && echo "$?"
   [ -n "$tmp" ] && rm -fr "$tmp"
   tput cnorm
+  killall aplay
 }
 
 # tmp dir
@@ -193,14 +192,14 @@ if [[ ! -p $pipe ]]; then
 fi
 
 # play
-play (){
-    if [[ -n $keepAudio ]]; then
-        name="$(($(date +%s%N)/1000000))" # lets name parts by epoch miliseconds
-        mpv --no-resume-playback --msg-level=all=no --no-video --record-file="${store}${name}.wav" "$1"
-    else
-        mpv --no-resume-playback --msg-level=all=no --no-video "$1"
-    fi
-}
+# play (){
+#     if [[ -n $keepAudio ]]; then
+#         name="$(($(date +%s%N)/1000000))" # lets name parts by epoch miliseconds
+#         mpv --no-resume-playback --msg-level=all=no --no-video --record-file="${store}${name}.wav" "$1"
+#     else
+#         mpv --no-resume-playback --msg-level=all=no --no-video "$1"
+#     fi
+# }
 
 # read clipboard or file (assuming text)
 if [ "$#" -eq  "0" ]
@@ -255,6 +254,9 @@ for file in x*; do
     (( random )) || resumeSave # store position if random is false
     calcPad # How much to pad to center block
     rand="(($RANDOM % ${#voices[@]}))"
+
+
+    # head is here i guess
     echoBlock (){
         echo
         # print header and text part
@@ -272,8 +274,8 @@ for file in x*; do
     sed -i 's/Ms\./Miss/' "$file"
 
     # synth
-    #echo "$file"
-    #echo "$tmp"
-    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output_file "$tmp/pipe" 2>/dev/null  | play "$tmp/pipe" 2>/dev/null  || exit
- 
+
+    #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output_file "$tmp/pipe" 2>/dev/null  | play "$tmp/pipe" 2>/dev/null  || exit
+    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | aplay -r 22050 -f S16_LE -t raw - 2>/dev/null || exit
+
 done
