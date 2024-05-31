@@ -281,7 +281,10 @@ for file in x*; do
     # working aplay line
     #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | aplay -i -r 22050 -f S16_LE -t raw - 2>/dev/null || exit
 
-    # working mpv line
+    # non-working mpv line
+    #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | mpv --demuxer=rawaudio --audio-samplerate=22050 --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --no-resume-playback --msg-level=all=no --no-video - 2>/dev/null
+
+    # working ffmpeg/mpv line
     cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | ffmpeg -f s16le -ar 22050 -ac 1 -i - -f wav - 2>/dev/null | mpv --no-resume-playback --msg-level=all=no --no-video - 2>/dev/null
 
 done
