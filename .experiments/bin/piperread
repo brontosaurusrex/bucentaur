@@ -176,7 +176,6 @@ cleanup () {
   (( debug )) && echo "$?"
   [ -n "$tmp" ] && rm -fr "$tmp"
   tput cnorm
-  killall aplay
 }
 
 # tmp dir
@@ -251,12 +250,15 @@ for file in x*; do
     if [[ -n $resume ]]; then
         (( part < jumpto )) && continue
     fi
+
+    # exit if there is no such file
+    [[ -f $file ]] || exit 
+
     (( random )) || resumeSave # store position if random is false
     calcPad # How much to pad to center block
     rand="(($RANDOM % ${#voices[@]}))"
 
-
-    # head is here i guess
+    # head is around here i guess
     echoBlock (){
         echo
         # print header and text part
@@ -275,7 +277,10 @@ for file in x*; do
 
     # synth
 
-    #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output_file "$tmp/pipe" 2>/dev/null  | play "$tmp/pipe" 2>/dev/null  || exit
-    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | aplay -r 22050 -f S16_LE -t raw - 2>/dev/null || exit
+    # working aplay line
+    #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | aplay -i -r 22050 -f S16_LE -t raw - 2>/dev/null || exit
+
+    # working mpv line
+    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | ffmpeg -f s16le -ar 22050 -ac 1 -i - -f wav - 2>/dev/null | mpv --no-resume-playback --msg-level=all=no --no-video - 2>/dev/null
 
 done
