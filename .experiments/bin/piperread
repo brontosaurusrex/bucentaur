@@ -21,12 +21,13 @@ if [ -d "$piperpath" ] ; then
     PATH="$piperpath:$PATH"
 fi
 voicespath="$HOME/piper" # where are the onnx and json files
-cd "$voicespath" || exit
 
 # loop over onnx files and populate array
 # Populate the array with .onnx files
-voices=(*.onnx)
+pushd "$voicespath" >/dev/null || { echo "$voicespath does not exist."; exit 1;}
+voices=(*.onnx) # populate array
 (( ${#voices[@]} )) || { echo "No voices (*.onnx) found in $voicespath"; exit 1; }
+popd >/dev/null || exit
 
 resume="please" # non-empty is true
 #keepAudio=""    # non-empty is true
@@ -43,7 +44,7 @@ mkdir -p "$storeroot" || exit
 debug="0"
 # end config
 
-storeInit (){
+storeInit () {
     # hash based on file path
     hash="$(readlink -f "$input" | md5sum | awk '{print $1}')"
     (( debug )) && echo "$hash"
@@ -52,7 +53,7 @@ storeInit (){
     touch "$store" || exit
 }
 
-resumeSave (){
+resumeSave () {
     if [[ "$base" != "clipboard" ]]; then
         echo "$part" > "$store/resume"
         echo "$base" > "$store/name"
@@ -61,7 +62,7 @@ resumeSave (){
 }
 
 # padding to center
-calcPad(){
+calcPad() {
     if [[ -n $centertext ]]; then
         columns="$(tput cols)"
         pad="$((( columns - width )/2))"
@@ -147,11 +148,13 @@ if [ "$1" == "--hash" ] || [ "$1" == "-x" ]; then # find file by hash
     input="$(cat name | tail -1)" || exit
 fi
 
+(( debug )) && { echo "here:"; pwd; }
 # else just path to file
 if [ -f "$1" ]; then
     input="$1"
 fi
 
+(( debug )) && echo "input 1st time: $input"
 # start
 # assuming we have a valid $input file path here, lets check again
 if [ -f "$input" ]; then
@@ -180,16 +183,16 @@ cleanup () {
 }
 
 # tmp dir
-tmp="/tmp/$RANDOM-$$-awsread"
+tmp="/tmp/$RANDOM-$$-piperread"
 trap cleanup EXIT SIGTERM SIGINT 
 # https://www.gnu.org/software/libc/manual/html_node/Termination-Signals.html
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1; }
 
 # named pipe
-pipe="$tmp/pipe"
-if [[ ! -p $pipe ]]; then
-    mkfifo $pipe
-fi
+# pipe="$tmp/pipe"
+# if [[ ! -p $pipe ]]; then
+#     mkfifo $pipe
+# fi
 
 # play
 # play (){
@@ -209,7 +212,9 @@ then
     base="clipboard" 
 else
     # file
-    [[ -f "$input" ]] || exit 1
+    (( debug )) && echo "input: $input"
+
+    [[ -f "$input" ]] || { echo "no input found"; exit 1; }
     cp "$input" "$tmp/some.txt"
     # base
     baseext=${input##*/}  # file.ext
