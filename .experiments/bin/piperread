@@ -14,16 +14,20 @@
 
 # config
 
+#set -x
+
 piperpath="$HOME/piper"  # where is the exe
 if [ -d "$piperpath" ] ; then
     PATH="$piperpath:$PATH"
 fi
 voicespath="$HOME/piper" # where are the onnx and json files
 cd "$voicespath" || exit
+ls *.onnx
+
 # loop over onnx files and populate array
 # Populate the array with .onnx files
 voices=(*.onnx)
-
+(( ${#voices[@]} )) || { echo "No voices (*.onnx) found in $voicespath"; exit 1; }
 #voices=(alan.onnx en_GB-alba-medium.onnx en_GB-cori-high.onnx en_GB-jenny_dioco-medium.onnx en_GB-semaine-medium.onnx en_US-libritts-high.onnx en_US-ryan-high.onnx)
 
 resume="please" # non-empty is true
