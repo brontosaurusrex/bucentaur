@@ -176,6 +176,7 @@ command -v awk >/dev/null 2>&1 || { echo "I need awk, exiting." >&2; exit 1; }
 command -v mpv >/dev/null 2>&1 || { echo "I need mpv, exiting." >&2; exit 1; }
 command -v ffmpeg >/dev/null 2>&1 || { echo "I need ffmpeg, exiting." >&2; exit 1; }
 command -v md5sum >/dev/null 2>&1 || { echo "I need md5sum, exiting." >&2; exit 1; }
+command -v jq >/dev/null 2>&1 || { echo "I need jq for json stuff, exiting." >&2; exit 1; }
 
 cleanup () {
   (( debug )) && echo "$?"
