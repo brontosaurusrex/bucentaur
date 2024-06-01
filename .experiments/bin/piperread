@@ -14,7 +14,7 @@
 
 # config
 
-#set -x
+
 
 piperpath="$HOME/piper"  # where is the exe
 if [ -d "$piperpath" ] ; then
@@ -148,7 +148,6 @@ if [ "$1" == "--hash" ] || [ "$1" == "-x" ]; then # find file by hash
     input="$(cat name | tail -1)" || exit
 fi
 
-(( debug )) && { echo "here:"; pwd; }
 # else just path to file
 if [ -f "$1" ]; then
     input="$1"
@@ -180,6 +179,7 @@ cleanup () {
   (( debug )) && echo "$?"
   [ -n "$tmp" ] && rm -fr "$tmp"
   tput cnorm
+  exit 0
 }
 
 # tmp dir
@@ -286,10 +286,14 @@ for file in x*; do
     # working aplay line
     #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | aplay -i -r 22050 -f S16_LE -t raw - 2>/dev/null || exit
 
-    # non-working mpv line
-    #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | mpv --demuxer=rawaudio --audio-samplerate=22050 --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --no-resume-playback --msg-level=all=no --no-video - 2>/dev/null
+    # working mpv line ! (with trouble when mpv is paused)
+    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --msg-level=all=no --no-video --cache=no - #2>/dev/null
 
-    # working ffmpeg/mpv line
-    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | ffmpeg -f s16le -ar 22050 -ac 1 -i - -f wav - 2>/dev/null | mpv --no-resume-playback --msg-level=all=no --no-video - 2>/dev/null
+    # working ffmpeg/mpv line (with trouble when mpv is paused)
+    #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw 2>/dev/null | ffmpeg -vn -f s16le -ar 22050 -ac 1 -i - -f wav - 2>/dev/null | mpv --no-resume-playback --msg-level=all=no --no-video - 2>/dev/null || exit 1
+
+    # logging
+    #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw 2>> $HOME/pipererr.txt | ffmpeg -vn -f s16le -ar 22050 -ac 1 -i - -f wav - 2>> $HOME/ffmpegerr.txt | mpv --no-resume-playback --msg-level=all=no --no-input-default-bindings --no-video - 2>> $HOME/mpverr.txt || exit 1
+    # testing with --no-input-default-bindings ^ 
 
 done
