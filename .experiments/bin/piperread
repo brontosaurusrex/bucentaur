@@ -292,7 +292,7 @@ for file in x*; do
     #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | aplay -i -r 22050 -f S16_LE -t raw - || exit
 
     # working mpv line ! (with trouble when mpv is paused, sometimes it can't continue and all hell ...)
-    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --msg-level=all=no --no-video - #2>/dev/null
+    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --msg-level=all=no --no-video - || exit 1
 
     # not working mpv line ! (with trouble when mpv is paused, sometimes it can't continue and all hell ...)
     #piper -m "${voicespath}/${voices[$rand]}" --output-raw "$(< "$file")" | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --msg-level=all=no --no-video - #2>/dev/null
