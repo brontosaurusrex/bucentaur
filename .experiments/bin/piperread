@@ -24,10 +24,12 @@ voicespath="$HOME/piper" # where are the onnx and json files
 
 # loop over onnx files and populate array
 # Populate the array with .onnx files
-pushd "$voicespath" >/dev/null || { echo "$voicespath does not exist."; exit 1;}
-voices=(*.onnx) # populate array
-(( ${#voices[@]} )) || { echo "No voices (*.onnx) found in $voicespath"; exit 1; }
-popd >/dev/null || exit
+populateVoicesArray () {
+    pushd "$voicespath" >/dev/null || { echo "$voicespath does not exist."; exit 1;}
+    voices=(*.onnx) # populate array
+    (( ${#voices[@]} )) || { echo "No voices (*.onnx) found in $voicespath"; exit 1; }
+    popd >/dev/null || exit
+}
 
 resume="please" # non-empty is true
 #keepAudio=""    # non-empty is true
@@ -246,6 +248,9 @@ all="$(find . -type f -name "x*" | wc -l)"
 # read
 part="0"
 for file in x*; do
+
+    populateVoicesArray # so the *.onnx voices can be add or deleted/renamed during playback
+
     ((part=part+1))
     # random
     if (( random )); then
@@ -284,10 +289,13 @@ for file in x*; do
     # synth
 
     # working aplay line
-    #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | aplay -i -r 22050 -f S16_LE -t raw - 2>/dev/null || exit
+    #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | aplay -i -r 22050 -f S16_LE -t raw - || exit
 
-    # working mpv line ! (with trouble when mpv is paused)
-    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --msg-level=all=no --no-video --cache=no - #2>/dev/null
+    # working mpv line ! (with trouble when mpv is paused, sometimes it can't continue and all hell ...)
+    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --msg-level=all=no --no-video - #2>/dev/null
+
+    # not working mpv line ! (with trouble when mpv is paused, sometimes it can't continue and all hell ...)
+    #piper -m "${voicespath}/${voices[$rand]}" --output-raw "$(< "$file")" | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --msg-level=all=no --no-video - #2>/dev/null
 
     # working ffmpeg/mpv line (with trouble when mpv is paused)
     #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw 2>/dev/null | ffmpeg -vn -f s16le -ar 22050 -ac 1 -i - -f wav - 2>/dev/null | mpv --no-resume-playback --msg-level=all=no --no-video - 2>/dev/null || exit 1
