@@ -267,7 +267,15 @@ for file in x*; do
 
     (( random )) || resumeSave # store position if random is false
     calcPad # How much to pad to center block
+    # get random voice
     rand="(($RANDOM % ${#voices[@]}))"
+    # get random speaker (some models have more than 1 spekaer)
+    num_speakers="$(jq '.num_speakers' "${voicespath}/${voices[$rand]}".json)" || { echo "no voice json found"; exit 1; }
+    speaker="$(($RANDOM % num_speakers))"
+
+    #echo "voice: ${voices[$rand]}"
+    #echo "num: $num_speakers, speaker: $speaker"
+
 
     # head is around here i guess
     echoBlock (){
@@ -275,7 +283,7 @@ for file in x*; do
         # print header and text part
         (( all > 1 )) && echo "(${part}/${all})" 
         cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g' 
-        echo "─── (voice ${voices[$rand]}) ─── ${perc}%" 
+        echo "─── (voice ${voices[$rand]}/$speaker) ─── ${perc}%" 
     }
     perc="$( perc "$part" "$all" )"
     echoBlock | pr -T -o "$pad"
@@ -292,7 +300,7 @@ for file in x*; do
     #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw  2>/dev/null | aplay -i -r 22050 -f S16_LE -t raw - || exit
 
     # working mpv line ! (with trouble when mpv is paused, sometimes it can't continue and all hell ...)
-    cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --msg-level=all=no --no-video - || exit 1
+    cat "$file" | piper -s "$speaker" -m "${voicespath}/${voices[$rand]}" --output-raw 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --msg-level=all=no --no-video - || exit 1
 
     # not working mpv line ! (with trouble when mpv is paused, sometimes it can't continue and all hell ...)
     #piper -m "${voicespath}/${voices[$rand]}" --output-raw "$(< "$file")" | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --msg-level=all=no --no-video - #2>/dev/null
