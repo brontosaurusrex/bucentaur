@@ -88,24 +88,31 @@ perc () {
 
 help () { 
 cat << EOF
-piperread, txt to speech 
-needs piper, mpv, xclip?, md5sum, awk, jq
------------------------------------------------------------------
-usage:
-piperread                     # will read from clipboard
-piperread file.txt            # will read from file
-piperread --goto 100 file.txt # or -g goto page 100, will set resume to this new entry
-piperread --list              # or -l list over store
-piperread --random            # or -r read random page
-piperread --hash ab           # or -x will read first file that includes those letters in hash
-
-interactive keys:
-n                           # skips to next section (quits curently playing mpv)
-ctrl+c                      # press for exit and to get the normal cursor back
-ctrl+z                      # suspend/stop playback, return with fg
-
-config:
-'resume' is enabled by default and should work for files only, not for clipboard.
+╭────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                │
+│ ███ ███ ███ ███ ███ ███ ███  █  ██                                                             │
+│ ███  █  ███ ██  █   █   ██  ███ █ █                                                            │
+│ █   ███ █   ███ █   █   ███ █ █ ██                                                             │
+│                                                                                                │
+│ piperread, txt to speech                                                                       │
+│ needs piper, mpv, xclip?, md5sum, awk, jq                                                      │
+│                                                                                                │
+│ usage:                                                                                         │
+│ piperread                     # will read from clipboard                                       │
+│ piperread file.txt            # will read from file                                            │
+│ piperread --goto 100 file.txt # or -g goto page 100, will set resume to this new entry         │
+│ piperread --list              # or -l list over store                                          │
+│ piperread --hash ab           # or -x will read first file that includes those letters in hash │
+│ piperread --random            # or -r read random page                                         │
+│                                                                                                │
+│ interactive keys:                                                                              │
+│ n                             # skips to next section (quits curently playing mpv)             │
+│ ctrl+c                        # press for exit and to get the normal cursor back               │
+│ ctrl+z                        # suspend/stop playback, return with fg                          │
+│                                                                                                │
+│ config note:                                                                                   │
+│ 'resume' is enabled by default and should work for files only, not for clipboard.              │
+╰────────────────────────────────────────────────────────────────────────────────────────────────╯
 EOF
 }
 
