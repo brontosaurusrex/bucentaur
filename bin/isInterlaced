@@ -11,7 +11,7 @@ while [ $# -gt 0 ]; do
 	echo "$1"
 
 	read -r _ _ _ _ _ _ _ tff _ bff _ progressive _ undef \
-	<<< "$(ffmpeg -filter:v idet -frames:v 1000 -an -f rawvideo -y /dev/null 2>&1 -i "$1" | grep "idet" | grep "Multi frame detection")"	
+	<<< "$(ffmpeg -filter:v idet -frames:v 300 -an -f rawvideo -y /dev/null 2>&1 -i "$1" | grep "idet" | grep "Multi frame detection" | tail -1)" # < suddenly the tail is needed here (2024)	
 	# if it makes no sense skip the rest
 	if [[ -z "$tff" ]]; then
 		
@@ -31,7 +31,12 @@ while [ $# -gt 0 ]; do
 
 		echo "☰ interlaced"
 		status="1"
-	else 
+
+    elif (( tff + bff + progressive == 0 )); then
+
+        echo "some sort of error..."	
+
+    else 
 
 		echo "█ progressive"
 		status="0"
@@ -40,6 +45,7 @@ while [ $# -gt 0 ]; do
 
 
 	shift
+
 done
 
 # this only makes sense if you check single file, like:
