@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# usage: epub2txtMany *.epub
+
+# needs:    https://github.com/kevinboone/epub2txt2 , 
+#           unzip, zipinfo (for cover extraction)
+# wishes:   catimg (for displaying covers in term)
+
+# does: Converts epub to txt and tries to extract cover image
+
+# tmp dir
+cleanup () {
+  [ -n "$tmp" ] && rm -fr "$tmp"
+  killall feh
+  exit 0
+}
+tmp="/tmp/$RANDOM-$$-epub2txtMany"
+trap cleanup EXIT SIGTERM SIGINT 
+mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1; }
+# end tmp dir
+
+x="10" # for feh
+# main
+while [ $# -gt 0 ]; do
+    file=$(readlink -f "$1")
+    baseext=$(basename "${1}")     # file.ext
+    base="${baseext%.*}"           # file
+    dir="$(dirname "${file}")"
+    echo "---"
+    #set -x
+    # convert to text
+    epub2txt -a -n "$file" > "${dir}/${base}.txt" || exit 1
+    # extract cover image
+    unzip "$file" "$(zipinfo -1 "$file" | grep -i cover | grep -E '\.jpg|\.jpeg|\.png' | tail -1)" -d "$tmp/" || { shift && continue; }
+    pushd "$tmp" >/dev/null || exit
+    unset image # array
+    image="$(find "$tmp" -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" \) -print)"
+    #echo "echoing ${image[0]}" 
+    cp "${image[0]}" "${dir}/${base}.jpg" >/dev/null && { rm "${image[0]}" && catimg -H "${dir}/${base}.jpg"; } # due to tail, only one should survive
+    feh -x -g 450x700+$x+10 --scale-down "${dir}/${base}.jpg" &
+    x="$(( x + 50 ))" # feh x
+    popd >/dev/null || exit
+    #set +x
+
+    shift
+done
