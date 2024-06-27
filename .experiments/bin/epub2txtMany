@@ -26,11 +26,11 @@ while [ $# -gt 0 ]; do
     baseext=$(basename "${1}")     # file.ext
     base="${baseext%.*}"           # file
     dir="$(dirname "${file}")"
-    echo "---"
+    echo "--- $base ---"
     #set -x
     # convert to text
     epub2txt -a -n "$file" > "${dir}/${base}.txt" || exit 1
-    # extract cover image
+    # extract cover image (chatgpt stuff)
     unzip -q "$file" -d "$tmp"
     pushd "$tmp" >/dev/null || exit
     # Find the content.opf file
@@ -38,7 +38,7 @@ while [ $# -gt 0 ]; do
     # Check if the OPF file was found
     if [ -z "$OPF_FILE" ]; then
       echo "No content.opf file found."
-      exit 1
+
     fi
     # Extract cover image reference
     COVER_ID=$(grep -i "cover" "$OPF_FILE" | grep -o 'content="[^"]*' | cut -d '"' -f2)
@@ -46,17 +46,19 @@ while [ $# -gt 0 ]; do
     # Check if the cover href was found
     if [ -z "$COVER_HREF" ]; then
       echo "No cover image reference found in the content.opf file."
-      exit 1
+
     fi
     # Find the cover image file
     COVER_IMAGE=$(dirname "$OPF_FILE")/$COVER_HREF
     # Check if the cover image file exists
     if [ ! -f "$COVER_IMAGE" ]; then
       echo "Cover image file not found."
-      exit 1
+    else
+      # Copy the cover image to the current directory
+      set -x
+      cp "$COVER_IMAGE" "${dir}/${base}.jpg" >/dev/null && catimg -H "${dir}/${base}.jpg"
+      set +x
     fi
-    # Copy the cover image to the current directory
-    cp "$COVER_IMAGE" "${dir}/${base}.jpg" >/dev/null && catimg -H "${dir}/${base}.jpg"
     # clean the tmp dir of everything
     cleanup && mktmp
     popd >/dev/null || exit
