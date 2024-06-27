@@ -55,9 +55,7 @@ while [ $# -gt 0 ]; do
       echo "Cover image file not found."
     else
       # Copy the cover image to the current directory
-      set -x
       cp "$COVER_IMAGE" "${dir}/${base}.jpg" >/dev/null && catimg -H "${dir}/${base}.jpg"
-      set +x
     fi
     # clean the tmp dir of everything
     cleanup && mktmp
