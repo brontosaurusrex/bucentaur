@@ -40,7 +40,7 @@ Order of parameters does matter:
 examples:
 
     noise                         # default
-    noise ++ -p                   # brighter and make permanent wall
+    noise ++ perm                 # brighter and make permanent wall
     noise deep                    # with color preset 'deep'
     noise deep +                  # with color preset 'deep' and 10% brighter
     noise - +++                   # default, but 10% darker and 30% more saturated
@@ -62,7 +62,7 @@ exit
 fi
 
 # Permanent wallpaper or not, must be last
-if [ "${!#}" == "-p" ] || [ "$1" == "--perm" ]; then
+if [ "${!#}" == "p" ] || [ "$1" == "perm" ]; then
     save="--save"
 fi
 
