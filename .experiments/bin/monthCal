@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# echo 3 months line calendar template
+
+export LANG=your_LANG.UTF-8  # Replace with your desired locale
+year=$(date +%Y)
+month=$(date +%m)
+
+for i in {0..2}; do  # Current month + next 2 months
+    current_month=$(date -d "$year-$month-01 +$i month" "+%m")
+    current_year=$(date -d "$year-$month-01 +$i month" "+%Y")
+    days_in_month=$(date -d "$current_year-$current_month-01 +1 month -1 day" "+%d")
+
+    for day in $(seq 1 $days_in_month); do
+        weekday_number=$(date -d "$current_year-$current_month-$day" "+%u")  # Get ISO weekday (1=Mon, 7=Sun)
+
+        if [[ "$weekday_number" -eq 1 ]]; then
+            echo ""  # Empty line before Monday
+        fi
+
+        date -d "$current_year-$current_month-$day" "+%Y-%m-%d w%V %a  "
+    done
+done
+
