@@ -226,6 +226,8 @@ else
     # base
     baseext=${input##*/}  # file.ext
     base="${baseext%.*}"  # file
+    # change term title
+    #echo -e "\033]0;${base}\007"
     # resume
     if [[ -n $resume ]] && ((! random )); then
         if [[ -n $jumpto ]]; then # jumpto is set, assuming --goto was used
@@ -289,12 +291,12 @@ for file in x*; do
     echoBlock (){
         echo
         # print header and text part
-        (( all > 1 )) && echo "(${part}/${all})" 
+        (( all > 1 )) && echo "(${part}/${all})" #| lolcat -f
         cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g' 
-        echo "─── (voice ${voices[$rand]}/$speaker) ─── ${perc}%" 
+        echo "─── (${voices[$rand]}/$speaker) ─── ${perc}%" #| lolcat -f
     }
     perc="$( perc "$part" "$all" )"
-    echoBlock | pr -T -o "$pad"
+    echoBlock | pr -T -o "$pad" 
     # perc2 "$perc" # < to much stuff on screen
 
     # replace text that is ofen read wrong, like 'dr.'
