@@ -22,10 +22,9 @@ declare -A COLOR_RGB=(
   [Yellow]="255 255 0"
   [Cyan]="0 255 255"
   [Aqua]="0 255 255"          # alias for Cyan
-  [Magenta]="255 0 255"
-  [Fuchsia]="255 0 255"       # alias for Magenta
   [Silver]="192 192 192"
   [Gray]="128 128 128"
+  [Grey]="128 128 128"
   [Maroon]="128 0 0"
   [Olive]="128 128 0"
   [Green]="0 128 0"
@@ -40,7 +39,6 @@ declare -A COLOR_RGB=(
   [DarkSalmon]="233 150 122"
   [LightSalmon]="255 160 122"
   [Crimson]="220 20 60"
-  [Red]="255 0 0"
   [FireBrick]="178 34 34"
   [DarkRed]="139 0 0"
 
@@ -85,6 +83,14 @@ declare -A COLOR_RGB=(
   [MediumPurple]="147 112 219"
   [RebeccaPurple]="102 51 153"
   [BlueViolet]="138 43 226"
+  [DarkViolet]="148 0 211"
+  [DarkOrchid]="153 50 204"
+  [DarkMagenta]="139 0 139"
+  [Purple]="128 0 128"
+  [Indigo]="75 0 130"
+  [SlateBlue]="106 90 205"
+  [DarkSlateBlue]="72 61 139"
+  [MediumSlateBlue]="123 104 238"
 
   # Green Colors
   [GreenYellow]="173 255 47"
@@ -98,6 +104,18 @@ declare -A COLOR_RGB=(
   [SpringGreen]="0 255 127"
   [MediumSeaGreen]="60 179 113"
   [SeaGreen]="46 139 87"
+  [ForestGreen]="34 139 34"
+  [Green]="0 128 0"
+  [DarkGreen]="0 100 0"
+  [YellowGreen]="154 205 50"
+  [OliveDrab]="107 142 35"
+  [Olive]="128 128 0"
+  [DarkOliveGreen]="85 107 47"
+  [MediumAquamarine]="102 205 170"
+  [DarkSeaGreen]="143 188 143"
+  [LightSeaGreen]="32 178 170"
+  [DarkCyan]="0 139 139"
+  [Teal]="0 128 128"
 
   # Blue Colors
   [Aqua]="0 255 255"
@@ -111,6 +129,19 @@ declare -A COLOR_RGB=(
   [CadetBlue]="95 158 160"
   [SteelBlue]="70 130 180"
   [LightSteelBlue]="176 196 222"
+  [PowderBlue]="176 224 230"
+  [LightBlue]="173 216 230"
+  [SkyBlue]="135 206 235"
+  [LightSkyBlue]="135 206 250"
+  [DeepSkyBlue]="0 191 255"
+  [DodgerBlue]="30 144 255"
+  [CornflowerBlue]="100 149 237"
+  [RoyalBlue]="65 105 225"
+  [Blue]="0 0 255"
+  [MediumBlue]="0 0 205"
+  [DarkBlue]="0 0 139"
+  [Navy]="0 0 128"
+  [MidnightBlue]="25 25 112"
 
   # Brown Colors
   [Cornsilk]="255 248 220"
@@ -124,6 +155,12 @@ declare -A COLOR_RGB=(
   [SandyBrown]="244 164 96"
   [Goldenrod]="218 165 32"
   [DarkGoldenrod]="184 134 11"
+  [Peru]="205 133 63"
+  [Chocolate]="210 105 30"
+  [SaddleBrown]="139 69 19"
+  [Sienna]="160 82 45"
+  [Brown]="165 42 42"
+  [Maroon]="128 0 0"
 
   # White Colors
   [White]="255 255 255"
@@ -137,6 +174,10 @@ declare -A COLOR_RGB=(
   [SeaShell]="255 245 238"
   [Beige]="245 245 220"
   [OldLace]="253 245 230"
+  [FloralWhite]="255 250 240"
+  [Ivory]="255 255 240"
+  [AntiqueWhite]="250 235 215"
+  [Linen]="250 240 230"
 
   # Gray Colors
   [Gainsboro]="220 220 220"
@@ -144,6 +185,7 @@ declare -A COLOR_RGB=(
   [Silver]="192 192 192"
   [DarkGray]="169 169 169"
   [Gray]="128 128 128"
+  [Grey]="128 128 128"
   [DimGray]="105 105 105"
   [LightSlateGray]="119 136 153"
   [SlateGray]="112 128 144"
