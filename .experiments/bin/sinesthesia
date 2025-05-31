@@ -67,8 +67,10 @@ colorize_string() {
   # Convert HSV to RGB
   read -r red grn blu < <(hsv_to_rgb "$hue" "$sat" "$light")
 
-  # Output the colorized string
-  echo -e "\e[38;2;${red};${grn};${blu}m${string}\e[0m"
+  # Loop over lines and colorize each
+  while IFS= read -r line; do
+    echo -e "\e[38;2;${red};${grn};${blu}m${line}\e[0m"
+  done <<< "$string"
 }
 
 # Main entry point
