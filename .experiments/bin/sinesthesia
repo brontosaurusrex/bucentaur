@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# sinesthesia
+
+# Colorize some string based on its hash
+
+# usage: 
+# sinesthesia "woot woot woot"
+# cat some.txt | sinestesia
+
+# Mostly written by chatgpt, 
+# but with a lot of human input and corrections
+
+hsv_to_rgb() {
+  awk -v h="$1" -v s="$2" -v v="$3" '
+  BEGIN {
+    h = (h % 360 + 360) % 360
+    s /= 100
+    v /= 100
+
+    c = v * s
+    h_ = h / 60
+    x = c * (1 - ((h_ % 2) - 1)^2)
+    m = v - c
+
+    if (h_ < 1)      { r = c; g = x; b = 0 }
+    else if (h_ < 2) { r = x; g = c; b = 0 }
+    else if (h_ < 3) { r = 0; g = c; b = x }
+    else if (h_ < 4) { r = 0; g = x; b = c }
+    else if (h_ < 5) { r = x; g = 0; b = c }
+    else             { r = c; g = 0; b = x }
+
+    r = int((r + m) * 255 + 0.5)
+    g = int((g + m) * 255 + 0.5)
+    b = int((b + m) * 255 + 0.5)
+
+    printf "%d %d %d\n", r, g, b
+  }'
+}
+
+# Colorize some string based on its hash
+colorize_string() {
+  local string="$1"
+  local debug="${2:-0}"
+
+  # HSL model
+  # change this static vars for different effect
+  local sat="20"
+  local light="88"
+
+  # Generate fallback string if none given
+  if [ -z "$string" ]; then
+    string="random-$RANDOM$$"
+  fi
+
+  # Hash to hue
+  local hash hue red grn blu
+  hash="$(echo "$string" | cksum | cut -d ' ' -f 1)"
+  hue="$((hash % 360))"
+
+  (( debug )) && {
+    echo "hash=${hash}"
+    echo "hue=${hue}"
+    echo "hue sat light=${hue} ${sat} ${light}"
+  }
+
+  # Convert HSV to RGB
+  read -r red grn blu < <(hsv_to_rgb "$hue" "$sat" "$light")
+
+  # Output the colorized string
+  echo -e "\e[38;2;${red};${grn};${blu}m${string}\e[0m"
+}
+
+# Main entry point
+if [ -t 0 ]; then
+  # stdin is a terminal, so read argument or fallback
+  if [ $# -gt 0 ]; then
+    colorize_string "$*"
+  else
+    colorize_string
+  fi
+else
+  # stdin is pipe/file, read entire input at once
+  input="$(cat)"
+  colorize_string "${input}"
+fi
