@@ -291,13 +291,20 @@ for file in x*; do
     echoBlock (){
         echo
         # print header and text part
-        (( all > 1 )) && echo "(${part}/${all})" #| lolcat -f
-        cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g' 
-        echo "─── (${voices[$rand]}/$speaker) ─── ${perc}%" #| lolcat -f
+        (( all > 1 )) && echo "(${part}/${all})" 
+        # use sinesthesia to colorize output if the script is on path
+        # https://raw.githubusercontent.com/brontosaurusrex/bucentaur/refs/heads/master/.experiments/bin/sinesthesia
+        if command -v sinesthesia >/dev/null 2>&1; then
+            cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g' | sinesthesia
+        else
+            cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g'
+        fi
+        
+        echo "─── (${voices[$rand]}/$speaker) ─── ${perc}%" 
     }
     perc="$( perc "$part" "$all" )"
     echoBlock | pr -T -o "$pad" 
-    # perc2 "$perc" # < to much stuff on screen
+
 
     # replace text that is ofen read wrong, like 'dr.'
     sed -i 's/Dr\./Doctor/' "$file"
