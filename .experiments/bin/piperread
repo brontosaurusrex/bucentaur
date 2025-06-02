@@ -158,7 +158,8 @@ if [ "$1" == "--hash" ] || [ "$1" == "-x" ]; then # find file by hash
     search="$1"
     cd "$storeroot" || exit
     cd -- "$(find . -name "*$search*" -type d | tail -1)" || exit
-    input="$(cat name | tail -1)" || exit
+    #echo "name="; cat name
+    input="$(tail -1 < name)" || exit
 fi
 
 # else just path to file
@@ -249,7 +250,7 @@ sed -i 's/Ms\./Miss/g' "$tmp/some.txt"
 
 # tr remove newlines, sed remove double spaces, split by some bytes, Use punctuations '.' as splitting points
 cd "$tmp" || exit
-cat "some.txt" | tr '\r\n' ' ' |  sed 's/ \{1,\}/ /g' | split --line-bytes="${bytes}" -t "." || exit 1
+tr '\r\n' ' ' < "some.txt" |  sed 's/ \{1,\}/ /g' | split --line-bytes="${bytes}" -t "." || exit 1
 
 # count generated files
 all="$(find . -type f -name "x*" | wc -l)"
@@ -286,10 +287,10 @@ for file in x*; do
     (( random )) || resumeSave # store position if random is false
     calcPad # How much to pad to center block
     # get random voice
-    rand="(($RANDOM % ${#voices[@]}))"
+    rand="((RANDOM % ${#voices[@]}))"
     # get random speaker (some models have more than 1 spekaer)
     num_speakers="$(jq '.num_speakers' "${voicespath}/${voices[$rand]}".json)" || { echo "no voice json found"; exit 1; }
-    speaker="$(($RANDOM % num_speakers))"
+    speaker="$((RANDOM % num_speakers))"
 
     # head is around here i guess
     echoBlock (){
@@ -299,15 +300,15 @@ for file in x*; do
         # use sinesthesia to colorize output if the script is on path
         # https://raw.githubusercontent.com/brontosaurusrex/bucentaur/refs/heads/master/.experiments/bin/sinesthesia
         if command -v sinesthesia >/dev/null 2>&1; then
-            cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g' | sinesthesia
+            fmt -w ${width} < "$file" | sed 's/ \{1,\}/ /g' | sinesthesia
         else
-            cat "$file" | fmt -w ${width} | sed 's/ \{1,\}/ /g'
+            fmt -w ${width} < "$file" | sed 's/ \{1,\}/ /g'
         fi
         
         echo "─── (${voices[$rand]}/$speaker) ─── ${perc}%" 
     }
     perc="$( perc "$part" "$all" )"
-    echoBlock | pr -T -o "$pad" 
+  
 
     # debug
     #cat "$file"
@@ -322,7 +323,11 @@ for file in x*; do
 
     # working mpv line ! (with disabled mpv keybindings, replaced with custom ones in function mpvCustomKeys)
     mpvCustomKeys # lets just keep the n to quit mpv (skip to next segment)
-    piper -s "$speaker" -m "${voicespath}/${voices[$rand]}" --output-raw < "$file" 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --no-video --no-input-default-bindings --input-conf="$storeroot/mpv_keybindings.conf" --msg-level=all=no - 2>/dev/null || exit 1
+    piper -s "$speaker" -m "${voicespath}/${voices[$rand]}" --output-raw < "$file" 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --no-video --no-input-default-bindings --input-conf="$storeroot/mpv_keybindings.conf" --msg-level=all=no - 2>/dev/null || exit 1 &
+
+    echoBlock | pr -T -o "$pad"
+
+    wait
 
     # working ffmpeg/mpv line (with trouble when mpv is paused)
     #cat "$file" | piper -m "${voicespath}/${voices[$rand]}" --output-raw 2>/dev/null | ffmpeg -vn -f s16le -ar 22050 -ac 1 -i - -f wav - 2>/dev/null | mpv --no-resume-playback --msg-level=all=no --no-video - 2>/dev/null || exit 1
