@@ -308,6 +308,7 @@ for file in x*; do
         echo "─── (${voices[$rand]}/$speaker) ─── ${perc}%" 
     }
     perc="$( perc "$part" "$all" )"
+    echoBlock | pr -T -o "$pad" & # runs in bg, so mpv can start at once ...
   
 
     # debug
@@ -323,9 +324,7 @@ for file in x*; do
 
     # working mpv line ! (with disabled mpv keybindings, replaced with custom ones in function mpvCustomKeys)
     mpvCustomKeys # lets just keep the n to quit mpv (skip to next segment)
-    piper -s "$speaker" -m "${voicespath}/${voices[$rand]}" --output-raw < "$file" 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --no-video --no-input-default-bindings --input-conf="$storeroot/mpv_keybindings.conf" --msg-level=all=no - 2>/dev/null || exit 1 &
-
-    echoBlock | pr -T -o "$pad"
+    piper -s "$speaker" -m "${voicespath}/${voices[$rand]}" --output-raw < "$file" 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --no-video --no-input-default-bindings --input-conf="$storeroot/mpv_keybindings.conf" --msg-level=all=no - 2>/dev/null || exit 1
 
     wait
 
