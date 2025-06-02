@@ -242,10 +242,14 @@ else
 
 fi
 
-# tr remove newlines, sed add newlines where punctuations are, 
-# sed remove double spaces, split by some bytes, keep lines
+# replace text that is ofen read wrong, like 'dr.'
+sed -i 's/Dr\./Doctor/g' "$tmp/some.txt"
+sed -i 's/Mr\./Mister/g' "$tmp/some.txt"
+sed -i 's/Ms\./Miss/g' "$tmp/some.txt"
+
+# tr remove newlines, sed remove double spaces, split by some bytes, Use punctuations '.' as splitting points
 cd "$tmp" || exit
-cat "some.txt" | tr '\r\n' ' ' | sed 's/[.!?]  */&\n/g' | sed 's/ \{1,\}/ /g' | split --line-bytes="${bytes}" || exit 1
+cat "some.txt" | tr '\r\n' ' ' |  sed 's/ \{1,\}/ /g' | split --line-bytes="${bytes}" -t "." || exit 1
 
 # count generated files
 all="$(find . -type f -name "x*" | wc -l)"
@@ -305,11 +309,8 @@ for file in x*; do
     perc="$( perc "$part" "$all" )"
     echoBlock | pr -T -o "$pad" 
 
-
-    # replace text that is ofen read wrong, like 'dr.'
-    sed -i 's/Dr\./Doctor/' "$file"
-    sed -i 's/Mr\./Mister/' "$file"
-    sed -i 's/Ms\./Miss/' "$file"
+    # debug
+    #cat "$file"
 
     # synth
 
