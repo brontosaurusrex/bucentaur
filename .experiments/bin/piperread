@@ -278,10 +278,7 @@ for file in x*; do
     speaker="$((RANDOM % num_speakers))" # number
     perc="$( perc "$part" "$all" )"
 
-    # debug
-    #echo "rand=${voices[$rand]} speaker=$speaker"
-
-    # head is around here i guess
+    # echoBlock
     echoBlock (){
         echo
         # print header and text part
