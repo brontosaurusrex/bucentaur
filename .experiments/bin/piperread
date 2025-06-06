@@ -196,22 +196,6 @@ trap cleanup EXIT SIGTERM SIGINT
 # https://www.gnu.org/software/libc/manual/html_node/Termination-Signals.html
 mkdir -m 700 "$tmp" || { echo '!! unable to create a tmp dir' >&2; tmp=; exit 1; }
 
-# named pipe
-# pipe="$tmp/pipe"
-# if [[ ! -p $pipe ]]; then
-#     mkfifo $pipe
-# fi
-
-# play
-# play (){
-#     if [[ -n $keepAudio ]]; then
-#         name="$(($(date +%s%N)/1000000))" # lets name parts by epoch miliseconds
-#         mpv --no-resume-playback --msg-level=all=no --no-video --record-file="${store}${name}.wav" "$1"
-#     else
-#         mpv --no-resume-playback --msg-level=all=no --no-video "$1"
-#     fi
-# }
-
 # read clipboard or file (assuming text)
 if [ "$#" -eq  "0" ]
 then
@@ -309,7 +293,6 @@ for file in x*; do
         else
             fmt -w ${width} < "$file" | sed 's/ \{1,\}/ /g'
         fi
-        
         echo "─── ($selected/$speaker) ─── ${perc}%" 
     }
 
