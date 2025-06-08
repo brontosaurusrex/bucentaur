@@ -8,7 +8,7 @@
 # sinesthesia "woot woot woot"
 # cat some.txt | sinestesia
 
-# Mostly written by chatgpt, 
+# 2025: Mostly written by chatgpt, 
 # but with a lot of human input and corrections
 
 hsv_to_rgb() {
@@ -37,20 +37,56 @@ hsv_to_rgb() {
     printf "%d %d %d\n", r, g, b
   }'
 }
+gamma_correct() {
+  awk '
+  function to_linear(v) {
+    v = v / 255
+    return (v <= 0.04045) ? v / 12.92 : ((v + 0.055) / 1.055)^2.4
+  }
+  function to_srgb(v) {
+    return (v <= 0.0031308) ? v * 12.92 : 1.055 * (v ^ (1/2.4)) - 0.055
+  }
+  {
+    r = to_linear($1)
+    g = to_linear($2)
+    b = to_linear($3)
+
+    Y = 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+    targetY = 0.7
+    if (Y > 0) {
+      scale = targetY / Y
+      r *= scale
+      g *= scale
+      b *= scale
+    }
+
+    r = int(to_srgb(r) * 255 + 0.5)
+    g = int(to_srgb(g) * 255 + 0.5)
+    b = int(to_srgb(b) * 255 + 0.5)
+
+    r = (r > 255) ? 255 : ((r < 0) ? 0 : r)
+    g = (g > 255) ? 255 : ((g < 0) ? 0 : g)
+    b = (b > 255) ? 255 : ((b < 0) ? 0 : b)
+
+    printf "%d %d %d\n", r, g, b
+  }'
+}
+
 
 # Colorize some string based on its hash
 colorize_string() {
   local string="$1"
-  local debug="${2:-0}"
+  local debug="0"
 
   # HSL model
   # change this static vars for different effect
-  local sat="20"
-  local light="88"
+  local sat="25"
+  local light="93"
 
   # Generate fallback string if none given
   if [ -z "$string" ]; then
-    string="random-$RANDOM$$"
+    string="███████████████████████$RANDOM$$"
   fi
 
   # Hash to hue
@@ -66,6 +102,12 @@ colorize_string() {
 
   # Convert HSV to RGB
   read -r red grn blu < <(hsv_to_rgb "$hue" "$sat" "$light")
+
+  (( debug )) && echo "$red $grn $blu < before"
+
+  read -r red grn blu < <(hsv_to_rgb "$hue" "$sat" "$light" | gamma_correct)
+
+  (( debug )) && echo "$red $grn $blu < after"
 
   # Loop over lines and colorize each
   local line
