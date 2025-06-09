@@ -101,9 +101,9 @@ colorize_string() {
   }
 
   # Convert HSV to RGB
-  read -r red grn blu < <(hsv_to_rgb "$hue" "$sat" "$light")
+  #read -r red grn blu < <(hsv_to_rgb "$hue" "$sat" "$light")
 
-  (( debug )) && echo "$red $grn $blu < before"
+  #(( debug )) && echo "$red $grn $blu < before"
 
   read -r red grn blu < <(hsv_to_rgb "$hue" "$sat" "$light" | gamma_correct)
 
