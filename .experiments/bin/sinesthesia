@@ -17,6 +17,12 @@ sat="25"
 light="93"
 # hue is derived from crc32 hash
 
+# avoid pink/magenta spectrum
+avoidPink="1" # 1 means avoid
+
+# print some debug stuff
+debug="0"
+
 hsv_to_rgb() {
   awk -v h="$1" -v s="$2" -v v="$3" '
   BEGIN {
@@ -82,7 +88,7 @@ gamma_correct() {
 # Colorize some string based on its hash
 colorize_string() {
     local string="$1"
-    local debug="0"
+
 
     # Generate fallback string if none given
     if [ -z "$string" ]; then
@@ -96,16 +102,25 @@ colorize_string() {
     hash="$(echo "$string" | cksum | cut -d ' ' -f 1)"
     hue="$((hash % 360))"
 
+    # avoid pink/magenta
+    (( avoidPink )) && {
+    (( debug )) && echo "avoiding pink/magenta spectrum"
+    if (( hue >= 230 )); then
+      hue=$((hue + 110))  # push it into 340–359 range
+    fi
+    }
+
+
     (( debug )) && {
-      echo "hash=${hash}"
+      #echo "hash=${hash}"
       echo "hue=${hue}"
-      echo "hue sat light=${hue} ${sat} ${light}"
+      #echo "hue sat light=${hue} ${sat} ${light}"
     }
 
     # Convert HSV to RGB
     read -r red grn blu < <(hsv_to_rgb "$hue" "$sat" "$light" | gamma_correct "$(awk "BEGIN { print $light / 100 }")")
 
-    (( debug )) && echo "$red $grn $blu < after"
+    (( debug )) && echo "$red $grn $blu"
 
     # Loop over lines and colorize each
     local line
