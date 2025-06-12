@@ -13,7 +13,7 @@
 
 # HSL model
 # change this static vars for different effect
-sat="95"
+sat="25"
 light="93"
 # hue is derived from crc32 hash
 
