@@ -13,15 +13,18 @@
 
 # HSL model
 # change this static vars for different effect
-sat="25"
+sat="95"
 light="93"
 # hue is derived from crc32 hash
 
 # avoid pink/magenta spectrum
 avoidPink="1" # 1 means avoid
 
+# avoid clean yellows
+avoidYellow="1" # 1 means avoid
+
 # print some debug stuff
-debug="0"
+debug="1"
 
 hsv_to_rgb() {
   awk -v h="$1" -v s="$2" -v v="$3" '
@@ -105,11 +108,18 @@ colorize_string() {
     # avoid pink/magenta
     (( avoidPink )) && {
     (( debug )) && echo "avoiding pink/magenta spectrum"
-    if (( hue >= 230 )); then
-      hue=$((hue + 110))  # push it into 340–359 range
+    if (( hue >= 290 && hue <=340 )); then
+      hue=$((hue + 50))
     fi
     }
 
+    # avoid yellow
+    (( avoidYellow )) && {
+    (( debug )) && echo "avoiding yellow"
+    if (( hue >= 40 && hue <=80 )); then
+      hue=$((hue + 41))
+    fi
+    }
 
     (( debug )) && {
       #echo "hash=${hash}"
