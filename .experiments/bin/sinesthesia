@@ -1,9 +1,14 @@
 #!/bin/bash
 
-# sinesthesia
+#  ██ ███ ███ ███  ██ ███ █ █ ███  ██ ███  █
+#  █   █  █ █ ██   █   █  ███ ██   █   █  ███
+# ██  ███ █ █ ███ ██   █  █ █ ███ ██  ███ █ █
 
 # Colorize some string based on its hash
+# 2025: Mostly written by chatgpt, 
+# but with a lot of brontosaurusrex input and corrections
 
+# -------------------------------------------------------
 # usage: 
 # sinesthesia "woot woot woot"
 # cat some.txt | sinesthesia
@@ -11,9 +16,7 @@
 # (autumn, ocean, forest, lacier, herbal, icefire)
 # zsh:
 # repeat 9 sinesthesia
-
-# 2025: Mostly written by chatgpt, 
-# but with a lot of brontosaurusrex input and corrections
+# -------------------------------------------------------
 
 # HSL model
 # change this static vars for different effect
