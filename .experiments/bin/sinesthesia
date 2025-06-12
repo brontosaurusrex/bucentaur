@@ -24,7 +24,7 @@ avoidPink="1" # 1 means avoid
 avoidYellow="1" # 1 means avoid
 
 # print some debug stuff
-debug="1"
+debug="0"
 
 hsv_to_rgb() {
   awk -v h="$1" -v s="$2" -v v="$3" '
@@ -109,7 +109,7 @@ colorize_string() {
     (( avoidPink )) && {
     (( debug )) && echo "avoiding pink/magenta spectrum"
     if (( hue >= 290 && hue <=340 )); then
-      hue=$((hue + 50))
+      hue=$(( (hue + 50) % 360 ))
     fi
     }
 
@@ -117,7 +117,7 @@ colorize_string() {
     (( avoidYellow )) && {
     (( debug )) && echo "avoiding yellow"
     if (( hue >= 40 && hue <=80 )); then
-      hue=$((hue + 41))
+      hue=$(( (hue + 41) % 360 ))
     fi
     }
 
