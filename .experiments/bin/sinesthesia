@@ -13,28 +13,22 @@
 # sinesthesia "woot woot woot"
 # cat some.txt | sinesthesia
 # sinesthesia --theme=ocean "woot woot woot"
-# (autumn, ocean, forest, glacier, herbal, icefire)
+# (autumn, ocean, forest, glacier, herbal, icefire, tealgray, sunset)
 # zsh:
 # repeat 9 sinesthesia
 # -------------------------------------------------------
 
-# HSL model
-# change this static vars for different effect
-sat="25"
+# Global color controls
+sat="25" # Some themes may override it
 light="93"
-# hue is derived from crc32 hash
+theme=""
 
-# theme default
-theme="default"
-
-# avoid pink/magenta spectrum
-avoidPink="0" # 1 means avoid
-
-# avoid clean yellows
-avoidYellow="0" # 1 means avoid
-
-# print some debug stuff
+# Avoid certain hues
+avoidPink="0"
+avoidYellow="0"
 debug="0"
+
+# --- Helpers ---
 
 hsv_to_rgb() {
   awk -v h="$1" -v s="$2" -v v="$3" '
@@ -42,7 +36,6 @@ hsv_to_rgb() {
     h = (h % 360 + 360) % 360
     s /= 100
     v /= 100
-
     c = v * s
     h_ = h / 60
     x = c * (1 - ((h_ % 2) - 1)^2)
@@ -64,7 +57,7 @@ hsv_to_rgb() {
 }
 
 gamma_correct() {
-  awk -v targetY="${1}" '
+  awk -v targetY="$1" '
   function to_linear(v) {
     v = v / 255
     return (v <= 0.04045) ? v / 12.92 : ((v + 0.055) / 1.055)^2.4
@@ -76,137 +69,119 @@ gamma_correct() {
     r = to_linear($1)
     g = to_linear($2)
     b = to_linear($3)
-
     Y = 0.2126 * r + 0.7152 * g + 0.0722 * b
 
     if (Y > 0) {
       scale = targetY / Y
-      r *= scale
-      g *= scale
-      b *= scale
+      r *= scale; g *= scale; b *= scale
     }
 
     r = int(to_srgb(r) * 255 + 0.5)
     g = int(to_srgb(g) * 255 + 0.5)
     b = int(to_srgb(b) * 255 + 0.5)
 
-    r = (r > 255) ? 255 : ((r < 0) ? 0 : r)
-    g = (g > 255) ? 255 : ((g < 0) ? 0 : g)
-    b = (b > 255) ? 255 : ((b < 0) ? 0 : b)
-
-    printf "%d %d %d\n", r, g, b
+    printf "%d %d %d\n", (r > 255 ? 255 : (r < 0 ? 0 : r)), (g > 255 ? 255 : (g < 0 ? 0 : g)), (b > 255 ? 255 : (b < 0 ? 0 : b))
   }'
 }
 
-# themes support
+# --- Theme remapping ---
+
 remap_hue() {
   local hue="$1"
+  local new_hue="$hue"
+  local new_sat="$sat"
+
   case "$theme" in
     autumn)
-      echo $(( (hue % 50) + 20 ))    # oranges, rust, gold
-      ;;
+      new_hue=$(( (hue % 50) + 20 )) ;;
     ocean)
-      echo $(( (hue % 100) + 140 ))  # greens, turquoises, deep blues
-      ;;
+      new_hue=$(( (hue % 100) + 140 )) ;;
     forest)
-      echo $(( (hue % 60) + 90 ))  # 90–150
-      ;;
+      new_hue=$(( (hue % 60) + 90 )) ;;
     glacier)
-      echo $(( (hue % 50) + 170 ))  # 170–220
-      ;;
+      new_hue=$(( (hue % 50) + 170 )) ;;
     herbal)
-      echo $(( (hue % 60) + 120 ))  # 120–180
-      ;;
+      new_hue=$(( (hue % 60) + 120 )) ;;
     icefire)
       case $((hue % 4)) in
-        0) echo 20 ;;
-        1) echo 200 ;;
-        2) echo 40 ;;
-        3) echo 260 ;;
+        0) new_hue=20 ;;
+        1) new_hue=200 ;;
+        2) new_hue=40 ;;
+        3) new_hue=260 ;;
+      esac ;;
+    tealgray)
+      case $((hue % 4)) in
+        0) new_hue=176; new_sat=57 ;;  # #66D2CE
+        1) new_hue=172; new_sat=58 ;;  # #2DAA9E
+        2) new_hue=0;   new_sat=0  ;;  # #EAEAEA
+        3) new_hue=30;  new_sat=17 ;;  # #E3D2C3
+      esac ;;
+    sunset)
+      case $((hue % 7)) in
+        0) new_hue=163; new_sat=42 ;;  # #84E3C8
+        1) new_hue=158; new_sat=27 ;;  # #A8E6CF
+        2) new_hue=83;  new_sat=19 ;;  # #DCEDC1
+        3) new_hue=24;  new_sat=29 ;;  # #FFD3B6
+        4) new_hue=3;   new_sat=35 ;;  # #FFAAA5
+        5) new_hue=355; new_sat=45 ;;  # #FF8B94
+        6) new_hue=355; new_sat=55 ;;  # #FF7480
       esac
       ;;
-    *)
-      echo "$hue"                   # default: no remapping
-      ;;
   esac
+
+  echo "$new_hue $new_sat"
 }
 
-# Colorize some string based on its hash
+# --- Core function ---
+
 colorize_string() {
-    local string="$1"
+  local string="$1"
 
-    # Generate fallback string if none given
-    if [ -z "$string" ]; then
-      string="███████████████████████
+  # fallback string
+  if [ -z "$string" ]; then
+    string="███████████████████████
 ███████████████████████ $RANDOM$$
-███████████████████████ "
-    fi
+███████████████████████"
+  fi
 
-    # Hash to hue
-    local hash hue red grn blu
-    hash="$(echo "$string" | cksum | cut -d ' ' -f 1)"
-    #hue="$((hash % 360))"
-    hue=$(remap_hue $((hash % 360)))
+  local hash hue red grn blu
+  hash="$(echo "$string" | cksum | cut -d ' ' -f 1)"
+  hue="$((hash % 360))"
 
-    # avoid pink/magenta
-    (( avoidPink )) && {
-    (( debug )) && echo "avoiding pink/magenta spectrum"
-    if (( hue >= 290 && hue <=340 )); then
-      hue=$(( (hue + 50) % 360 ))
-    fi
-    }
+  # avoid unwanted ranges
+  (( avoidPink )) && (( hue >= 290 && hue <= 340 )) && hue=$(( (hue + 50) % 360 ))
+  (( avoidYellow )) && (( hue >= 40 && hue <= 80 )) && hue=$(( (hue + 41) % 360 ))
 
-    # avoid yellow
-    (( avoidYellow )) && {
-    (( debug )) && echo "avoiding yellow"
-    if (( hue >= 40 && hue <=80 )); then
-      hue=$(( (hue + 41) % 360 ))
-    fi
-    }
+  # apply theme mapping (outputs hue sat)
+  read -r hue sat < <(remap_hue "$hue")
 
-    (( debug )) && {
-      #echo "hash=${hash}"
-      echo "hue=${hue}"
-      #echo "hue sat light=${hue} ${sat} ${light}"
-    }
+  # convert HSV to RGB
+  read -r red grn blu < <(hsv_to_rgb "$hue" "$sat" "$light" | gamma_correct "$(awk "BEGIN { print $light / 100 }")")
 
-    # Convert HSV to RGB
-    read -r red grn blu < <(hsv_to_rgb "$hue" "$sat" "$light" | gamma_correct "$(awk "BEGIN { print $light / 100 }")")
+  (( debug )) && echo "hue=$hue sat=$sat rgb=$red $grn $blu"
 
-    (( debug )) && echo "$red $grn $blu"
-
-    # Loop over lines and colorize each
-    local line
-    while IFS= read -r line; do
-      echo -e "\e[38;2;${red};${grn};${blu}m${line}\e[0m"
-    done <<< "$string"
+  # output colored string
+  while IFS= read -r line; do
+    echo -e "\e[38;2;${red};${grn};${blu}m${line}\e[0m"
+  done <<< "$string"
 }
 
-# Main entry point
-if [ -t 0 ]; then
-    # stdin is a terminal, so use argument or fallback
+# --- Entry point ---
 
-    # Parse --theme=name if given
-    if [[ "$1" == --theme=* ]]; then
-        theme="${1#--theme=}"
-        shift
-    fi
-
-    if [ $# -gt 0 ]; then
-        colorize_string "$*"
-    else
-        colorize_string
-      echo
-    fi
-
-else
-    # stdin is pipe/file, read entire input at once
-    input="$(cat)"
-
-    # Parse --theme=name from args even when reading from pipe
-    if [[ "$1" == --theme=* ]]; then
-        theme="${1#--theme=}"
-    fi
-    colorize_string "${input}"
+# parse --theme=NAME from args
+if [[ "$1" == --theme=* ]]; then
+  theme="${1#--theme=}"
+  shift
 fi
 
+if [ -t 0 ]; then
+  if [ $# -gt 0 ]; then
+    colorize_string "$*"
+  else
+    colorize_string
+    echo
+  fi
+else
+  input="$(cat)"
+  colorize_string "$input"
+fi
