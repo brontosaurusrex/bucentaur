@@ -13,7 +13,7 @@
 # sinesthesia "woot woot woot"
 # cat some.txt | sinesthesia
 # sinesthesia --theme=ocean "woot woot woot"
-# (autumn, ocean, forest, lacier, herbal, icefire)
+# (autumn, ocean, forest, glacier, herbal, icefire)
 # zsh:
 # repeat 9 sinesthesia
 # -------------------------------------------------------
@@ -184,30 +184,29 @@ colorize_string() {
 
 # Main entry point
 if [ -t 0 ]; then
-  # stdin is a terminal, so use argument or fallback
+    # stdin is a terminal, so use argument or fallback
 
-  # Parse --theme=name if given
-  if [[ "$1" == --theme=* ]]; then
-    theme="${1#--theme=}"
-    shift
-  fi
+    # Parse --theme=name if given
+    if [[ "$1" == --theme=* ]]; then
+        theme="${1#--theme=}"
+        shift
+    fi
 
-  if [ $# -gt 0 ]; then
-    colorize_string "$*"
-  else
-    colorize_string
-    echo
-  fi
+    if [ $# -gt 0 ]; then
+        colorize_string "$*"
+    else
+        colorize_string
+      echo
+    fi
 
 else
-  # stdin is pipe/file, read entire input at once
-  input="$(cat)"
+    # stdin is pipe/file, read entire input at once
+    input="$(cat)"
 
-  # Parse --theme=name from args even when reading from pipe
-  if [[ "$1" == --theme=* ]]; then
-    theme="${1#--theme=}"
-  fi
-
-  colorize_string "${input}"
+    # Parse --theme=name from args even when reading from pipe
+    if [[ "$1" == --theme=* ]]; then
+        theme="${1#--theme=}"
+    fi
+    colorize_string "${input}"
 fi
 
