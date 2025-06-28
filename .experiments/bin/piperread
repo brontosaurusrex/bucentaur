@@ -3,7 +3,7 @@
 # piperread
 
 # txt to speech using local
-# txt2speach called piper
+# txt2speech called piper
 # based on awsread
 
 # needs piper, aplay, xclip?, md5sum, awk
@@ -21,9 +21,9 @@ fi
 voicespath="$HOME/piper" # where are the onnx and json files
 
 resume="please" # non-empty is true
-#keepAudio=""    # non-empty is true < disabled
-# split text at (max:3000)
-bytes="600"
+#keepAudio=""    # non-empty is true < not implemented
+# split text at
+bytes="550"
 # text display width in chars (50-80)
 width="50"
 # center text block
@@ -31,9 +31,19 @@ centertext="mkay" # non-empty is true
 # storeroot
 storeroot="$HOME/tmp/recPIPERREAD"
 mkdir -p "$storeroot" || exit
+# trash (for 'deleteing items in the database')
+trash="$HOME/tmp/recPIPERREADtrash"
+mkdir -p "$trash" || exit
 # debug 1 is true
 debug="0"
 # end config
+
+# if sourced cd to the $storeroot dir and exit
+if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
+  echo "Script was sourced, cding to $storeroot"
+  cd "$storeroot" || return 1
+  return 0
+fi
 
 # checks
 command -v piper >/dev/null 2>&1 || { echo "I need piper on path, exiting." >&2; exit 1; }
@@ -104,7 +114,10 @@ cat << EOF
 │ piperread --list              # or -l list over store                                          │
 │ piperread --hash ab           # or -x will read first file that includes those letters in hash │
 │ piperread --random            # or -r read random page                                         │
-│                                                                                                │
+│ piperread --delete 8e6        # will move the item with hash 8e6                               │
+│                               # out of 'database' dir to 'trash' dir                           │
+│ source piperread              # will cd to 'database' dir and exit                             │     
+│                                                                                                │  
 │ interactive keys:                                                                              │
 │ n                             # skips to next section (quits curently playing mpv)             │
 │ ctrl+c                        # press for exit and to get the normal cursor back               │
@@ -160,6 +173,40 @@ if [ "$1" == "--hash" ] || [ "$1" == "-x" ]; then # find file by hash
     cd -- "$(find . -name "*$search*" -type d | tail -1)" || exit
     #echo "name="; cat name
     input="$(tail -1 < name)" || exit
+fi
+
+# delete from 'database', based on hash
+if [ "$1" == "--delete" ]; then # find file by hash
+    shift
+    search="$1"
+    cd "$storeroot" || exit
+    hashtodeleteDir="$(find . -name "*$search*" -type d | tail -1)"
+    if [ -z "$hashtodeleteDir" ]; then
+        echo "No matching directory found for hash '$search'"
+        exit 1
+    fi
+
+    input="$(tail -1 < "${hashtodeleteDir}/name")" || exit
+    echo "This will delete the metadata about the item:"  
+    echo "\"$hashtodeleteDir $input\""
+    echo "from the database, you sure? (y/n)"
+    read -r answer
+
+    case "$answer" in
+    [Yy]|[Yy][Ee][Ss])
+        echo "Moving \"$hashtodeleteDir $input\" to \"$trash\""
+        # Not actually deleteing an item, but moving it to $trash dir
+        mv "$hashtodeleteDir" "$trash/"
+        ;;
+    [Nn]|[Nn][Oo])
+        echo "Okay, doing nothing."
+        ;;
+    *)
+        echo "Invalid response."
+        ;;
+    esac
+
+    exit
 fi
 
 # else just path to file
@@ -298,7 +345,7 @@ for file in x*; do
     # working mpv line ! (with disabled mpv keybindings, replaced with custom ones in function mpvCustomKeys)
     mpvCustomKeys # lets just keep the n to quit mpv (skip to next segment)
 
-    piper -s "$speaker" -m "${voicespath}/${selected}" --output-raw < "$file" 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --no-video --no-input-default-bindings --input-conf="$storeroot/mpv_keybindings.conf" --msg-level=all=no - 2>/dev/null || exit 1 
+    piper -s "$speaker" -m "${voicespath}/${selected}" --output-raw < "$file" 2>/dev/null | mpv --demuxer=rawaudio --demuxer-rawaudio-format=s16le --demuxer-rawaudio-rate=22050 --audio-samplerate=22050 --demuxer-rawaudio-channels=1 --no-resume-playback --no-video --no-input-default-bindings --input-conf="$storeroot/mpv_keybindings.conf" --msg-level=all=no --volume=90 - 2>/dev/null || exit 1 
 
 
     wait
