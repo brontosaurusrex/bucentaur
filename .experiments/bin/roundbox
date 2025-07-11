@@ -1,37 +1,48 @@
 #!/bin/bash
 
-# roundbox, draw round box around single line test
-# usage: roundbox woot
-#   ╭──────╮
-#   │ woot │
-#   ╰──────╯
+# ╭─────────────────────────────────────────╮
+# │ roundbox, rewriten by chatgpt in 2025   │
+# │ (replaces old roundbox and multibox)    │
+# │                                         │
+# │ usage examples:                         │
+# │ echo "woot\nwoot" | roundbox            │
+# │ roundbox "woot\nwoot"                   │
+# ╰─────────────────────────────────────────╯
 
-# https://dirask.com/posts/Bash-repeat-a-character-N-times-prz6rp
-function repeat()
-{
-    local count="$1"
-    local character="$2"
+# If there's an argument, use it; otherwise, read from stdin
+if [[ -n "$1" ]]; then
+  input_text=$(printf "%b" "$1")
+else
+  input_text=$(cat)
+fi
 
-    for (( i = 0; i < "$count"; ++i )); do
-        echo -n "$character"
-    done
-}
+# Normalize tabs
+input_text=$(printf "%s" "$input_text" | expand)
 
-border()
-{
-    text="$*"
-    char="─"
-    len="${#text}"
-    len="$(( len + 2 ))"
+# Terminal width logic
+term_width=$(tput cols)
+max_allowed_length=$(( term_width - 4 ))  # 2 padding + 2 borders
 
-    topedge="$(repeat "$len" "$char")"
+# Truncate long lines and compute max length
+max_length=0
+trimmed_lines=()
+while IFS= read -r line; do
+  # Truncate if needed
+  if (( ${#line} > max_allowed_length )); then
+    line=${line:0:max_allowed_length}
+  fi
+  trimmed_lines+=("$line")
+  (( ${#line} > max_length )) && max_length=${#line}
+done <<< "$input_text"
 
-    botedge="╰$topedge╯"
-    topedge="╭$topedge╮"
-    middle="│ $text │"
-    
-    echo -e "$topedge\n$middle\n$botedge"
+# Top border
+echo "╭$(printf '─%.0s' $(seq 1 $((max_length + 2))))╮"
 
-}
+# Boxed lines
+for line in "${trimmed_lines[@]}"; do
+  padding=$(( max_length - ${#line} ))
+  printf "│ %s%*s │\n" "$line" "$padding" ""
+done
 
-border "$*"
+# Bottom border
+echo "╰$(printf '─%.0s' $(seq 1 $((max_length + 2))))╯"
