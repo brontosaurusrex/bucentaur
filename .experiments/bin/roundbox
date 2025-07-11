@@ -5,8 +5,12 @@
 # │ (replaces old roundbox and multibox)    │
 # │                                         │
 # │ usage examples:                         │
-# │ echo "woot\nwoot" | roundbox            │
+# │ echo "woot\nwoot" | roundbox            │ 
+# │ cat file.txt | roundbox                 │
 # │ roundbox "woot\nwoot"                   │
+# │                                         │
+# │ note: If max line lenght > term width,  │
+# │ lines will be truncated                 │
 # ╰─────────────────────────────────────────╯
 
 # If there's an argument, use it; otherwise, read from stdin
