@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# chatgpt 2025
+# bak: Backup one or more files into ~/bak while preserving their path structures
+# with deduplication based on file content hash
+
+# usage:
+# bak file1 file2
+
+backup_root="$HOME/bak"
+index_file="$backup_root/.bak_index"
+timestamp="$(date +%Y%m%d-%H%M%S)"
+
+mkdir -p "$backup_root"
+touch "$index_file"
+
+if [ "$#" -eq 0 ]; then
+    echo "Usage: bak <file1> [file2 ...]"
+    exit 1
+fi
+
+while [ "$#" -gt 0 ]; do
+    file=$1
+    shift
+
+    if [ ! -f "$file" ]; then
+        echo "Skipping: '$file' is not a regular file"
+        continue
+    fi
+
+    sha256=$(sha256sum "$file" | awk '{print $1}')
+
+    # Check if this hash already exists
+    if grep -q "$sha256" "$index_file"; then
+        echo "✗ Skipping '$file' — identical content already backed up"
+        continue
+    fi
+
+    abs_path="$(realpath "$file")"
+    rel_path="${abs_path#/}"
+    dest_path="$backup_root/$rel_path.$timestamp"
+
+    mkdir -p "$(dirname "$dest_path")"
+    cp -- "$file" "$dest_path"
+
+    echo "$sha256  $abs_path" >> "$index_file"
+
+    echo "✓ Backed up '$file' → '$dest_path'"
+done
