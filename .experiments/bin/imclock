@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Output image
+OUTPUT="/tmp/imclock.png"
+
+# Image size and center
+SIZE=1000
+CENTER=$((SIZE / 2))
+LENGTH_HOUR=320
+LENGTH_MIN=390
+
+# Tick mark radius
+TICK_INNER=$((CENTER - 20))
+TICK_OUTER=$((CENTER - 5))
+
+# Get current time
+HOUR=$(date +%I)    # 12-hour format
+MIN=$(date +%M)
+
+# Calculate angles
+ANGLE_HOUR=$(echo "scale=6; (30 * $HOUR + 0.5 * $MIN)" | bc)
+ANGLE_MIN=$(echo "scale=6; 6 * $MIN" | bc)
+
+# Convert degrees to radians
+deg2rad() {
+    echo "scale=10; $1 * 4 * a(1) / 180" | bc -l
+}
+
+# Compute a point on the circle at a given radius and angle
+polar_to_xy() {
+    local angle_deg=$1
+    local radius=$2
+    local angle_rad=$(deg2rad "$angle_deg")
+    local x=$(echo "$CENTER + $radius * s($angle_rad)" | bc -l)
+    local y=$(echo "$CENTER - $radius * c($angle_rad)" | bc -l)
+    printf "%.0f %.0f\n" "$x" "$y"
+}
+
+# Hour and minute hand endpoints
+END_HOUR=($(polar_to_xy "$ANGLE_HOUR" $LENGTH_HOUR))
+END_MIN=($(polar_to_xy "$ANGLE_MIN" $LENGTH_MIN))
+
+# Start drawing commands string
+DRAW_CMDS=""
+
+# Add 12 hour tick marks (every 30 degrees)
+for i in {0..11}; do
+    angle=$((i * 30))
+    INNER=($(polar_to_xy "$angle" $TICK_INNER))
+    OUTER=($(polar_to_xy "$angle" $TICK_OUTER))
+    DRAW_CMDS+="line ${INNER[0]},${INNER[1]} ${OUTER[0]},${OUTER[1]} "
+done
+
+# Add clock hands to DRAW_CMDS
+DRAW_CMDS+="stroke-width 42 line $CENTER,$CENTER ${END_HOUR[0]},${END_HOUR[1]} "
+DRAW_CMDS+="stroke-width 16 line $CENTER,$CENTER ${END_MIN[0]},${END_MIN[1]}"
+
+# Generate image with ImageMagick
+convert -size ${SIZE}x${SIZE} xc:transparent \
+    -stroke white -strokewidth 32 \
+    -draw "$DRAW_CMDS" \
+    $OUTPUT
+
+#echo "✅ Clock image with hour ticks saved to $OUTPUT"
+
+# fix aspect for terminal usage
+mogrify -resize 1450x1000\! "$OUTPUT"
+
+# padding ?
+mogrify -background transparent -gravity center -extent 3100x1050 "$OUTPUT"

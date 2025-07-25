@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# gitbak: Back up files to ~/gitbak using Git to manage version history
+
+backup_root="$HOME/gitbak"
+timestamp="$(date "+%Y-%m-%d %H:%M:%S")"
+
+mkdir -p "$backup_root"
+
+# Initialize git repo if it doesn't exist
+if [ ! -d "$backup_root/.git" ]; then
+    git -C "$backup_root" init -q
+    git -C "$backup_root" config user.name "Backup Script"
+    git -C "$backup_root" config user.email "backup@example.com"
+    echo "Initialized new Git repository in $backup_root"
+fi
+
+if [ "$#" -eq 0 ]; then
+    echo "Usage: gitbak file1 file2"
+    echo "Note: Paths are relative to current directory where script is run"
+    exit 1
+fi
+
+commit_needed=false
+original_dir="$(pwd)"
+
+while [ "$#" -gt 0 ]; do
+    src="$1"
+    shift
+    
+    # Get absolute path of source file (relative to original directory)
+    abs_src="$(realpath -- "$original_dir/$src" 2>/dev/null || echo "")"
+    
+    if [ -z "$abs_src" ] || [ ! -e "$abs_src" ]; then
+        echo "✗ Skipping '$src' — file does not exist (looked in: $original_dir)"
+        continue
+    fi
+
+    if [ -d "$abs_src" ]; then
+        echo "✗ Skipping '$src' — directories are not supported"
+        continue
+    fi
+
+    if [ ! -f "$abs_src" ]; then
+        echo "✗ Skipping '$src' — not a regular file"
+        continue
+    fi
+
+    # Create relative path under backup root
+    rel_src="files/${abs_src#/}"
+    dest="$backup_root/$rel_src"
+
+    mkdir -p "$(dirname "$dest")"
+    if cp --preserve=all -- "$abs_src" "$dest"; then
+        if git -C "$backup_root" add "$rel_src" 2>/dev/null; then
+            commit_needed=true
+            echo "✓ Backed up '$src' to '$rel_src'"
+        else
+            echo "✗ Failed to add '$rel_src' to Git"
+        fi
+    else
+        echo "✗ Failed to copy '$src' to backup"
+    fi
+done
+
+if $commit_needed; then
+    if git -C "$backup_root" commit -q -m "Backup at $timestamp"; then
+        echo "Changes committed to Git repository"
+    else
+        echo "✗ Failed to commit changes"
+    fi
+else
+    echo "Nothing to commit."
+fi
