@@ -3,7 +3,7 @@
 # imgboxBBcode
 
 # convert imgbox stdout to some bbcode 
-# needs imgbox script @ https://codeberg.org/plotski/imgbox-cli/src/branch/master/README.md
+# needs imgbox script @ https://codeberg.org/plotski/imgbox-cli
 
 # usage example
 # imgbox image.png --thumb-width 300 | imgboxbbcode
