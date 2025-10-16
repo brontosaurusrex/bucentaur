@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# camelCaseToUPPER (with spaces) - deepseek 2025
+
+# what it does:
+# Rename file(s) - camelCase to CAMEL CASE
+
+# example:
+# camelCaseToUPPER camelCase.txt
+
+# WARNING:
+# It will rename files without any questions
+
+# Exit if no files provided
+if [ "$#" -eq 0 ]; then
+    echo "Usage: $0 <files...>"
+    echo "Example: $0 *.mxf"
+    exit 1
+fi
+
+for original_file in "$@"; do
+    # Skip directories
+    if [ -d "$original_file" ]; then
+        echo "Skipping directory: $original_file"
+        continue
+    fi
+
+    # Extract parts
+    dir=$(dirname "$original_file")
+    base=$(basename "$original_file")
+    name="${base%.*}"
+    ext="${base##*.}"
+
+    # Convert camelCase/PascalCase to UPPERCASE WITH SPACES
+    new_name=$(echo "$name" | sed -E '
+        s/([a-z])([A-Z])/\1 \2/g;      # camelCase → camel Case
+        s/([A-Z]+)([A-Z][a-z])/\1 \2/g; # HTMLParser → HTML Parser
+        s/.*/\U&/g                      # Convert all to UPPERCASE
+    ')
+
+    # Reattach extension (if original had one)
+    if [ "$name" != "$base" ]; then
+        new_file="$dir/$new_name.$ext"
+    else
+        new_file="$dir/$new_name"
+    fi
+
+    # Rename (skip if no change)
+    if [ "$original_file" != "$new_file" ]; then
+        mv -nv "$original_file" "$new_file"
+    fi
+done
+
