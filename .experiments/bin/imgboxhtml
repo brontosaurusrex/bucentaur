@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# imgboxmarkdown
+# imgboxhtml
 
-# convert imgbox stdout to some markdown 
+# convert imgbox stdout to some html
 # needs imgbox script @ https://codeberg.org/plotski/imgbox-cli
 
 # usage example
-# imgbox image.png --thumb-width 300 | imgboxmarkdown
+# imgbox image.png --thumb-width 300 | imgboxhtml
 
 input=$(cat)
 echo "$input"
@@ -16,7 +16,7 @@ image="$(grep Image: <<< "$input" | awk '{print $2}')"
 thumb="$(grep Thumbnail: <<< "$input" | awk '{print $2}')"
 
 echo
-echo "markdown:"
-echo "[![image]($thumb)]($image)"
+echo "html:"
+echo "<a href=\"${image}\"><img src=\"${thumb}\"></a>"
 
 # and whatever code here to put that into clipboard
