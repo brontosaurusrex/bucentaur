@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# imgboxbb (json)
+
+# convert imgbox --json to some bbcode, markdown and html
+# needs imgbox script @ https://codeberg.org/plotski/imgbox-cli
+# and jq (apt install jq)
+
+# usage example
+# imgbox one.png two.png three.png -w 200 --json | imgboxbb
+
+input=$(cat)
+# exit on empty input
+if [[ -z "$input" ]]; then
+    echo "❌ Error: No input received." >&2
+    exit 1
+fi
+# exit on non-json input
+if ! echo "$input" | jq empty >/dev/null 2>&1; then
+    echo "❌ Error: Input is not valid JSON." >&2
+    exit 1
+fi
+
+# init variables, makes intent clear
+bbcode=""; markdown=""; html=""
+
+# loop over each
+while read -r item; do
+    image_url=$(jq -r '.image_url' <<<"$item")
+    thumb_url=$(jq -r '.thumbnail_url' <<<"$item")
+	# bbcode:
+	bbcode+="[url=$image_url][img]${thumb_url}[/img][/url]"
+	# markdown:
+	markdown+="[![image]($thumb_url)]($image_url)"
+	# html:
+	html+="<a href=\"${image_url}\"><img src=\"${thumb_url}\"></a>"
+done < <(jq -c '.[]?' <<<"$input")
+
+echo "bbcode:" && echo "$bbcode" && echo
+echo "markdown:" && echo "$markdown" && echo
+echo "html:" && echo "$html" && echo
+
+# and whatever code here to put that into clipboard
+# todo: log image_url, thumbnail_url and edit_url for each upload
+# todo: some error checking
