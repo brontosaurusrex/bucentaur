@@ -6,28 +6,31 @@
 # needs imgbox script @ https://codeberg.org/plotski/imgbox-cli
 # and jq (apt install jq)
 
-# usage example
+# usage examples:
 # imgbox one.png two.png three.png -w 200 --json | imgboxbb
+# cat some.json | imgboxbb
 
 input=$(cat)
 # exit on empty input
 if [[ -z "$input" ]]; then
-    echo "❌ Error: No input received." >&2
+    echo "Error: No input received." >&2
     exit 1
 fi
 # exit on non-json input
 if ! echo "$input" | jq empty >/dev/null 2>&1; then
-    echo "❌ Error: Input is not valid JSON." >&2
+	echo "$input" >&2
+    echo "Error: Input is not valid JSON." >&2
     exit 1
 fi
 
 # init variables, makes intent clear
-bbcode=""; markdown=""; html=""
+bbcode=""; markdown=""; html=""; log=""
 
 # loop over each
 while read -r item; do
     image_url=$(jq -r '.image_url' <<<"$item")
     thumb_url=$(jq -r '.thumbnail_url' <<<"$item")
+	 edit_url=$(jq -r '.edit_url' <<<"$item")
 	# bbcode:
 	bbcode+="[url=$image_url][img]${thumb_url}[/img][/url]"
 	# markdown:
@@ -40,6 +43,10 @@ echo "bbcode:" && echo "$bbcode" && echo
 echo "markdown:" && echo "$markdown" && echo
 echo "html:" && echo "$html" && echo
 
-# and whatever code here to put that into clipboard
-# todo: log image_url, thumbnail_url and edit_url for each upload
-# todo: some error checking
+# + some code here to drop things into clipboard
+
+# logging
+log+="<div style=\"font-size: 150%;\">${html}<br><a href=\"${edit_url}\">delete ($(date +%y%m%d))</a></div>"
+mkdir -p "$HOME/.cache/imgboxbb_log"
+echo "$log" >> "$HOME/.cache/imgboxbb_log/imgbox.log.htm" || echo "Error: Can't write log @ $HOME/.cache/imgboxbb_log/imgbox.log.htm"
+echo "log: $HOME/.cache/imgboxbb_log/imgbox.log.htm"
