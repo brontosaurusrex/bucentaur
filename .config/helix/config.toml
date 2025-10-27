@@ -1,0 +1,21 @@
+theme = "catppuccin_macchiato"
+
+[editor]
+true-color = true
+
+[editor.soft-wrap]
+enable = true
+
+# Also search for hidden files/folders with space + f
+[editor.file-picker]
+hidden = false
+
+# Change cursor shape when in insert mode
+[editor.cursor-shape]
+insert = "bar"
+
+# In normal mode use escape to clear selection (as well as default ;)
+# and also clear multiple cursors (as well as default ,)
+# https://www.youtube.com/watch?v=aiSI6vdZWgE
+[keys.normal]
+esc = ["collapse_selection", "keep_primary_selection"]
