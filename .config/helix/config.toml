@@ -2,6 +2,7 @@ theme = "catppuccin_macchiato"
 
 [editor]
 true-color = true
+#trim-trailing-whitespace = true
 
 [editor.soft-wrap]
 enable = true
@@ -13,6 +14,7 @@ hidden = false
 # Change cursor shape when in insert mode
 [editor.cursor-shape]
 insert = "bar"
+select = "underline"
 
 # In normal mode use escape to clear selection (as well as default ;)
 # and also clear multiple cursors (as well as default ,)
@@ -21,3 +23,5 @@ insert = "bar"
 esc = ["collapse_selection", "keep_primary_selection"]
 # show where the spaces are (toggle)
 F1 = ":toggle whitespace.render all none"
+# uppercase
+"A-c" = "switch_to_uppercase"
