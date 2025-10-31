@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+
+# clockascii (around 30x30 chars, depending on aspect)
+
+# Written mostly by chatgpt in 2025
+
+#### mine
+# hide cursor
+tput civis
+
+# reshow cursor
+cleanup () {
+  tput cnorm
+  exit 0
+}
+
+trap cleanup EXIT SIGTERM SIGINT 
+
+clear # just once
+#### end mine
+
+ROWS=30
+BASE_COLS=30
+CX=14.5
+CY=14.5
+RADIUS=14
+HOUR_LEN=9
+MIN_LEN=12
+ASPECT=0.4   # smaller = wider circle; 0.5 fits most terminals
+
+# scale width to compensate
+COLS=$(awk -v c="$BASE_COLS" -v a="$ASPECT" 'BEGIN{print int(c / a + 0.5)}')
+
+# mine center
+doCenter () {
+    columns="$(tput cols)"
+    pad="$((( columns - COLS )/2))"
+}
+
+everything () {
+    read -r H M S < <(date '+%H %M %S')
+
+    MD=$(awk -v m="$M" -v s="$S" 'BEGIN{print m*6 + s*0.1}')
+    HD=$(awk -v h="$H" -v m="$M" -v s="$S" 'BEGIN{print (h%12)*30 + m*0.5 + s*(0.5/60)}')
+
+    #clear
+    tput cup 0 0
+
+    awk -v rows="$ROWS" -v cols="$COLS" \
+        -v cx="$CX" -v cy="$CY" -v r="$RADIUS" \
+        -v aspect="$ASPECT" \
+        -v hd="$HD" -v md="$MD" \
+        -v hlen="$HOUR_LEN" -v mlen="$MIN_LEN" \
+        -v H="$H" -v M="$M" -v S="$S" '
+    BEGIN {
+      PI = 3.141592653589793
+
+      # init grid
+      y = 0
+      while (y < rows) {
+        x = 0
+        while (x < cols) {
+          grid[y, x] = " "
+          x++
+        }
+        y++
+      }
+
+      # draw circle
+      y = 0
+      while (y < rows) {
+        x = 0
+        while (x < cols) {
+          # map to corrected coords (stretch horizontally)
+          dx = (x - cx/aspect) * aspect
+          dy = cy - y
+          dist = sqrt(dx*dx + dy*dy)
+          #if (dist >= r - 0.3 && dist <= r + 0.3)
+          #  grid[y, x] = "o"
+          x++
+        }
+        y++
+      }
+
+      # hour ticks
+      k = 0
+      while (k < 12) {
+        deg = k * 30
+        rad = (90 - deg) * PI / 180
+        tx = (cx/aspect) + ((r - 1) / aspect) * cos(rad)
+        ty = cy - (r - 1) * sin(rad)
+        gx = int(tx + 0.5)
+        gy = int(ty + 0.5)
+        if (gy >= 0 && gy < rows && gx >= 0 && gx < cols)
+          grid[gy, gx] = "⬤"
+        k++
+      }
+
+      # minute hand
+      mrad = (90 - md) * PI / 180
+      t = 0
+      while (t <= mlen) {
+        px = (cx/aspect) + (t / aspect) * cos(mrad)
+        py = cy - t * sin(mrad)
+        gx = int(px + 0.5)
+        gy = int(py + 0.5)
+        if (gx >= 0 && gx < cols && gy >= 0 && gy < rows)
+          grid[gy, gx] = (t >= mlen - 1 ? "●" : "●")
+        t += 0.5
+      }
+
+      # hour hand
+      # hrad = (90 - hd) * PI / 180
+      # t = 0
+      # while (t <= hlen) {
+      #   px = (cx/aspect) + (t / aspect) * cos(hrad)
+      #   py = cy - t * sin(hrad)
+      #   gx = int(px + 0.5)
+      #   gy = int(py + 0.5)
+      #   if (gx >= 0 && gx < cols && gy >= 0 && gy < rows)
+      #     grid[gy, gx] = "■"
+      #   t += 0.5
+      # }
+
+      # hour hand
+      hrad=(90-hd)*PI/180
+      t=0
+      while(t<=hlen){
+          px=(cx/aspect)+(t/aspect)*cos(hrad)
+          py=cy-t*sin(hrad)
+          gx=int(px+0.5)
+          gy=int(py+0.5)
+          if(gx>=0 && gx<cols && gy>=0 && gy<rows) {
+              grid[gy,gx]="■"
+              # extra horizontal width
+              if(gx+1<cols) grid[gy,gx+1]="■"
+              if(gx-1>=0)   grid[gy,gx-1]="■"
+          }
+          t+=0.5
+      }
+
+
+      grid[int(cy), int(cx/aspect)] = " "
+
+      # print
+      y = 0
+      while (y < rows) {
+        x = 0
+        while (x < cols) {
+          printf("%s", grid[y, x])
+          x++
+        }
+        printf("\n")
+        y++
+      }
+      #printf("\n     %02d:%02d:%02d\n", H, M, S)
+    }'
+
+}
+
+
+while true; do
+
+  doCenter # get new $pad variable
+
+  #echo "oldpad=$oldpad, newpad=$pad"
+  (( oldpad != pad )) && clear
+
+  everything | pr -T -o "$pad"
+  sleep 10
+  
+  oldpad="$pad"
+
+done
