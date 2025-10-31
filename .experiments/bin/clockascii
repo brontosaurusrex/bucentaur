@@ -75,8 +75,8 @@ everything () {
           dx = (x - cx/aspect) * aspect
           dy = cy - y
           dist = sqrt(dx*dx + dy*dy)
-          #if (dist >= r - 0.3 && dist <= r + 0.3)
-          #  grid[y, x] = "o"
+          if (dist >= r - 0.3 && dist <= r + 0.3)
+            grid[y, x] = " "
           x++
         }
         y++
@@ -103,7 +103,8 @@ everything () {
       while (t <= mlen) {
         px = (cx/aspect) + (t / aspect) * cos(mrad)
         py = cy - t * sin(mrad)
-        gx = int(px + 0.5)
+        #gx = int(px + 0.5)
+        gx = int(px)
         gy = int(py + 0.5)
         if (gx >= 0 && gx < cols && gy >= 0 && gy < rows)
           grid[gy, gx] = (t >= mlen - 1 ? "●" : "●")
@@ -129,7 +130,8 @@ everything () {
       while(t<=hlen){
           px=(cx/aspect)+(t/aspect)*cos(hrad)
           py=cy-t*sin(hrad)
-          gx=int(px+0.5)
+          #gx=int(px+0.5)
+          gx=int(px)
           gy=int(py+0.5)
           if(gx>=0 && gx<cols && gy>=0 && gy<rows) {
               grid[gy,gx]="■"
@@ -169,7 +171,7 @@ while true; do
 
   everything | pr -T -o "$pad"
   sleep 10
-  
+    
   oldpad="$pad"
 
 done
