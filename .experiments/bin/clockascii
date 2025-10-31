@@ -25,16 +25,16 @@ CX=14.5
 CY=14.5
 RADIUS=14
 HOUR_LEN=9
-MIN_LEN=12
-ASPECT=0.4   # smaller = wider circle; 0.5 fits most terminals
+MIN_LEN=11
+ASPECT=0.40   # smaller = wider circle; 0.5 fits most terminals
 
 # scale width to compensate
 COLS=$(awk -v c="$BASE_COLS" -v a="$ASPECT" 'BEGIN{print int(c / a + 0.5)}')
 
-# mine center
 doCenter () {
     columns="$(tput cols)"
     pad="$((( columns - COLS )/2))"
+    (( pad < 0 )) && pad=0
 }
 
 everything () {
@@ -90,7 +90,8 @@ everything () {
         tx = (cx/aspect) + ((r - 1) / aspect) * cos(rad)
         ty = cy - (r - 1) * sin(rad)
         gx = int(tx + 0.5)
-        gy = int(ty + 0.5)
+        #gy = int(ty + 0.5)
+        gy = int(ty)
         if (gy >= 0 && gy < rows && gx >= 0 && gx < cols)
           grid[gy, gx] = "⬤"
         k++
