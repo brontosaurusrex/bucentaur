@@ -28,6 +28,10 @@ HOUR_LEN=9
 MIN_LEN=11
 ASPECT=0.40   # smaller = wider circle; 0.5 fits most terminals
 
+MINCHAR="●"
+HOURCHAR="■"
+TICKCHAR="⬤"
+
 # scale width to compensate
 COLS=$(awk -v c="$BASE_COLS" -v a="$ASPECT" 'BEGIN{print int(c / a + 0.5)}')
 
@@ -51,7 +55,9 @@ everything () {
         -v aspect="$ASPECT" \
         -v hd="$HD" -v md="$MD" \
         -v hlen="$HOUR_LEN" -v mlen="$MIN_LEN" \
-        -v H="$H" -v M="$M" -v S="$S" '
+        -v H="$H" -v M="$M" -v S="$S" \
+        -v MINCHAR="$MINCHAR" -v HOURCHAR="$HOURCHAR" -v TICKCHAR="$TICKCHAR" '
+
     BEGIN {
       PI = 3.141592653589793
 
@@ -93,7 +99,7 @@ everything () {
         #gy = int(ty + 0.5)
         gy = int(ty)
         if (gy >= 0 && gy < rows && gx >= 0 && gx < cols)
-          grid[gy, gx] = "⬤"
+          grid[gy, gx] = TICKCHAR
         k++
       }
 
@@ -107,7 +113,7 @@ everything () {
         gx = int(px)
         gy = int(py + 0.5)
         if (gx >= 0 && gx < cols && gy >= 0 && gy < rows)
-          grid[gy, gx] = (t >= mlen - 1 ? "●" : "●")
+          grid[gy, gx] = (t >= mlen - 1 ? MINCHAR : MINCHAR)
         t += 0.5
       }
 
@@ -120,7 +126,7 @@ everything () {
         gx = int(px + 0.5)
         gy = int(py + 0.5)
         if (gx >= 0 && gx < cols && gy >= 0 && gy < rows)
-          grid[gy, gx] = "■"
+          grid[gy, gx] = HOURCHAR
         t += 0.5
       }
 
@@ -165,7 +171,7 @@ everything () {
 
 
 while true; do
-
+  
   doCenter # get new $pad variable
 
   #echo "oldpad=$oldpad, newpad=$pad"
