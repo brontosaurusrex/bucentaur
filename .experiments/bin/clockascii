@@ -24,13 +24,14 @@ BASE_COLS=30
 CX=14.5
 CY=14.5
 RADIUS=14
-HOUR_LEN=9
+HOUR_LEN=11
 MIN_LEN=11
-ASPECT=0.40   # smaller = wider circle; 0.5 fits most terminals
+ASPECT=0.4   # smaller = wider circle; 0.5 fits most terminals
 
 MINCHAR="●"
 HOURCHAR="■"
 TICKCHAR="⬤"
+MIDDLECHAR=" "
 
 # scale width to compensate
 COLS=$(awk -v c="$BASE_COLS" -v a="$ASPECT" 'BEGIN{print int(c / a + 0.5)}')
@@ -56,7 +57,7 @@ everything () {
         -v hd="$HD" -v md="$MD" \
         -v hlen="$HOUR_LEN" -v mlen="$MIN_LEN" \
         -v H="$H" -v M="$M" -v S="$S" \
-        -v MINCHAR="$MINCHAR" -v HOURCHAR="$HOURCHAR" -v TICKCHAR="$TICKCHAR" '
+        -v MINCHAR="$MINCHAR" -v HOURCHAR="$HOURCHAR" -v TICKCHAR="$TICKCHAR" -v MIDDLECHAR="$MIDDLECHAR" '
 
     BEGIN {
       PI = 3.141592653589793
@@ -95,7 +96,8 @@ everything () {
         rad = (90 - deg) * PI / 180
         tx = (cx/aspect) + ((r - 1) / aspect) * cos(rad)
         ty = cy - (r - 1) * sin(rad)
-        gx = int(tx + 0.5)
+        #gx = int(tx + 0.5)
+        gx = int(tx)
         #gy = int(ty + 0.5)
         gy = int(ty)
         if (gy >= 0 && gy < rows && gx >= 0 && gx < cols)
@@ -111,7 +113,8 @@ everything () {
         py = cy - t * sin(mrad)
         #gx = int(px + 0.5)
         gx = int(px)
-        gy = int(py + 0.5)
+        #gy = int(py + 0.5)
+        gy = int(py)
         if (gx >= 0 && gx < cols && gy >= 0 && gy < rows)
           grid[gy, gx] = (t >= mlen - 1 ? MINCHAR : MINCHAR)
         t += 0.5
@@ -123,8 +126,10 @@ everything () {
       while (t <= hlen) {
         px = (cx/aspect) + (t / aspect) * cos(hrad)
         py = cy - t * sin(hrad)
-        gx = int(px + 0.5)
-        gy = int(py + 0.5)
+        #gx = int(px + 0.5)
+        gx = int(px)
+        #gy = int(py + 0.5)
+        gy = int(py)
         if (gx >= 0 && gx < cols && gy >= 0 && gy < rows)
           grid[gy, gx] = HOURCHAR
         t += 0.5
@@ -151,7 +156,7 @@ everything () {
       # }
 
 
-      grid[int(cy), int(cx/aspect)] = " "
+      grid[int(cy), int(cx/aspect)] = MIDDLECHAR
 
       # print
       y = 0
