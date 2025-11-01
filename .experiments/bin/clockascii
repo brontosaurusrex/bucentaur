@@ -36,11 +36,20 @@ MIDDLECHAR=" "
 # scale width to compensate
 COLS=$(awk -v c="$BASE_COLS" -v a="$ASPECT" 'BEGIN{print int(c / a + 0.5)}')
 
+# doCenter () {
+#     columns="$(tput cols)"
+#     pad="$((( columns - COLS ) / 2 ))"
+#     (( pad < 0 )) && pad=0
+# }
+
 doCenter () {
     columns="$(tput cols)"
-    pad="$((( columns - COLS )/2))"
+    # Adjust for true visual center
+    true_center_offset=$(awk -v cx="$CX" -v a="$ASPECT" -v c="$COLS" 'BEGIN{print int((cx/a) - (c/2))}')
+    pad="$((( columns - COLS ) / 2 - true_center_offset ))"
     (( pad < 0 )) && pad=0
 }
+
 
 everything () {
     read -r H M S < <(date '+%H %M %S')
@@ -135,11 +144,9 @@ everything () {
         t += 0.5
       }
 
-      # hour hand
-
-
-      # hrad=(90-hd)*PI/180
+      # hour hand      # hrad=(90-hd)*PI/180
       # t=0
+      # 
       # while(t<=hlen){
       #     px=(cx/aspect)+(t/aspect)*cos(hrad)
       #     py=cy-t*sin(hrad)
@@ -179,11 +186,11 @@ while true; do
   
   doCenter # get new $pad variable
 
-  #echo "oldpad=$oldpad, newpad=$pad"
   (( oldpad != pad )) && clear
 
   everything | pr -T -o "$pad"
-  sleep 10
+  #echo "oldpad=$oldpad, newpad=$pad, offset=$true_center_offset" # debug
+  sleep 1
     
   oldpad="$pad"
 
