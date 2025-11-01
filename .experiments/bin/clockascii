@@ -24,7 +24,7 @@ BASE_COLS=30
 CX=14.5
 CY=14.5
 RADIUS=14
-HOUR_LEN=11
+HOUR_LEN=9
 MIN_LEN=11
 ASPECT=0.4   # smaller = wider circle; 0.5 fits most terminals
 
