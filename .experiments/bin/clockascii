@@ -190,7 +190,7 @@ while true; do
 
   everything | pr -T -o "$pad"
   #echo "oldpad=$oldpad, newpad=$pad, offset=$true_center_offset" # debug
-  sleep 1
+  sleep 10
     
   oldpad="$pad"
 
