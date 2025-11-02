@@ -144,27 +144,7 @@ everything () {
         t += 0.5
       }
 
-      # hour hand      # hrad=(90-hd)*PI/180
-      # t=0
-      # 
-      # while(t<=hlen){
-      #     px=(cx/aspect)+(t/aspect)*cos(hrad)
-      #     py=cy-t*sin(hrad)
-      #     #gx=int(px+0.5)
-      #     gx=int(px)
-      #     gy=int(py+0.5)
-      #     if(gx>=0 && gx<cols && gy>=0 && gy<rows) {
-      #         grid[gy,gx]="■"
-      #         # extra horizontal width
-      #         if(gx+1<cols) grid[gy,gx+1]="■"
-      #         if(gx-1>=0)   grid[gy,gx-1]="■"
-      #     }
-      #     t+=0.5
-      # }
-
-
       grid[int(cy), int(cx/aspect)] = MIDDLECHAR
-
       # print
       y = 0
       while (y < rows) {
