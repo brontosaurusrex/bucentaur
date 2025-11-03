@@ -26,12 +26,13 @@ CY=14.5
 RADIUS=14
 HOUR_LEN=9
 MIN_LEN=12
-ASPECT=0.398   # smaller = wider circle; 0.5 fits most terminals
+ASPECT=0.41 # smaller = wider circle; 0.5 fits most terminals
 
 MINCHAR="●"
 HOURCHAR="■"
 TICKCHAR="⬤"
 MIDDLECHAR=" "
+COLOR="#648484" # HEX color of everything
 
 # scale width to compensate
 COLS=$(awk -v c="$BASE_COLS" -v a="$ASPECT" 'BEGIN{print int(c / a + 0.5)}')
@@ -161,6 +162,26 @@ everything () {
 
 }
 
+# Nothing to do with a clock, but a lot with the colors of the clock
+colorizehexfunc () {
+
+    hex="${1#\#}"  # strip leading '#' if present
+
+    # Validate 6-digit hex
+    if [[ ! "$hex" =~ ^[0-9A-Fa-f]{6}$ ]]; then
+      echo "Invalid color: must be 6 hex digits (e.g. FF00AA)" >&2
+      exit 1
+    fi
+
+    # Convert to RGB
+    r=$((16#${hex:0:2})); g=$((16#${hex:2:2})); b=$((16#${hex:4:2}))
+
+    # Apply color to stdin text
+    while IFS= read -r line; do
+      printf "\033[38;2;%d;%d;%dm%s\033[0m\n" "$r" "$g" "$b" "$line"
+    done
+
+}
 
 while true; do
   
@@ -168,9 +189,9 @@ while true; do
 
   (( oldpad != pad )) && clear
 
-  everything | pr -T -o "$pad"
+  everything | pr -T -o "$pad" | colorizehexfunc "$COLOR"
   #echo "oldpad=$oldpad, newpad=$pad, offset=$true_center_offset" # debug
-  sleep 10
+  sleep 2
     
   oldpad="$pad"
 
