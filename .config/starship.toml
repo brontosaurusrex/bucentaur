@@ -1,5 +1,5 @@
 [line_break]
-disabled = true
+disabled = false
 
 [username]
 format = "[$user]($style) "
@@ -10,7 +10,7 @@ show_always = false
 disabled = true
 
 [directory]
-disabled = true
+disabled = false
 
 [cmd_duration]
 min_time = 10000
