@@ -29,3 +29,7 @@ disabled = true
 disabled = true
 [golang]
 disabled = true
+
+# git, disable 'on' word
+[git_branch]
+format = "[$symbol$branch]($style) "
