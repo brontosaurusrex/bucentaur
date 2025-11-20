@@ -26,13 +26,19 @@ CY=14.5
 RADIUS=14
 HOUR_LEN=9
 MIN_LEN=12
-ASPECT=0.41 # smaller = wider circle; 0.5 fits most terminals
+# Read ASPECT from enviroment, for example set in .zshrc like
+# export ASPECT="0.4"
+# else set to some default like 0.4
+ASPECT="${ASPECT:-0.4}"
 
 MINCHAR="●"
 HOURCHAR="■"
 TICKCHAR="⬤"
 MIDDLECHAR=" "
-COLOR="#648484" # HEX color of everything
+# HEX color of everything
+# COLOR="03edf9" # synthwave blue
+# COLOR="cb4547" # orange/red
+COLOR="98da95" # green
 
 # scale width to compensate
 COLS=$(awk -v c="$BASE_COLS" -v a="$ASPECT" 'BEGIN{print int(c / a + 0.5)}')
@@ -196,3 +202,7 @@ while true; do
   oldpad="$pad"
 
 done
+
+
+
+
