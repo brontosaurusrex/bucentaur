@@ -14,3 +14,13 @@ disabled = true
 
 [cmd_duration]
 min_time = 10000
+
+# Don't guess languages dummy
+[python]
+disabled = true
+[nodejs]
+disabled = true
+[ruby]
+disabled = true
+[golang]
+disabled = true
