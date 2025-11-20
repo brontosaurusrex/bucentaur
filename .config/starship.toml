@@ -1,5 +1,9 @@
+
+# right side prompt
+right_format = """$directory"""
+
 [line_break]
-disabled = false
+disabled = true
 
 [username]
 format = "[$user]($style) "
@@ -11,6 +15,7 @@ disabled = true
 
 [directory]
 disabled = false
+truncation_length = 3
 
 [cmd_duration]
 min_time = 10000
