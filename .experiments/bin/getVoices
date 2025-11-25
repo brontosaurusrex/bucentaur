@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Download 'medium' english voices for piper to current dir
+
+wget -qO - "https://raw.githubusercontent.com/rhasspy/piper/refs/heads/master/VOICES.md" | \
+grep 'en/en_' | grep 'https' | grep 'medium' | grep -oP '\(\K[^)]+' | grep -oP '^[^?]*' | \
+wget -i -
