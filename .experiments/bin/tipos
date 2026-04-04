@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# tipos - send text or files to local LLM for typo checking
+# usage:
+# tipos "what th hec is thi?" # should return: "What the heck is this?"
+# tipos file.md file2.md
+
+# This script written by deepseek, 4. 4. 2026
+
+model="gemma4"
+
+# If no arguments provided, show usage
+if [ $# -eq 0 ]; then
+    echo "Usage:"
+    echo "  tipos \"text to check\""
+    echo "  tipos file.txt"
+    echo "  tipos file1.md file2.txt"
+    exit 1
+fi
+
+# Function to check text with ollama
+check_text() {
+    local text="$1"
+    ollama run "${model}" --think=false --nowordwrap "Fix all typos and grammatical errors in this text and return the corrected version. Just return corrected version, do not explain anything, do not share any observations please. Also check for basic math problems, like addition or substraction.
+
+Text to fix: ${text}"
+}
+
+# Process all arguments
+for input in "$@"; do
+    if [ -f "$input" ]; then
+        # It's a file - read and process it
+        echo "=== Checking file: $input ==="
+        content=$(cat "$input")
+        corrected=$(check_text "$content")
+        echo "$corrected"
+        echo ""
+    else
+        # It's text - check directly
+        echo "=== Checking text: \"$input\" ==="
+        check_text "$input"
+        echo ""
+    fi
+done
