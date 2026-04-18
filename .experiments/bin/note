@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+
+# note (chatgpt 18.4.26)
+
+set -euo pipefail
+
+NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
+INBOX="$NOTES_DIR/flow.md"
+EDITOR="${EDITOR:-hx}"
+
+mkdir -p "$NOTES_DIR"
+
+today() {
+  date +"%Y-%m-%d"
+}
+
+slugify() {
+  echo "$1" \
+    | tr '[:upper:]' '[:lower:]' \
+    | tr -cd 'a-z0-9 -' \
+    | tr ' ' '-' \
+    | sed 's/-\+/-/g'
+}
+
+latest_note() {
+  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' ! -name "$(basename "$INBOX")" \
+    -printf '%T@ %p\n' \
+    | sort -nr \
+    | head -n1 \
+    | cut -d' ' -f2-
+}
+
+new_note() {
+  local title file slug
+
+  title="${1:-note}"
+  slug="$(slugify "$title")"
+  file="$NOTES_DIR/$(today)-$slug.md"
+
+  if [[ ! -f "$file" ]]; then
+    cat > "$file" <<EOF
+---
+title: $title
+date: $(today)
+---
+EOF
+  fi
+
+  "$EDITOR" "$file"
+}
+
+list_notes() {
+  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' -printf '%f\n' \
+    | sort -r
+}
+
+cat_note() {
+  local query="${1:-}"
+  local file=""
+
+  if [[ -z "$query" ]]; then
+    file="$(latest_note)"
+  else
+    while IFS= read -r f; do
+      if [[ "${f,,}" == *"${query,,}"* ]]; then
+        file="$f"
+        break
+      fi
+    done < <(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md')
+  fi
+
+  if [[ -z "$file" ]]; then
+    echo "No match found"
+    exit 1
+  fi
+
+  cat "$file"
+}
+
+open_note() {
+  local query="${1:-}"
+  local file=""
+
+  if [[ -z "$query" ]]; then
+    file="$(latest_note)"
+  else
+    while IFS= read -r f; do
+      if [[ "${f,,}" == *"${query,,}"* ]]; then
+        file="$f"
+        break
+      fi
+    done < <(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md')
+  fi
+
+  if [[ -z "$file" ]]; then
+    echo "No match found"
+    exit 1
+  fi
+
+  "$EDITOR" "$file"
+}
+
+inbox_add() {
+  local text="$*"
+  mkdir -p "$NOTES_DIR"
+
+  echo "- $(date '+%Y-%m-%d %H:%M') $text" >> "$INBOX"
+}
+
+search_notes() {
+  [[ -z "${1:-}" ]] && return
+  grep -RIn \
+    --exclude-dir=.git \
+    --exclude-dir=node_modules \
+    --exclude='*.swp' \
+    -- "$1" "$NOTES_DIR" || true
+}
+
+usage() {
+  echo "Usage:"
+  echo "  note new \"title\""
+  echo "  note list"
+  echo "  note open [query]"
+  echo "  note cat  [query]"
+  echo "  note grep <query>"
+  echo "  note \"quick note\" (flow.md)"
+  echo "  note -h | --help"
+  echo ""
+  echo "Storage: $NOTES_DIR"
+}
+
+cmd="${1:-}"
+
+case "$cmd" in
+  new)
+    shift
+    new_note "$@"
+    ;;
+  list)
+    list_notes
+    ;;
+  open)
+    shift || true
+    open_note "$@"
+    ;;
+  cat)
+    shift || true
+    cat_note "$@"
+    ;;
+  grep)
+    shift
+    search_notes "$@"
+    ;;
+  ""|-h|--help)
+    usage
+    ;;
+  *)
+    inbox_add "$@"
+    ;;
+esac
