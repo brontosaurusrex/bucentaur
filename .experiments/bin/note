@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # note (chatgpt 18.4.26)
+# needs: fzf
 
 set -euo pipefail
 
@@ -28,6 +29,21 @@ latest_note() {
     | sort -nr \
     | head -n1 \
     | cut -d' ' -f2-
+}
+
+open_note_fzf() {
+  local file
+
+  file=$(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' ! -name "$(basename "$INBOX")" \
+    | sort -r \
+    | fzf --prompt="notes> " \
+          --preview="bat --style=numbers --color=always {} 2>/dev/null || cat {}" \
+          --height=80% \
+          --reverse)
+
+  [[ -z "$file" ]] && return
+
+  "$EDITOR" "$file"
 }
 
 new_note() {
@@ -81,16 +97,18 @@ open_note() {
   local query="${1:-}"
   local file=""
 
+  # fzf mode when no query
   if [[ -z "$query" ]]; then
-    file="$(latest_note)"
-  else
-    while IFS= read -r f; do
-      if [[ "${f,,}" == *"${query,,}"* ]]; then
-        file="$f"
-        break
-      fi
-    done < <(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md')
+    open_note_fzf
+    return
   fi
+
+  while IFS= read -r f; do
+    if [[ "${f,,}" == *"${query,,}"* ]]; then
+      file="$f"
+      break
+    fi
+  done < <(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md')
 
   if [[ -z "$file" ]]; then
     echo "No match found"
