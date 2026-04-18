@@ -211,26 +211,26 @@ usage() {
   echo "Usage:"
   echo "  note new \"title\""
   echo "  note list"
-  echo "  note open [query]"
+  echo "  note | note open [query]"
   echo "  note cat  [query]"
   echo "  note grep | search <query>"
   echo "  note \"quick note\" (flow.md)"
   echo "  note -h | --help"
-  echo ""
+  echo "  (pipe stands for or)"
   echo "Storage: $NOTES_DIR"
 }
 
 cmd="${1:-}"
 
 case "$cmd" in
-  new)
+  new|+)
     shift
     new_note "$@"
     ;;
   list)
     list_notes
     ;;
-  open)
+  ""|open)
     shift || true
     open_note "$@"
     ;;
@@ -242,7 +242,7 @@ case "$cmd" in
     shift
     search_notes "$@"
     ;;
-  ""|-h|--help)
+  -h|--help)
     usage
     ;;
   *)
