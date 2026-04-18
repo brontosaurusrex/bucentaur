@@ -212,7 +212,7 @@ usage() {
   echo "  note new \"title\""
   echo "  note list"
   echo "  note | note open [query]"
-  echo "  note cat  [query]"
+  echo "  note cat [query]"
   echo "  note grep | search <query>"
   echo "  note \"quick note\" (flow.md)"
   echo "  note -h | --help"
