@@ -24,7 +24,7 @@ slugify() {
 }
 
 latest_note() {
-  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' ! -name "$(basename "$INBOX")" \
+  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
     -printf '%T@ %p\n' \
     | sort -nr \
     | head -n1 \
@@ -34,7 +34,7 @@ latest_note() {
 open_note_fzf() {
   local file
 
-  file=$(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' ! -name "$(basename "$INBOX")" \
+  file=$(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
     | sort -r \
     | fzf --prompt="notes> " \
           --preview="bat --style=numbers --color=always {} 2>/dev/null || cat {}" \
@@ -85,10 +85,7 @@ cat_note() {
     done < <(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md')
   fi
 
-  if [[ -z "$file" ]]; then
-    echo "No match found"
-    exit 1
-  fi
+  [[ -z "$file" ]] && { echo "No match found"; exit 1; }
 
   cat "$file"
 }
@@ -110,10 +107,7 @@ open_note() {
     fi
   done < <(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md')
 
-  if [[ -z "$file" ]]; then
-    echo "No match found"
-    exit 1
-  fi
+  [[ -z "$file" ]] && { echo "No match found"; exit 1; }
 
   "$EDITOR" "$file"
 }
