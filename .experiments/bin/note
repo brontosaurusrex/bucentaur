@@ -1,16 +1,25 @@
 #!/usr/bin/env bash
 
 # note (chatgpt 18.4.26)
-# needs: fzf
-# likes: batcat
+# needs: fzf, rg (ripgrep)
+# likes: batcat (bat)
 
 set -euo pipefail
-#set -x
 
+# config dirs and files
 NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
 INBOX="$NOTES_DIR/flow.md"
 EDITOR="${EDITOR:-hx}"
 
+# check for required
+for cmd in fzf rg; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "Error: $cmd is required but not installed" >&2
+    exit 1
+  fi
+done
+
+# make notes root dir
 mkdir -p "$NOTES_DIR"
 
 today() {
@@ -33,39 +42,96 @@ latest_note() {
     | cut -d' ' -f2-
 }
 
+# open_note_fzf() {
+#   local file
+
+#   file=$(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+#     | sort -r \
+#     | fzf --prompt="notes> " \
+#           --preview="batcat --style=minimal --color=always {} 2>/dev/null || cat {}" \
+#           --height=80% \
+#           --reverse)
+
+#   [[ -z "$file" ]] && return
+
+#   "$EDITOR" "$file"
+# }
+
 open_note_fzf() {
   local file
 
-  file=$(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
-    | sort -r \
+  file=$(
+    find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+      -printf '%T@ %p\n' \
+    | sort -nr \
+    | cut -d' ' -f2- \
     | fzf --prompt="notes> " \
           --preview="batcat --style=minimal --color=always {} 2>/dev/null || cat {}" \
           --height=80% \
-          --reverse)
+          --reverse
+  )
 
   [[ -z "$file" ]] && return
 
   "$EDITOR" "$file"
 }
 
+# search_notes() {
+#   [[ -z "${1:-}" ]] && return
+
+#   local file
+
+#   file=$(grep -RIl \
+#     --exclude-dir=.git \
+#     --exclude-dir=node_modules \
+#     --exclude='*.swp' \
+#     -- "$1" "$NOTES_DIR" \
+#     | fzf --prompt="search> " \
+#           --preview="batcat --style=minimal --color=always {} 2>/dev/null || cat {}" \
+#           --height=80% \
+#           --reverse)
+
+#   [[ -z "$file" ]] && return
+
+#   "$EDITOR" "$file"
+# }
+
+# search_notes() {
+#   local query="${1:-}"
+
+#   rg -m1 --no-heading --line-number --color=always "" "$NOTES_DIR" \
+#     | fzf --ansi \
+#           --delimiter : \
+#           --prompt="search> " \
+#           --preview='batcat --style=numbers --color=always {1} --highlight-line {2} 2>/dev/null || cat {1}' \
+#           --bind "change:reload:rg --no-heading --line-number --color=always {q} '$NOTES_DIR' || true" \
+#           --phony \
+#           --query "$query" --reverse
+
+#           [[ -z "$file" ]] && return
+#           "$EDITOR" "$file"
+# }
+
 search_notes() {
-  [[ -z "${1:-}" ]] && return
+  local selection file line
 
-  local file
+  selection=$(
+    rg -m1 --no-heading --line-number --color=always "" "$NOTES_DIR" \
+      | fzf --ansi \
+            --delimiter : \
+            --prompt="search> " \
+            --preview='batcat --style=numbers --color=always {1} --highlight-line {2} 2>/dev/null || cat {1}' \
+            --bind "change:reload:rg -m1 --no-heading --line-number --color=always {q} '$NOTES_DIR' || true" \
+            --phony --reverse
+  )
 
-  file=$(grep -RIl \
-    --exclude-dir=.git \
-    --exclude-dir=node_modules \
-    --exclude='*.swp' \
-    -- "$1" "$NOTES_DIR" \
-    | fzf --prompt="search> " \
-          --preview="batcat --style=minimal --color=always {} 2>/dev/null || cat {}" \
-          --height=80% \
-          --reverse)
+  [[ -z "$selection" ]] && return
 
-  [[ -z "$file" ]] && return
+  file="${selection%%:*}"
+  line="${selection#*:}"
+  line="${line%%:*}"
 
-  "$EDITOR" "$file"
+  "$EDITOR" "$file" "+$line"
 }
 
 new_note() {
@@ -147,7 +213,7 @@ usage() {
   echo "  note list"
   echo "  note open [query]"
   echo "  note cat  [query]"
-  echo "  note grep <query>"
+  echo "  note grep | search <query>"
   echo "  note \"quick note\" (flow.md)"
   echo "  note -h | --help"
   echo ""
@@ -172,7 +238,7 @@ case "$cmd" in
     shift || true
     cat_note "$@"
     ;;
-  grep)
+  grep|search)
     shift
     search_notes "$@"
     ;;
