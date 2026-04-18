@@ -2,8 +2,10 @@
 
 # note (chatgpt 18.4.26)
 # needs: fzf
+# likes: batcat
 
 set -euo pipefail
+#set -x
 
 NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
 INBOX="$NOTES_DIR/flow.md"
@@ -37,7 +39,27 @@ open_note_fzf() {
   file=$(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
     | sort -r \
     | fzf --prompt="notes> " \
-          --preview="bat --style=numbers --color=always {} 2>/dev/null || cat {}" \
+          --preview="batcat --style=minimal --color=always {} 2>/dev/null || cat {}" \
+          --height=80% \
+          --reverse)
+
+  [[ -z "$file" ]] && return
+
+  "$EDITOR" "$file"
+}
+
+search_notes() {
+  [[ -z "${1:-}" ]] && return
+
+  local file
+
+  file=$(grep -RIl \
+    --exclude-dir=.git \
+    --exclude-dir=node_modules \
+    --exclude='*.swp' \
+    -- "$1" "$NOTES_DIR" \
+    | fzf --prompt="search> " \
+          --preview="batcat --style=minimal --color=always {} 2>/dev/null || cat {}" \
           --height=80% \
           --reverse)
 
@@ -117,15 +139,6 @@ inbox_add() {
   mkdir -p "$NOTES_DIR"
 
   echo "- $(date '+%Y-%m-%d %H:%M') $text" >> "$INBOX"
-}
-
-search_notes() {
-  [[ -z "${1:-}" ]] && return
-  grep -RIn \
-    --exclude-dir=.git \
-    --exclude-dir=node_modules \
-    --exclude='*.swp' \
-    -- "$1" "$NOTES_DIR" || true
 }
 
 usage() {
