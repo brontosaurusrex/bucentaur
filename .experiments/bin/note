@@ -209,7 +209,7 @@ inbox_add() {
 
 usage() {
   echo "Usage:"
-  echo "  note new \"title\""
+  echo "  note + | new \"title\""
   echo "  note list"
   echo "  note | note open [query]"
   echo "  note cat [query]"
