@@ -210,12 +210,12 @@ inbox_add() {
 usage() {
   echo "Usage:"
   echo "  note + | new \"title\""
-  echo "  note list"
-  echo "  note | note open [query]"
-  echo "  note cat [query]"
-  echo "  note grep | search <query>"
+  echo "  note l | list"
+  echo "  note   | open [query]"
+  echo "  note c | cat [query]"
+  echo "  note g | grep | s <query>"
   echo "  note \"quick note\" (flow.md)"
-  echo "  note -h | --help"
+  echo "  note h | -h | --help"
   echo "  (pipe stands for or)"
   echo "Storage: $NOTES_DIR"
 }
@@ -227,22 +227,22 @@ case "$cmd" in
     shift
     new_note "$@"
     ;;
-  list)
+  list|l)
     list_notes
     ;;
   ""|open)
     shift || true
     open_note "$@"
     ;;
-  cat)
+  cat|c)
     shift || true
     cat_note "$@"
     ;;
-  grep|search)
+  grep|search|g|s)
     shift
     search_notes "$@"
     ;;
-  -h|--help)
+  h|-h|--help)
     usage
     ;;
   *)
