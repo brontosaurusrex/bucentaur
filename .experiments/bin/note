@@ -59,12 +59,12 @@ search_notes() {
   local selection file line
 
   selection=$(
-    rg -m1 --no-heading --line-number --color=always "" "$NOTES_DIR" \
+    rg -i -m1 --no-heading --line-number --color=always "" "$NOTES_DIR" \
       | fzf --ansi \
             --delimiter : \
             --prompt="search> " \
             --preview='batcat --style=numbers --color=always {1} --highlight-line {2} 2>/dev/null || cat {1}' \
-            --bind "change:reload:rg -m1 --no-heading --line-number --color=always {q} '$NOTES_DIR' || true" \
+            --bind "change:reload:rg -i -m1 --no-heading --line-number --color=always {q} '$NOTES_DIR' || true" \
             --phony --reverse
   )
 
