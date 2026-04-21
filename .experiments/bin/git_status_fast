@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+NOTES_DIR="$HOME/notes"
+
+git_status_fast() {
+  local repo="$NOTES_DIR"
+
+  # not a git repo
+  git -C "$repo" rev-parse --is-inside-work-tree &>/dev/null || return
+
+  # dirty check (fast)
+  if [[ -n "$(git -C "$repo" status --porcelain)" ]]; then
+    echo "✗ dirty"
+    return
+  fi
+
+  # ahead/behind without fetch
+  local status
+  status=$(git -C "$repo" status -sb 2>/dev/null)
+
+  if [[ "$status" == *"[ahead "* ]]; then
+    echo "↑ ahead"
+    return
+  fi
+
+  # optional: lazy fetch (only sometimes)
+  if [[ ! -f "$repo/.last_fetch" || $(find "$repo/.last_fetch" -mmin +1 2>/dev/null) ]]; then
+    git -C "$repo" fetch -q &>/dev/null || true
+    touch "$repo/.last_fetch"
+  fi
+
+  status=$(git -C "$repo" status -sb 2>/dev/null)
+
+  if [[ "$status" == *"[behind "* ]]; then
+    echo "↓ behind"
+    return
+  fi
+
+  echo "✓ clean"
+}
+
+git_status_fast
