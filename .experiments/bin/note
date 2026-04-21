@@ -37,14 +37,6 @@ slugify() {
   echo "$input"
 }
 
-latest_note() {
-  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
-    -printf '%T@ %p\n' \
-    | sort -nr \
-    | head -n1 \
-    | cut -d' ' -f2-
-}
-
 open_note_fzf() {
   local file
 
@@ -142,8 +134,18 @@ EOF
 }
 
 list_notes() {
-  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' -printf '%f\n' \
-    | sort -r
+  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+    -printf '%T@ %f\n' \
+  | sort -n \
+  | cut -d' ' -f2-
+}
+
+latest_note() {
+  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+    -printf '%T@ %p\n' \
+    | sort -nr \
+    | head -n1 \
+    | cut -d' ' -f2-
 }
 
 cat_note() {
