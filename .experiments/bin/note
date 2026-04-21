@@ -59,17 +59,20 @@ open_note_fzf() {
 }
 
 search_notes() {
+  local query="${1:-}"
   local selection file line
 
   selection=$(
-    rg -i -m1 --no-heading --line-number --color=always "" "$NOTES_DIR" \
+    rg -i -m1 --no-heading --line-number --color=always "${query:-}" "$NOTES_DIR" \
       | fzf --ansi \
             --delimiter : \
             --prompt="search> " \
             --preview='batcat --style=numbers --color=always {1} --highlight-line {2} 2>/dev/null || cat {1}' \
             --bind "change:reload:rg -i -m1 --no-heading --line-number --color=always {q} '$NOTES_DIR' || true" \
+            --phony \
+            --query "$query" \
             --height=80% \
-            --phony --reverse
+            --reverse
   )
 
   [[ -z "$selection" ]] && return
@@ -225,7 +228,7 @@ case "$cmd" in
     cat_note "$@"
     ;;
   grep|search|g|s)
-    shift
+    shift || true
     search_notes "$@"
     ;;
   h|-h|--help)
