@@ -65,6 +65,7 @@ search_notes() {
             --prompt="search> " \
             --preview='batcat --style=numbers --color=always {1} --highlight-line {2} 2>/dev/null || cat {1}' \
             --bind "change:reload:rg -i -m1 --no-heading --line-number --color=always {q} '$NOTES_DIR' || true" \
+            --height=80% \
             --phony --reverse
   )
 
