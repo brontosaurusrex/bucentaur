@@ -213,7 +213,7 @@ case "$cmd" in
   list|l)
     list_notes
     ;;
-  ""|open)
+  ""|open|o)
     shift || true
     open_note "$@"
     ;;
