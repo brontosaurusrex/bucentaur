@@ -4,6 +4,9 @@
 # needs: fzf, rg
 # likes: batcat
 
+# written mostly by chatgpt (ai) in april 2026
+# brex production
+
 set -euo pipefail
 
 NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
