@@ -1,0 +1,231 @@
+#!/usr/bin/env bash
+
+# note (clean + dedupe, fixed slug logic)
+# needs: fzf, rg
+# likes: batcat
+
+set -euo pipefail
+
+NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
+EDITOR="${EDITOR:-hx}"
+
+# deps
+for cmd in fzf rg; do
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "Error: $cmd is required" >&2
+    exit 1
+  fi
+done
+
+mkdir -p "$NOTES_DIR"
+
+today() {
+  date +"%Y-%m-%d"
+}
+
+slugify() {
+  local input="${1:-}"
+
+  input="$(echo "$input" \
+    | tr '[:upper:]' '[:lower:]' \
+    | tr -cd 'a-z0-9 -' \
+    | tr ' ' '-' \
+    | sed 's/-\+/-/g' \
+    | sed 's/^-//' \
+    | sed 's/-$//')"
+
+  echo "$input"
+}
+
+latest_note() {
+  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+    -printf '%T@ %p\n' \
+    | sort -nr \
+    | head -n1 \
+    | cut -d' ' -f2-
+}
+
+open_note_fzf() {
+  local file
+
+  file=$(
+    find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+      -printf '%T@ %p\n' \
+    | sort -nr \
+    | cut -d' ' -f2- \
+    | fzf --prompt="notes> " \
+          --preview="batcat --style=minimal --color=always {} 2>/dev/null || cat {}" \
+          --height=80% \
+          --reverse
+  )
+
+  [[ -z "$file" ]] && return
+  "$EDITOR" "$file"
+}
+
+search_notes() {
+  local selection file line
+
+  selection=$(
+    rg -m1 --no-heading --line-number --color=always "" "$NOTES_DIR" \
+      | fzf --ansi \
+            --delimiter : \
+            --prompt="search> " \
+            --preview='batcat --style=numbers --color=always {1} --highlight-line {2} 2>/dev/null || cat {1}' \
+            --bind "change:reload:rg -m1 --no-heading --line-number --color=always {q} '$NOTES_DIR' || true" \
+            --phony --reverse
+  )
+
+  [[ -z "$selection" ]] && return
+
+  file="${selection%%:*}"
+  line="${selection#*:}"
+  line="${line%%:*}"
+
+  "$EDITOR" "$file" "+$line"
+}
+
+create_note() {
+  local text="$*"
+  local title slug file
+
+  [[ -z "$text" ]] && return
+
+  title="$text"
+
+  # robust slug: full text → slugify → trim to 5 parts
+  slug="$(slugify "$text" | cut -d- -f1-5)"
+  [[ -z "$slug" ]] && slug="note"
+
+  file="$NOTES_DIR/$(today)-$slug.md"
+
+  # dedupe: reopen if exists
+  if [[ -f "$file" ]]; then
+    "$EDITOR" "$file"
+    return
+  fi
+
+  cat > "$file" <<EOF
+---
+title: $title
+date: $(today)
+---
+$title
+EOF
+
+  "$EDITOR" "$file"
+}
+
+new_note() {
+  local title slug file
+
+  title="${*:-note}"
+
+  slug="$(slugify "$title" | cut -d- -f1-5)"
+  [[ -z "$slug" ]] && slug="note"
+
+  file="$NOTES_DIR/$(today)-$slug.md"
+
+  if [[ -f "$file" ]]; then
+    "$EDITOR" "$file"
+    return
+  fi
+
+  cat > "$file" <<EOF
+---
+title: $title
+date: $(today)
+---
+EOF
+
+  "$EDITOR" "$file"
+}
+
+list_notes() {
+  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' -printf '%f\n' \
+    | sort -r
+}
+
+cat_note() {
+  local query="${1:-}"
+  local file=""
+
+  if [[ -z "$query" ]]; then
+    file="$(latest_note)"
+  else
+    while IFS= read -r f; do
+      if [[ "${f,,}" == *"${query,,}"* ]]; then
+        file="$f"
+        break
+      fi
+    done < <(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md')
+  fi
+
+  [[ -z "$file" ]] && { echo "No match found"; exit 1; }
+
+  cat "$file"
+}
+
+open_note() {
+  local query="${1:-}"
+  local file=""
+
+  if [[ -z "$query" ]]; then
+    open_note_fzf
+    return
+  fi
+
+  while IFS= read -r f; do
+    if [[ "${f,,}" == *"${query,,}"* ]]; then
+      file="$f"
+      break
+    fi
+  done < <(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md')
+
+  [[ -z "$file" ]] && { echo "No match found"; exit 1; }
+
+  "$EDITOR" "$file"
+}
+
+usage() {
+  echo "Usage:"
+  echo "  note \"text\"         → create/reopen note"
+  echo "  note new \"title\"    → explicit title"
+  echo "  note l              → list"
+  echo "  note                → open (fzf)"
+  echo "  note c              → cat latest"
+  echo "  note s              → search (rg|fzf)"
+  echo "  note h              → help"
+  echo ""
+  echo "Storage: $NOTES_DIR"
+}
+
+cmd="${1:-}"
+
+case "$cmd" in
+  new|+)
+    shift
+    new_note "$@"
+    ;;
+  list|l)
+    list_notes
+    ;;
+  ""|open)
+    shift || true
+    open_note "$@"
+    ;;
+  cat|c)
+    shift || true
+    cat_note "$@"
+    ;;
+  grep|search|g|s)
+    shift
+    search_notes "$@"
+    ;;
+  h|-h|--help)
+    usage
+    ;;
+  *)
+    create_note "$@"
+    ;;
+esac
