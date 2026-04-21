@@ -199,9 +199,9 @@ open_note() {
 usage() {
   echo "Usage:"
   echo "  note \"text\"         → create/reopen note"
-  echo "  note new \"title\"    → explicit title"
+  echo "  note n \"title\"      → create new with explicit title"
   echo "  note l              → list"
-  echo "  note                → open (fzf)"
+  echo "  note o              → open (fzf)"
   echo "  note c              → cat latest"
   echo "  note s              → search (rg|fzf)"
   echo "  note h              → help"
@@ -212,7 +212,7 @@ usage() {
 cmd="${1:-}"
 
 case "$cmd" in
-  new|+)
+  new|+|n)
     shift
     new_note "$@"
     ;;
