@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 
-# note (clean + dedupe, fixed slug logic)
+# note (clean + dedupe + git sync)
 # needs: fzf, rg
-# likes: batcat
 
 # written mostly by chatgpt (ai) in april 2026
 # brex production
 
 set -euo pipefail
+# set -x
 
 NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
 EDITOR="${EDITOR:-hx}"
+export FZF_DEFAULT_OPTS="--color=fg:-1,bg:-1,hl:-1,fg+:-1,bg+:-1,hl+:-1,info:-1,prompt:-1,spinner:-1,pointer:-1,marker:-1,border:-1,preview-border:-1"
 
 # deps
 for cmd in fzf rg; do
@@ -40,6 +41,51 @@ slugify() {
   echo "$input"
 }
 
+# ----------------------------
+# git sync (auto + manual)
+# ----------------------------
+
+note_sync() {
+  local repo="$NOTES_DIR"
+  local stamp="$repo/.git/.last_sync_day"
+  local today_str
+  local forced="${1:-}"
+
+  # not a git repo
+  if ! git -C "$repo" rev-parse --git-dir &>/dev/null 2>&1; then
+    [[ "$forced" == "force" ]] && echo "note: $repo is not a git repository"
+    return 0
+  fi
+
+  today_str="$(date +%Y-%m-%d)"
+
+  # only once per day unless forced
+  if [[ "$forced" != "force" ]]; then
+    [[ -f "$stamp" && "$(cat "$stamp")" == "$today_str" ]] && return 0
+  fi
+
+  # skip if nothing changed
+  if [[ -z "$(git -C "$repo" status --porcelain 2>/dev/null)" ]]; then
+    [[ "$forced" == "force" ]] && echo "note: nothing to sync"
+    echo "$today_str" > "$stamp"
+    return 0
+  fi
+
+  git -C "$repo" add -A
+  git -C "$repo" commit -m "notes: auto-sync $(date '+%H:%M')" &>/dev/null || true
+  git -C "$repo" pull --rebase --autostash --quiet &>/dev/null || true
+  git -C "$repo" push --quiet &>/dev/null || true
+
+  echo "$today_str" > "$stamp"
+
+  [[ "$forced" == "force" ]] && echo "note: synced"
+}
+
+# run auto-sync (safe, cheap)
+note_sync
+
+
+
 open_note_fzf() {
   local file
 
@@ -49,7 +95,7 @@ open_note_fzf() {
     | sort -nr \
     | cut -d' ' -f2- \
     | fzf --prompt="notes> " \
-          --preview="batcat --style=minimal --color=always {} 2>/dev/null || cat {}" \
+          --preview="cat {}" \
           --height=80% \
           --reverse
   )
@@ -63,16 +109,16 @@ search_notes() {
   local selection file line
 
   selection=$(
-    rg -i -m1 --no-heading --line-number --color=always "${query:-}" "$NOTES_DIR" \
-      | fzf --ansi \
-            --delimiter : \
-            --prompt="search> " \
-            --preview='batcat --style=numbers --color=always {1} --highlight-line {2} 2>/dev/null || cat {1}' \
-            --bind "change:reload:rg -i -m1 --no-heading --line-number --color=always {q} '$NOTES_DIR' || true" \
-            --phony \
-            --query "$query" \
-            --height=80% \
-            --reverse
+    rg -i -m1 --no-heading --line-number --color=never "$query" "$NOTES_DIR" \
+      | fzf \
+          --delimiter : \
+          --prompt="search> " \
+          --preview='cat {1}' \
+          --bind "change:reload:rg -i -m1 --no-heading --line-number --color=never {q} '$NOTES_DIR' || true" \
+          --phony \
+          --query "$query" \
+          --height=80% \
+          --reverse
   )
 
   [[ -z "$selection" ]] && return
@@ -92,13 +138,11 @@ create_note() {
 
   title="$text"
 
-  # robust slug: full text → slugify → trim to 5 parts
   slug="$(slugify "$text" | cut -d- -f1-5)"
   [[ -z "$slug" ]] && slug="note"
 
   file="$NOTES_DIR/$(today)-$slug.md"
 
-  # dedupe: reopen if exists
   if [[ -f "$file" ]]; then
     "$EDITOR" "$file"
     return
@@ -109,6 +153,7 @@ create_note() {
 title: $title
 date: $(today)
 ---
+
 $title
 EOF
 
@@ -143,16 +188,16 @@ EOF
 list_notes() {
   find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
     -printf '%T@ %f\n' \
-  | sort -n \
+  | sort -nr \
   | cut -d' ' -f2-
 }
 
 latest_note() {
   find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
     -printf '%T@ %p\n' \
-    | sort -nr \
-    | head -n1 \
-    | cut -d' ' -f2-
+  | sort -nr \
+  | head -n1 \
+  | cut -d' ' -f2-
 }
 
 cat_note() {
@@ -199,11 +244,12 @@ open_note() {
 usage() {
   echo "Usage:"
   echo "  note \"text\"         → create/reopen note"
-  echo "  note n \"title\"      → create new with explicit title"
+  echo "  note n \"title\"      → explicit title"
   echo "  note l              → list"
   echo "  note o              → open (fzf)"
   echo "  note c              → cat latest"
-  echo "  note s              → search (rg|fzf)"
+  echo "  note s              → search"
+  echo "  note sync           → git sync"
   echo "  note h              → help"
   echo ""
   echo "Storage: $NOTES_DIR"
@@ -230,6 +276,9 @@ case "$cmd" in
   grep|search|g|s)
     shift || true
     search_notes "$@"
+    ;;
+  sync)
+    note_sync force
     ;;
   h|-h|--help)
     usage
