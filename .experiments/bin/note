@@ -259,7 +259,7 @@ usage() {
   echo "  note o              → open (fzf)"
   echo "  note c              → cat latest"
   echo "  note s              → search"
-  echo "  note sync           → git sync"
+  #echo "  note sync           → git sync"
   echo "  note h              → help"
   echo ""
   echo "Storage: $NOTES_DIR"
@@ -287,9 +287,10 @@ case "$cmd" in
     shift || true
     search_notes "$@"
     ;;
-  sync)
-    note_sync force
-    ;;
+# not working as expected, so disabled, maybe just git status should be fine?
+#  sync)
+#    note_sync force
+#    ;;
   h|-h|--help)
     usage
     ;;
