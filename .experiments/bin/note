@@ -68,6 +68,8 @@ open_note_fzf() {
   "$EDITOR" "$file"
 }
 
+# unlike open_note_fzf, search_notes is curently not limited to *.md files
+
 search_notes() {
   local query="${1:-}"
   local selection file line
