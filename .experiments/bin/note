@@ -81,8 +81,10 @@ note_sync() {
   [[ "$forced" == "force" ]] && echo "note: synced"
 }
 
-# run auto-sync (safe, cheap)
-note_sync
+# run auto-sync (will autorun when script starts, but only once)
+# disabled until I understand this
+
+#note_sync
 
 
 
