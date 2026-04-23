@@ -19,7 +19,7 @@ for ed in "${EDITOR:-}" hx vim nano; do
     fi
 done
 
-# this should now also work with older versions of fzf, if not comment out
+# this should now also work with older versions of fzf, if not comment out next line:
 export FZF_DEFAULT_OPTS="--color=fg:-1,bg:-1,hl:-1,fg+:-1,bg+:-1,hl+:-1,info:-1,prompt:-1,spinner:-1,pointer:-1,marker:-1,border:-1"
 
 # deps
@@ -49,53 +49,6 @@ slugify() {
 
   echo "$input"
 }
-
-# ----------------------------
-# git sync (auto + manual)
-# ----------------------------
-
-note_sync() {
-  local repo="$NOTES_DIR"
-  local stamp="$repo/.git/.last_sync_day"
-  local today_str
-  local forced="${1:-}"
-
-  # not a git repo
-  if ! git -C "$repo" rev-parse --git-dir &>/dev/null 2>&1; then
-    [[ "$forced" == "force" ]] && echo "note: $repo is not a git repository"
-    return 0
-  fi
-
-  today_str="$(date +%Y-%m-%d)"
-
-  # only once per day unless forced
-  if [[ "$forced" != "force" ]]; then
-    [[ -f "$stamp" && "$(cat "$stamp")" == "$today_str" ]] && return 0
-  fi
-
-  # skip if nothing changed
-  if [[ -z "$(git -C "$repo" status --porcelain 2>/dev/null)" ]]; then
-    [[ "$forced" == "force" ]] && echo "note: nothing to sync"
-    echo "$today_str" > "$stamp"
-    return 0
-  fi
-
-  git -C "$repo" add -A
-  git -C "$repo" commit -m "notes: auto-sync $(date '+%H:%M')" &>/dev/null || true
-  git -C "$repo" pull --rebase --autostash --quiet &>/dev/null || true
-  git -C "$repo" push --quiet &>/dev/null || true
-
-  echo "$today_str" > "$stamp"
-
-  [[ "$forced" == "force" ]] && echo "note: synced"
-}
-
-# run auto-sync (will autorun when script starts, but only once)
-# disabled until I understand this
-
-#note_sync
-
-
 
 open_note_fzf() {
   local file
@@ -287,10 +240,6 @@ case "$cmd" in
     shift || true
     search_notes "$@"
     ;;
-# not working as expected, so disabled, maybe just git status should be fine?
-#  sync)
-#    note_sync force
-#    ;;
   h|-h|--help)
     usage
     ;;
