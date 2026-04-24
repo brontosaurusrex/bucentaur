@@ -58,7 +58,7 @@ open_note_fzf() {
       -printf '%T@ %p\n' \
     | sort -nr \
     | cut -d' ' -f2- \
-    | fzf --prompt="notes> " \
+    | fzf --prompt="open> " \
           --preview="cat {}" \
           --height=80% \
           --reverse
