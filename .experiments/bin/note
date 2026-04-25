@@ -20,7 +20,7 @@ for ed in "${EDITOR:-}" hx vim nano; do
 done
 
 # this should now also work with older versions of fzf, if not comment out next line:
-export FZF_DEFAULT_OPTS="--color=fg:-1,bg:-1,hl:-1,fg+:-1,bg+:-1,hl+:-1,info:-1,prompt:-1,spinner:-1,pointer:-1,marker:-1,border:-1"
+export FZF_DEFAULT_OPTS="--pointer='>' --color=fg:-1,bg:-1,hl:-1,fg+:-1,bg+:-1,hl+:-1,info:-1,prompt:-1,spinner:-1,pointer:-1,marker:-1,border:-1"
 
 # deps
 for cmd in fzf rg; do
