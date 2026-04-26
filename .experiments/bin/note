@@ -206,15 +206,57 @@ open_note() {
   "$EDITOR" "$file"
 }
 
+remove_note() {
+  local file trash_dir target
+
+  trash_dir="$NOTES_DIR/.trash"
+  mkdir -p "$trash_dir"
+
+  file=$(
+    find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+      -printf '%T@ %f\n' \
+    | sort -nr \
+    | cut -d' ' -f2- \
+    | fzf --prompt="trash> " \
+          --pointer=">" \
+          --color="pointer:red" \
+          --preview='cat "'"$NOTES_DIR"'"/{}' \
+          --height=80% \
+          --reverse
+  )
+
+  [[ -z "$file" ]] && return
+
+  printf "Move '%s' to trash? [y/N] " "$file"
+  read -r confirm
+
+  if [[ ! "$confirm" =~ ^[yY]$ ]]; then
+    echo "Aborted"
+    return
+  fi
+
+  target="$trash_dir/$file"
+
+  # handle name collisions in trash
+  if [[ -e "$target" ]]; then
+    target="$trash_dir/$(date +%s)-$file"
+  fi
+
+  mv -- "$NOTES_DIR/$file" "$target"
+  echo "Moved to trash: $file"
+}
+
+
+
 usage() {
   echo "Usage:"
   echo "  note \"text\"         → create/reopen note"
   echo "  note n \"title\"      → explicit title"
   echo "  note l              → list"
   echo "  note o              → open (fzf)"
+  echo "  note s              → search (rg|fzf)"
   echo "  note c              → cat latest"
-  echo "  note s              → search"
-  #echo "  note sync           → git sync"
+  echo "  note rm             → move to .trash"
   echo "  note h              → help"
   echo ""
   echo "Storage: $NOTES_DIR"
@@ -233,6 +275,10 @@ case "$cmd" in
   ""|open|o)
     shift || true
     open_note "$@"
+    ;;
+  remove|rm) 
+    shift || true
+    remove_note "$@"
     ;;
   cat|c)
     shift || true
