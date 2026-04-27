@@ -1,0 +1,5 @@
+inherits = "flatwhite"
+
+"ui.virtual.jump-label" = { fg = "#44403a", bg = "#ddd0bd", modifiers = ["bold"] }
+"ui.cursor.match" = { fg = "#44403a", bg = "#ddc7bd", modifiers = ["bold"] }
+

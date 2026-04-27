@@ -1,0 +1,123 @@
+# Synthwave '84 theme for Helix
+# Save this file as: ~/.config/helix/themes/synthwave84.toml
+# Then in your Helix config (config.toml) set `theme = "synthwave84"`
+
+[metadata]
+name = "synthwave84"
+author = "Generated with ChatGPT"
+version = "1.0"
+
+# Palette (synthwave / retro neon inspired)
+[colors]
+background = "#0b0611"    # deep midnight
+surface = "#1a0f2b"       # dark purple surface
+foreground = "#e6e6f0"    # soft off-white
+muted = "#9b88a9"
+accent_pink = "#ff6ac1"
+accent_magenta = "#ff4fa3"
+accent_cyan = "#66f6ff"
+accent_blue = "#6ea6ff"
+accent_orange = "#ff9b55"
+accent_yellow = "#ffd166"
+accent_violet = "#b07bff"
+accent_green = "#7ef7c2"
+
+# UI colors
+[ui]
+background = "${colors.background}"
+foreground = "${colors.foreground}"
+cursor = "${colors.accent_pink}"
+selection = "#2a1130"
+line_number = "#6a5a77"
+gutter = "#100718"
+accent = "${colors.accent_magenta}"
+panel = "${colors.surface}"
+status_fg = "${colors.background}"
+status_bg = "${colors.accent_violet}"
+search_bg = "#3a1a3a"
+match_paren = "${colors.accent_yellow}"
+
+# Tokens / syntax highlighting
+# Common token names used by Helix themes. If Helix changes keys you can adapt these.
+[token.generic]
+# Fallbacks
+text = "${colors.foreground}"
+background = "${colors.background}"
+
+[token.comment]
+foreground = "#8b6f92"
+italic = true
+
+[token.keyword]
+foreground = "${colors.accent_pink}"
+bold = true
+
+[token.operator]
+foreground = "${colors.accent_cyan}"
+
+[token.function]
+foreground = "${colors.accent_blue}"
+bold = true
+
+[token.variable]
+foreground = "${colors.foreground}"
+
+[token.string]
+foreground = "${colors.accent_green}"
+
+[token.number]
+foreground = "${colors.accent_orange}"
+
+[token.constant]
+foreground = "${colors.accent_yellow}"
+
+[token.type]
+foreground = "${colors.accent_violet}"
+bold = true
+
+[token.punctuation]
+foreground = "${colors.muted}"
+
+[token.attribute]
+foreground = "${colors.accent_cyan}"
+
+[token.tag]
+foreground = "${colors.accent_magenta}"
+
+# Diagnostics
+[diagnostic.error]
+fg = "#ff6b6b"
+bold = true
+
+[diagnostic.warn]
+fg = "#ffb86b"
+
+[diagnostic.info]
+fg = "${colors.accent_blue}"
+
+[diagnostic.hint]
+fg = "${colors.accent_green}"
+
+# Additional UI elements mapping (statusbar, tabs, popups)
+[ui.status]
+fg = "${ui.status_fg}"
+bg = "${ui.status_bg}"
+
+[ui.tabs]
+active_fg = "${colors.background}"
+active_bg = "${colors.accent_pink}"
+inactive_fg = "${colors.muted}"
+inactive_bg = "${colors.surface}"
+
+[ui.popup]
+fg = "${colors.foreground}"
+bg = "${colors.surface}"
+
+# Optional: cursor line and selection highlights
+[ui.cursor_line]
+bg = "#110421"
+
+[ui.selection_highlight]
+bg = "#241025"
+
+# End of theme

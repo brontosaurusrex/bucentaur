@@ -1,0 +1,34 @@
+inherits = "dracula"
+
+"punctuation" = "foreground_two"
+"punctuation.bracket" = "foreground_two"
+"punctuation.delimiter" = "foreground_two"
+"ui.virtual" = { fg = "purple_dim" }
+"ui.virtual.inlay-hint" = { fg = "purple_dim" }
+"ui.virtual.inlay-hint.parameter" = { fg = "purple_dim" }
+"ui.virtual.inlay-hint.type" = { fg = "purple_dim" }
+"ui.virtual.jump-label" = { fg = "purple_dim" }
+'ui.window' = { fg="grey" }
+
+[palette]
+background        = "#1b1926"
+black             = "#1f1d2c"
+comment           = "#6D6550"
+current_line      = "#3e284e"
+cursorline        = "#26242e"
+cyan              = "#8cfaf3"
+purple_dim        = "#847dac"
+darker            = "#121117"
+foreground        = "#fbe8cf"
+foreground_two    = "#c5ae8f"
+green             = "#8cfa97" 
+grey              = "#666666"
+indent            = "#56596a"
+orange            = "#facc8c" 
+pink              = "#ed8cfa"
+purple            = "#b48cfa" 
+red               = "#fa8c8c"
+selection         = "#363848"
+whitespace        = "#586693"
+yellow            = "#f1fa8c" 
+
