@@ -291,6 +291,12 @@ case "$cmd" in
   h|-h|--help)
     usage
     ;;
+  pull)
+  git -C "$NOTES_DIR" pull
+  ;;
+  push)
+  git -C "$NOTES_DIR" add . && git -C "$NOTES_DIR" commit -m "note commit" &&  git -C "$NOTES_DIR" push
+  ;;
   *)
     create_note "$@"
     ;;
