@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+# noteurls (open last n urls found in notes)
+# usage:
+# noteurls        # last note
+# noteurls 3      # last 3 notes
+
+set -euo pipefail
+
+NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
+N="${1:-1}"
+
+# --- cross-platform opener ---
+open_url() {
+  local url="$1"
+
+  if grep -qi microsoft /proc/version 2>/dev/null; then
+    # WSL2 → use Windows browser
+    cmd.exe /c start "" "$url" >/dev/null 2>&1
+  elif command -v xdg-open >/dev/null 2>&1; then
+    # Linux
+    xdg-open "$url" >/dev/null 2>&1 &
+  elif command -v open >/dev/null 2>&1; then
+    # macOS
+    open "$url"
+  else
+    echo "No opener found for: $url"
+  fi
+}
+
+# --- get last N notes ---
+mapfile -t files < <(
+  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+    -printf '%T@ %p\n' \
+  | sort -nr \
+  | head -n "$N" \
+  | cut -d' ' -f2-
+)
+
+[[ ${#files[@]} -eq 0 ]] && {
+  echo "No notes found"
+  exit 0
+}
+
+# --- extract URLs ---
+mapfile -t urls < <(
+  grep -hEo 'https?://[^ )"]+' "${files[@]}" \
+  | sort -u
+)
+
+[[ ${#urls[@]} -eq 0 ]] && {
+  echo "No URLs found"
+  exit 0
+}
+
+# --- open URLs ---
+for url in "${urls[@]}"; do
+  echo "Opening: $url"
+  open_url "$url"
+done
