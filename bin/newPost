@@ -1,83 +1,48 @@
 #!/bin/bash
+set -euo pipefail
 
-# make new jekyll _post
-# usage: newPost "the post title" tag1 tag2 tagN
+[[ $# -lt 1 ]] && echo "usage: newPost \"title\" tag1 tag2 ..." && exit 1
 
-# brontosaurusrex 2018
+blog_root="/home/b/blog/brontosaurusrex.github.io"
+[[ ! -d "$blog_root" ]] && echo "$blog_root not found" && exit 1
 
-postname=${1// /-} # replace spaces with -
+title="$1"
+shift
 
-[[ -z "$postname" ]] && echo "usage: newPost \"the post title\" tag1 tag2 tag3" && exit 1
-
-# configure this next line
-blog_root="/home/b/source/brontosaurusrex.github.io"
-
-[[ ! -d "$blog_root" ]] && echo "$blog_root not found, exiting" && exit 1
-
+postname=$(echo "$title" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/-\+/-/g; s/^-//; s/-$//')
 today=$(date +%Y-%m-%d)
-
 post="${blog_root}/_posts/${today}-${postname}.md"
 
-# if file is already there, just open it with geany
-file="$post"
-if [ -f "$file" ]; then
-    echo "already there"
-    # just edit with something
-    # configure this next line 
-    vim "$post" 
-    echo "just opening file"
+editor="${EDITOR:-hx}"
+
+if [ -f "$post" ]; then
+    echo "already exists, opening"
+    "$editor" "$post"
     exit 0
 fi
 
-echo "---" > "$post"
-echo "published: true" >> "$post"
-echo "layout: post" >> "$post"
+validtag=(audio bash blender books cli linux luv mine misc nvidia video web ai chess)
 
-# now in utc, due to netifly 
-# Universal Time is often called “Greenwich Mean Time” (GMT) for historical reasons.
-jdate=$(date -u +"%Y-%m-%d %H:%M")
+jdate=$(date -u +"%Y-%m-%d %H:%M +0000")
 
-# date: '2018-03-02 16:54 +0100'
+tmp=$(mktemp)
 
-echo "date: '$jdate'" >> "$post"
-echo "title: $1" >> "$post"
+{
+echo "---"
+echo "published: true"
+echo "layout: post"
+echo "date: '$jdate'"
+echo "title: \"$title\""
+echo -n "tags: "
 
-# tags: jekyll blog github-page
-
-shift # assume the rest are tags
-echo -n "tags: " >> "$post"
-
-# compare each tag with list of valid tags
-while [ $# -gt 0 ]; do
-    # configure this next line
-    validtag=("linux" "mine" "blender" "cli" "video" "web" "misc" "bash" "luv" "audio" "crypto" "books")
-    tag="$1"
-    for item in ${validtag[@]}; do
-       echo ${item}
-       if [ "${item}" = "${tag}" ]; then
-            echo -n "$item " >> "$post"
-       fi
-    done
-shift
+for tag in "$@"; do
+    [[ " ${validtag[*]} " == *" $tag "* ]] && echo -n "$tag "
 done
 
+echo
+echo "---"
+} > "$tmp"
 
-# ending
-echo >> "$post"
-echo "---" >> "$post"
+mv "$tmp" "$post"
 
-# edit with something
-# configure this next line 
-vim "$post" 
-
-exit
-
-# Example front matter:
----
-published: true
-layout: post
-date: '2018-03-02 16:54'
-title: git cli credentials
-tags: cli
----
-
+"$editor" "$post"
