@@ -246,20 +246,167 @@ remove_note() {
   echo "Moved to trash: $file"
 }
 
-
-
 usage() {
-  echo "Usage:"
-  echo "  note \"text\"         → create/reopen note"
-  echo "  note n \"title\"      → explicit title"
-  echo "  note l              → list"
-  echo "  note o              → open (fzf)"
-  echo "  note s              → search (rg|fzf)"
-  echo "  note c              → cat latest"
-  echo "  note rm             → move to .trash"
-  echo "  note h              → help"
-  echo ""
+  cat <<'EOF'
+Usage:
+
+  note n "title"          → new note with explicit title
+  note "text"             → create/reopen note
+  note l                  → list
+  note o                  → open (fzf)
+  note s                  → search (rg|fzf)
+  note c                  → cat latest
+  note rm                 → move to .trash
+  note pull               → git pull
+  note push               → git push
+  note --longhelp | less  → full help
+  note h                  → this help
+
+EOF
   echo "Storage: $NOTES_DIR"
+}
+
+longhelp() {
+  cat <<'EOF'
+NAME
+    note - simple note manager
+
+SYNOPSIS
+    note [command] [arguments]
+
+DESCRIPTION
+    note is a fast, minimal note-taking tool that stores notes as plain
+    text/markdown files in $NOTES_DIR (default: ~/notes).
+
+    It provides:
+      - fast fuzzy navigation (fzf)
+      - full-text search (ripgrep)
+      - quick note creation
+      - optional git sync
+
+    Notes are stored as:
+        YYYY-MM-DD-slug.md
+
+COMMANDS
+
+    (default)
+        note [text]
+        Create or reopen a note using the given text.
+
+    new, n, +
+        Create a new note with explicit title.
+
+    open, o
+        Open a note:
+          no args → fzf picker
+          query   → first filename match
+
+    list, l
+        List notes (sorted by modification time).
+
+    search, s, g, grep
+        Full-text search (rg + fzf).
+        Opens file at matching line.
+
+    cat, c
+        Print note contents:
+          no args → latest note
+          query   → first match
+
+    remove, rm
+        Move a note to .trash (interactive).
+
+    pull
+        git pull (inside NOTES_DIR)
+
+    push
+        git add + commit + push
+
+    help, h
+        Short help
+
+    --longhelp
+        This page
+
+
+FILES
+
+    $NOTES_DIR/*.md
+        Notes
+
+    $NOTES_DIR/.trash/
+        Deleted notes
+
+
+ENVIRONMENT
+
+    NOTES_DIR
+        Notes location (default: ~/notes)
+
+    EDITOR
+        Editor to use (fallback: hx → vim → nano)
+
+
+EXAMPLES
+
+    note "fix audio bug"
+        Create a quick note
+
+    note n "Project ideas"
+        Create structured note
+
+    note o
+        Open via fzf
+
+    note o mpv
+        Open matching note
+
+    note s audio
+        Search inside notes
+
+    note c
+        Print latest note
+
+    note rm
+        Delete note (to trash)
+
+    note push
+    note pull
+        Sync with git
+
+
+BEHAVIOR
+
+    • Titles are slugified:
+        "My Idea!!!" → my-idea
+
+    • Slugs are truncated (~5 words)
+
+    • Duplicate note (same day/title):
+        → reopened instead of recreated
+
+
+DEPENDENCIES
+
+    Required:
+        fzf
+        rg
+
+    Optional:
+        git
+
+
+EXIT STATUS
+
+    0  success
+    1  failure
+
+
+AUTHOR
+
+    chatgpt (2026)
+
+EOF
 }
 
 cmd="${1:-}"
@@ -291,13 +438,16 @@ case "$cmd" in
   h|-h|--help)
     usage
     ;;
+  --longhelp)
+    longhelp
+    ;;
   pull)
   git -C "$NOTES_DIR" pull
-  ;;
+    ;;
   push)
   git -C "$NOTES_DIR" add . && git -C "$NOTES_DIR" commit -m "note commit" &&  git -C "$NOTES_DIR" push
-  ;;
+    ;;
   *)
-    create_note "$@"
+  create_note "$@"
     ;;
 esac
