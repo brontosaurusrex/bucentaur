@@ -1,30 +1,24 @@
 #!/usr/bin/env bash
 
-# noteurls (open last n urls found in notes)
-# usage:
-# noteurls        # last note
-# noteurls 3      # last 3 notes
-
 set -euo pipefail
 
 NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
-N="${1:-1}"
+N="${1:-100}"
 
-# --- cross-platform opener ---
+# this should now also work with older versions of fzf, if not comment out next line:
+export FZF_DEFAULT_OPTS="--pointer='>' --color=fg:-1,bg:-1,hl:-1,fg+:-1,bg+:-1,hl+:-1,info:-1,prompt:-1,spinner:-1,pointer:-1,marker:-1,border:-1"
+
 open_url() {
   local url="$1"
 
   if grep -qi microsoft /proc/version 2>/dev/null; then
-    # WSL2 → use Windows browser
     cmd.exe /c start "" "$url" >/dev/null 2>&1
   elif command -v xdg-open >/dev/null 2>&1; then
-    # Linux
     xdg-open "$url" >/dev/null 2>&1 &
   elif command -v open >/dev/null 2>&1; then
-    # macOS
     open "$url"
   else
-    echo "No opener found for: $url"
+    echo "No opener for: $url"
   fi
 }
 
@@ -42,19 +36,27 @@ mapfile -t files < <(
   exit 0
 }
 
-# --- extract URLs ---
-mapfile -t urls < <(
-  grep -hEo 'https?://[^ )"]+' "${files[@]}" \
-  | sort -u
+# --- fzf selection ---
+selection=$(
+  for f in "${files[@]}"; do
+    rg -o 'https?://[^ )"]+' "$f" \
+      | while read -r url; do
+          printf "%s\t%s\n" "$url" "$(basename "$f")"
+        done
+  done \
+  | fzf --multi \
+        --delimiter='\t' \
+        --with-nth=1,2 \
+        --prompt="open url> " \
+        --preview='cat "'"$NOTES_DIR"'"/{2}' \
+        --height=80% \
+        --reverse
 )
 
-[[ ${#urls[@]} -eq 0 ]] && {
-  echo "No URLs found"
-  exit 0
-}
+[[ -z "$selection" ]] && exit 0
 
-# --- open URLs ---
-for url in "${urls[@]}"; do
-  echo "Opening: $url"
+# --- open selected ---
+while IFS=$'\t' read -r url file; do
+  echo "Opening: $url ($file)"
   open_url "$url"
-done
+done <<< "$selection"
