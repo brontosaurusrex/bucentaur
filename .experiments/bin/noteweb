@@ -1,0 +1,287 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+: "${NOTES_DIR:=$HOME/notes}"
+
+tmp="$(mktemp --suffix=.html)"
+
+# ----------------------------
+# HTML escape
+# ----------------------------
+escape_html() {
+  sed \
+    -e 's/&/\&amp;/g' \
+    -e 's/</\&lt;/g' \
+    -e 's/>/\&gt;/g' \
+    -e 's/"/\&quot;/g'
+}
+
+# ----------------------------
+# title = full filename
+# ----------------------------
+get_title() {
+  basename "$1" \
+    | sed -E '
+        s/\.[^.]+$//;
+        s/^[0-9]{4}-[0-9]{2}-[0-9]{2}-//
+      '
+}
+
+linkify() {
+  sed -E '
+    s/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/<a href="\2" target="_blank">\1<\/a>/g
+    s#(https?://[^[:space:]]+)#<a href="\1" target="_blank">\1</a>#g
+  '
+}
+
+# ----------------------------
+# preview = first N lines
+# ----------------------------
+get_preview() {
+  python3 - "$1" <<'PY'
+import sys
+import re
+import html
+
+path = sys.argv[1]
+n = 3
+
+with open(path, "r", encoding="utf-8", errors="ignore") as f:
+    lines = f.readlines()
+
+# ----------------------------
+# strip YAML frontmatter
+# ----------------------------
+if lines and lines[0].strip() == "---":
+    i = 1
+    while i < len(lines) and lines[i].strip() != "---":
+        i += 1
+
+    if i < len(lines):
+        lines = lines[i+1:]
+
+# ----------------------------
+# collect first N non-empty lines
+# ----------------------------
+out = []
+
+for line in lines:
+    line = line.strip()
+
+    if not line:
+        continue
+
+    out.append(line)
+
+    if len(out) >= n:
+        break
+
+text = " ".join(out)
+
+# ----------------------------
+# escape HTML FIRST
+# ----------------------------
+text = html.escape(text)
+
+# ----------------------------
+# markdown links
+# ----------------------------
+placeholders = []
+
+def md_replace(match):
+    label = match.group(1)
+    url = match.group(2)
+
+    token = f"@@LINK{len(placeholders)}@@"
+
+    placeholders.append(
+        f'<a href="{url}" target="_blank">{label}</a>'
+    )
+
+    return token
+
+text = re.sub(
+    r'\[([^\]]+)\]\((https?://[^)]+)\)',
+    md_replace,
+    text
+)
+
+# ----------------------------
+# raw URLs
+# ----------------------------
+text = re.sub(
+    r'(?<!")https?://[^\s<]+',
+    lambda m: f'<a href="{m.group(0)}" target="_blank">{m.group(0)}</a>',
+    text
+)
+
+# ----------------------------
+# restore markdown links
+# ----------------------------
+for i, link in enumerate(placeholders):
+    text = text.replace(f"@@LINK{i}@@", link)
+
+print(text)
+PY
+}
+# ----------------------------
+# open file (WSL2 + Linux + macOS)
+# ----------------------------
+open_file() {
+  local file="$1"
+
+  if command -v wslpath >/dev/null 2>&1 && command -v explorer.exe >/dev/null 2>&1; then
+    explorer.exe "$(wslpath -w "$file")" >/dev/null 2>&1 &
+  elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$file" >/dev/null 2>&1 &
+  elif command -v open >/dev/null 2>&1; then
+    open "$file" >/dev/null 2>&1 &
+  else
+    echo "No opener found: $file"
+  fi
+}
+
+
+
+# ----------------------------
+# HTML header
+# ----------------------------
+cat > "$tmp" <<'HTML'
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>noteweb</title>
+
+<style>
+
+body {
+  /* max-width: 1200px; */
+  margin: 0 auto;
+  padding: 2rem;
+  background: #111;
+  color: #eee;
+  font-family: "Roboto", sans-serif;
+  font-size: 25px;
+  
+
+}
+
+h1 {
+  font-size: 1.0rem;
+  opacity: 0.7;
+  margin-bottom: 1.5rem;
+}
+
+.grid {
+  column-width: 260px;
+  column-gap: 1rem;
+}
+
+.card {
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 0 1rem 0;
+  background: #1b1b1b;
+  border: 0px solid #333;
+  border-radius: 14px;
+  padding: 1rem;
+  cursor: pointer;
+
+  /* IMPORTANT FIX */
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+  page-break-inside: avoid;
+
+  /* make stacking stable */
+  vertical-align: top;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: #555;
+}
+
+.card a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.card a:hover {
+  opacity: 0.7;
+}
+
+.title {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.preview {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  line-height: 1.3;
+  margin-bottom: 0.8rem;
+}
+
+.meta {
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+</style>
+
+<script>
+function openNote(path) {
+  window.location.href = "file://" + path;
+}
+</script>
+
+</head>
+<body>
+
+<div class="grid">
+HTML
+
+# ----------------------------
+# main loop (safe, no subshell issues)
+# ----------------------------
+while IFS= read -r file; do
+  [ -z "$file" ] && continue
+
+  title="$(get_title "$file")"
+  preview="$(get_preview "$file")"
+  mtime="$(date -r "$file" "+%Y-%m-%d %H:%M" 2>/dev/null || echo "")"
+
+  # escape file path for JS
+  file_escaped="${file//\\/\\\\}"
+  file_escaped="${file_escaped//\"/\\\"}"
+
+  cat >> "$tmp" <<EOF
+<div class="card" onclick="openNote('$file_escaped')">
+  <div class="title">$title</div>
+  <div class="preview">$preview</div>
+  <div class="meta">$mtime</div>
+</div>
+EOF
+
+done < <(
+  find "$NOTES_DIR" \
+    -type f \
+    \( -name "*.md" -o -name "*.txt" \) \
+    -not -path "*/.trash/*" \
+  | sort -r
+)
+
+# ----------------------------
+# footer
+# ----------------------------
+cat >> "$tmp" <<'HTML'
+</div>
+</body>
+</html>
+HTML
+
+# ----------------------------
+# open result
+# ----------------------------
+open_file "$tmp"
