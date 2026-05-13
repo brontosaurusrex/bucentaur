@@ -158,11 +158,18 @@ list_notes() {
 }
 
 latest_note() {
-  find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
-    -printf '%T@ %p\n' \
-  | sort -nr \
-  | head -n1 \
-  | cut -d' ' -f2-
+  local file
+
+  file=$(
+    find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' -printf '%T@|%p\n' \
+    | sort -nr \
+    | head -n 1 \
+    | cut -d'|' -f2-
+  )
+
+  [[ -n "$file" ]] || return 1
+
+  printf '%s\n' "$file"
 }
 
 cat_note() {
@@ -170,7 +177,10 @@ cat_note() {
   local file=""
 
   if [[ -z "$query" ]]; then
-    file="$(latest_note)"
+    if ! file="$(latest_note)"; then
+      echo "No notes found"
+      return 1
+    fi
   else
     while IFS= read -r f; do
       if [[ "${f,,}" == *"${query,,}"* ]]; then
