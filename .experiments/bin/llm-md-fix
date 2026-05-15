@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MODEL="${MODEL:-gemma4}"
+
+#!/usr/bin/env bash
+set -euo pipefail
+
+MODEL="${MODEL:-gemma4}"
+
+usage() {
+  cat <<'EOF'
+╭───────────────────────────────────────────────────────────────────────╮
+│ llm-md-fix — clean Markdown using a local LLM                         │
+│                                                                       │
+│ USAGE:                                                                │
+│   llm-md-fix file.md        # rewrite file content                    │
+│   cat file.md | llm-md-fix  # pipe input                              │
+│   llm-md-fix                # reads stdin                             │
+│                                                                       │
+│ OPTIONS:                                                              │
+│   -h, --help    Show this help                                        │
+│                                                                       │
+│ DESCRIPTION:                                                          │
+│   Converts messy text into clean Markdown using a local Ollama model. │
+│                                                                       │
+│   Rules applied:                                                      │
+│     - preserves content                                               │
+│     - fixes Markdown structure                                        │
+│     - converts raw URLs to Markdown links (when possible)             │
+│     - preserves YAML frontmatter                                      │
+│     - outputs ONLY Markdown                                           │
+│                                                                       │
+│ ENV:                                                                  │
+│   MODEL   Ollama model name (default: gemma4)                         │
+│                                                                       │
+│ EXAMPLES:                                                             │
+│   llm-md-fix notes.md                                                 │
+│   cat notes.md | llm-md-fix                                           │
+│   echo "https://example.com" | llm-md-fix                             │
+╰───────────────────────────────────────────────────────────────────────╯
+
+  ALT: node module called markdownlint
+
+    markdownlint --fix some.md
+
+EOF
+}
+
+case "${1:-}" in
+  -h|--help)
+    usage
+    exit 0
+    ;;
+esac
+
+PROMPT='Convert this text into clean markdown.
+
+Rules:
+- Preserve ALL information.
+- Do not summarize.
+- Do not remove content.
+- Do not invent new information.
+- Convert bare URLs into markdown links when appropriate.
+- Use proper markdown headings, lists, and code fences.
+- Use code fences only when the input already contains code blocks or structured code.
+- Keep the original tone and wording.
+- Output ONLY markdown.
+- Preserve YAML frontmatter exactly, it looks like this example:
+---
+title: forgejo
+date: 2026-05-13
+---
+- Only improve markdown body formatting.
+- Do not wrap output in markdown fences.
+- Do not add line breaks if not neccesary
+'
+
+if [[ $# -gt 0 ]]; then
+  file="$1"
+
+  if [[ ! -f "$file" ]]; then
+    echo "llm-md-fix: file not found: $file" >&2
+    exit 1
+  fi
+
+  input="$(cat "$file")"
+else
+  input="$(cat)"
+fi
+
+if [[ -z "$(echo "$input" | tr -d '[:space:]')" ]]; then
+  exit 0
+fi
+
+printf '%s\n\n%s\n' "$PROMPT" "$input" \
+  | ollama run --think=false "$MODEL" 2>/dev/null
