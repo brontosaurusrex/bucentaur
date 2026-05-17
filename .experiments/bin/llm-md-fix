@@ -3,11 +3,6 @@ set -euo pipefail
 
 MODEL="${MODEL:-gemma4}"
 
-#!/usr/bin/env bash
-set -euo pipefail
-
-MODEL="${MODEL:-gemma4}"
-
 usage() {
   cat <<'EOF'
 ╭───────────────────────────────────────────────────────────────────────╮

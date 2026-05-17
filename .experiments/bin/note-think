@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MODEL="${MODEL:-gemma4}"
+NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
+
+COUNT=10
+DAYS=""
+
+usage() {
+cat <<'EOF'
+note-think — summarize recent notes using local LLM
+
+USAGE:
+  note-think
+  note-think 20
+  note-think --days 30
+  note-think 20 --days 7
+
+DESCRIPTION:
+  Collects recent markdown notes and asks a local Ollama model
+  for a thematic overview and "what is the author thinking about"
+  best-effort interpretation.
+
+OPTIONS:
+  -h, --help       Show help
+  --days N         Only include notes modified within last N days
+
+ENVIRONMENT:
+  MODEL            Ollama model name (default: gemma4)
+  NOTES_DIR        Notes directory (default: ~/notes)
+
+EXAMPLES:
+  note-think
+  note-think 20
+  note-think --days 30
+  note-think 15 --days 7
+
+EOF
+}
+
+# -------------------------
+# arg parsing
+# -------------------------
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --days)
+      DAYS="${2:-}"
+      shift 2
+      ;;
+    *)
+      COUNT="$1"
+      shift
+      ;;
+  esac
+done
+
+# -------------------------
+# build find command
+# -------------------------
+
+find_args=(
+  "$NOTES_DIR"
+  -maxdepth 1
+  -type f
+  -name '*.md'
+)
+
+if [[ -n "$DAYS" ]]; then
+  find_args+=(-mtime "-$DAYS")
+fi
+
+tmp="$(mktemp)"
+
+find "${find_args[@]}" \
+  -printf '%T@|%p\n' \
+| sort -nr \
+| head -n "$COUNT" \
+| cut -d'|' -f2- \
+| while IFS= read -r file; do
+    printf '\n\n===== NOTE: %s =====\n\n' "$(basename "$file")"
+    cat "$file"
+  done > "$tmp"
+
+# empty guard
+if [[ ! -s "$tmp" ]]; then
+  echo "No notes found"
+  rm -f "$tmp"
+  exit 1
+fi
+
+PROMPT='You are analyzing a collection of personal markdown notes.
+
+Tasks:
+- Identify recurring themes.
+- Identify projects or interests.
+- Identify what the author appears focused on recently.
+- Give a best-effort overview of current thinking.
+- Be concise and grounded in the text.
+- Do not invent personal details.
+- Do not diagnose mental state.
+- Output plain text only.
+
+Structure output like:
+
+Themes:
+- ...
+
+Current focus:
+- ...
+
+Possible ongoing projects:
+- ...
+
+Best-effort interpretation:
+...
+
+'
+
+{
+  printf '%s\n\n' "$PROMPT"
+  cat "$tmp"
+} | ollama run "$MODEL"
+
+rm -f "$tmp"
