@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODEL="${MODEL:-gemma4}"
+MODEL="${MODEL:-deepseek-r1}"
 NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
 
 COUNT=10
@@ -140,6 +140,9 @@ Possible ongoing projects:
 - ...
 
 Best-effort interpretation:
+...
+
+Build static interconnected wiki using zettekasten, single file in html/css/javascript
 ...
 
 '
