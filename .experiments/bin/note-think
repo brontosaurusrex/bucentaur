@@ -50,11 +50,26 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     --days)
-      DAYS="${2:-}"
+      [[ $# -lt 2 ]] && {
+        echo "--days requires a number" >&2
+        exit 1
+      }
+
+      if [[ ! "$2" =~ ^[0-9]+$ ]]; then
+        echo "Invalid --days value: $2" >&2
+        exit 1
+      fi
+
+      DAYS="$2"
       shift 2
       ;;
     *)
-      COUNT="$1"
+      if [[ "$1" =~ ^[0-9]+$ ]]; then
+        COUNT="$1"
+      else
+        echo "Invalid argument: $1" >&2
+        exit 1
+      fi
       shift
       ;;
   esac
@@ -75,24 +90,31 @@ if [[ -n "$DAYS" ]]; then
   find_args+=(-mtime "-$DAYS")
 fi
 
-tmp="$(mktemp)"
+# -------------------------
+# collect files safely
+# -------------------------
 
-find "${find_args[@]}" \
-  -printf '%T@|%p\n' \
-| sort -nr \
-| head -n "$COUNT" \
-| cut -d'|' -f2- \
-| while IFS= read -r file; do
-    printf '\n\n===== NOTE: %s =====\n\n' "$(basename "$file")"
-    cat "$file"
-  done > "$tmp"
+mapfile -t files < <(
+  find "${find_args[@]}" -printf '%T@|%p\n' \
+    | sort -nr \
+    | head -n "$COUNT" \
+    | cut -d'|' -f2-
+)
 
-# empty guard
-if [[ ! -s "$tmp" ]]; then
+if [[ ${#files[@]} -eq 0 ]]; then
   echo "No notes found"
-  rm -f "$tmp"
   exit 1
 fi
+
+tmp="$(mktemp)"
+
+for file in "${files[@]}"; do
+  printf '\n\n===== NOTE: %s =====\n\n' "$(basename "$file")"
+  cat "$file"
+done > "$tmp"
+
+# debug
+cat "$tmp"
 
 PROMPT='You are analyzing a collection of personal markdown notes.
 
@@ -126,5 +148,7 @@ Best-effort interpretation:
   printf '%s\n\n' "$PROMPT"
   cat "$tmp"
 } | ollama run "$MODEL"
+
+
 
 rm -f "$tmp"
