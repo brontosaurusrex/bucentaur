@@ -175,7 +175,27 @@ latest_note() {
 cat_note() {
   local query="${1:-}"
   local file=""
+  local count
 
+  # note c 10  -> cat latest 10 notes
+  if [[ "$query" =~ ^[0-9]+$ ]]; then
+    count="$query"
+
+    find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+      -printf '%T@|%p\n' \
+    | sort -nr \
+    | head -n "$count" \
+    | cut -d'|' -f2- \
+    | while IFS= read -r f; do
+        printf '\n===== %s =====\n\n' "$(basename "$f")"
+        cat "$f"
+        printf '\n'
+      done
+
+    return
+  fi
+
+  # existing behavior
   if [[ -z "$query" ]]; then
     if ! file="$(latest_note)"; then
       echo "No notes found"
@@ -265,7 +285,7 @@ Usage:
   note l                  → list
   note o                  → open (fzf)
   note s                  → search (rg|fzf)
-  note c                  → cat latest
+  note c                  → cat latest n notes
   note rm                 → move to .trash
   note pull               → git pull
   note push               → git push
@@ -321,7 +341,8 @@ COMMANDS
     cat, c
         Print note contents:
           no args → latest note
-          query   → first match
+          number  → latest N notes
+          query   → first filename match
 
     remove, rm
         Move a note to .trash (interactive).
@@ -376,6 +397,9 @@ EXAMPLES
 
     note c
         Print latest note
+
+    note c 10
+        Print latest 10 notes
 
     note rm
         Delete note (to trash)
