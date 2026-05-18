@@ -153,7 +153,7 @@ EOF
 list_notes() {
   find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
     -printf '%T@ %f\n' \
-  | sort -nr \
+  | sort -n \
   | cut -d' ' -f2-
 }
 
