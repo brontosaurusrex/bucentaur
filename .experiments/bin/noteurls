@@ -66,26 +66,27 @@ mapfile -t files < <(
 }
 
 # --- collect urls ---
-urls=$(
-  for f in "${files[@]}"; do
-    rg -o 'https?://[^[:space:]>"]+' "$f" \
-      | sed 's/[),.;]*$//' \
-      | awk '!seen[$0]++' \
-      | while read -r url; do
-          printf "%s\t%s\n" "$url" "$(basename "$f")"
-        done
-  done
-)
+# Use an array instead of a string
+urls_array=()
+for f in "${files[@]}"; do
+  while IFS= read -r url; do
+    # Clean the URL
+    url=$(echo "$url" | sed 's/[),.;]*$//')
+    # Add to array if not empty
+    if [[ -n "$url" ]]; then
+      urls_array+=("$url"$'\t'"$(basename "$f")")
+    fi
+  done < <(rg -o 'https?://[^[:space:]>"]+' "$f" | awk '!seen[$0]++')
+done
 
-[[ -z "$urls" ]] && {
+[[ ${#urls_array[@]} -eq 0 ]] && {
   echo "No URLs found"
   exit 0
 }
 
 # --- fzf selection ---
-selection=$(
-  printf '%s\n' "$urls" \
-    | fzf --multi \
+# Use printf to output array elements with newlines
+selection=$(printf '%s\n' "${urls_array[@]}" | fzf --multi \
           --marker='*' \
           --bind 'tab:toggle' \
           --delimiter='\t' \
@@ -93,31 +94,23 @@ selection=$(
           --prompt="open urls> " \
           --preview='bat --style=numbers --color=always "'"$NOTES_DIR"'"/{2} 2>/dev/null || cat "'"$NOTES_DIR"'"/{2}' \
           --height=80% \
-          --reverse
-)
+          --reverse)
 
 [[ -z "$selection" ]] && exit 0
 
-# --- open selected urls ---
-while IFS= read -r line; do
-  # Skip empty lines
-  [[ -z "$line" ]] && continue
-  
-  # Split on tab
+# --- open selected urls - Use array for selections ---
+mapfile -t selected_lines <<< "$selection"
+
+for line in "${selected_lines[@]}"; do
+  # Extract URL and file using parameter expansion
   url="${line%%$'\t'*}"
   file="${line#*$'\t'}"
   
-  [[ -z "${url// }" ]] && continue
-
-  # remove possible CRLF junk
-  url="${url%$'\r'}"
-  file="${file%$'\r'}"
+  [[ -z "$url" ]] && continue
 
   echo "Opening: $url ($file)"
-
   open_url "$url"
-
   sleep 0.1
-done <<< "$selection"
+done
 
 wait
