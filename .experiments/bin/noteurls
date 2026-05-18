@@ -99,8 +99,14 @@ selection=$(
 [[ -z "$selection" ]] && exit 0
 
 # --- open selected urls ---
-printf '%s\n' "$selection" |
-while IFS=$'\t' read -r url file; do
+while IFS= read -r line; do
+  # Skip empty lines
+  [[ -z "$line" ]] && continue
+  
+  # Split on tab
+  url="${line%%$'\t'*}"
+  file="${line#*$'\t'}"
+  
   [[ -z "${url// }" ]] && continue
 
   # remove possible CRLF junk
@@ -112,6 +118,6 @@ while IFS=$'\t' read -r url file; do
   open_url "$url"
 
   sleep 0.1
-done
+done <<< "$selection"
 
 wait
