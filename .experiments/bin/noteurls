@@ -35,11 +35,17 @@ open_url() {
   local url="$1"
 
   if grep -qi microsoft /proc/version 2>/dev/null; then
-    powershell.exe Start-Process "$url" >/dev/null 2>&1
+    powershell.exe -NoProfile -Command "Start-Process '$url'" >/dev/null 2>&1 &
+    disown || true
+
   elif command -v xdg-open >/dev/null 2>&1; then
     xdg-open "$url" >/dev/null 2>&1 &
+    disown || true
+
   elif command -v open >/dev/null 2>&1; then
-    open "$url"
+    open "$url" >/dev/null 2>&1 &
+    disown || true
+
   else
     echo "No opener for: $url"
   fi
@@ -59,8 +65,8 @@ mapfile -t files < <(
   exit 0
 }
 
-# --- extract urls + fzf selection ---
-selection=$(
+# --- collect urls ---
+urls=$(
   for f in "${files[@]}"; do
     rg -o 'https?://[^[:space:]>"]+' "$f" \
       | sed 's/[),.;]*$//' \
@@ -68,27 +74,44 @@ selection=$(
       | while read -r url; do
           printf "%s\t%s\n" "$url" "$(basename "$f")"
         done
-  done \
-  | fzf --multi \
-        --marker='*' \
-        --bind 'tab:toggle' \
-        --delimiter='\t' \
-        --with-nth=1,2 \
-        --prompt="open urls> " \
-        --preview='bat --style=numbers --color=always "'"$NOTES_DIR"'"/{2} 2>/dev/null || cat "'"$NOTES_DIR"'"/{2}' \
-        --height=80% \
-        --reverse
+  done
+)
+
+[[ -z "$urls" ]] && {
+  echo "No URLs found"
+  exit 0
+}
+
+# --- fzf selection ---
+selection=$(
+  printf '%s\n' "$urls" \
+    | fzf --multi \
+          --marker='*' \
+          --bind 'tab:toggle' \
+          --delimiter='\t' \
+          --with-nth=1,2 \
+          --prompt="open urls> " \
+          --preview='bat --style=numbers --color=always "'"$NOTES_DIR"'"/{2} 2>/dev/null || cat "'"$NOTES_DIR"'"/{2}' \
+          --height=80% \
+          --reverse
 )
 
 [[ -z "$selection" ]] && exit 0
 
 # --- open selected urls ---
+printf '%s\n' "$selection" |
 while IFS=$'\t' read -r url file; do
-  [[ -z "$url" ]] && continue
+  [[ -z "${url// }" ]] && continue
+
+  # remove possible CRLF junk
+  url="${url%$'\r'}"
+  file="${file%$'\r'}"
 
   echo "Opening: $url ($file)"
-  open_url "$url" &
+
+  open_url "$url"
+
   sleep 0.1
-done <<< "$selection"
+done
 
 wait
