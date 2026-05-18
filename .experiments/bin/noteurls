@@ -28,7 +28,7 @@ esac
 NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
 N="${1:-100}"
 
-# this should now also work with older versions of fzf, if not comment out next line:
+# should also work with older fzf versions
 export FZF_DEFAULT_OPTS="--pointer='>' --color=fg:-1,bg:-1,hl:-1,fg+:-1,bg+:-1,hl+:-1,info:-1,prompt:-1,spinner:-1,pointer:-1,marker:-1,border:-1"
 
 open_url() {
@@ -59,10 +59,12 @@ mapfile -t files < <(
   exit 0
 }
 
-# --- fzf selection ---
+# --- extract urls + fzf selection ---
 selection=$(
   for f in "${files[@]}"; do
-    rg -o 'https?://[^ )"]+' "$f" \
+    rg -o 'https?://[^[:space:]>"]+' "$f" \
+      | sed 's/[),.;]*$//' \
+      | awk '!seen[$0]++' \
       | while read -r url; do
           printf "%s\t%s\n" "$url" "$(basename "$f")"
         done
@@ -73,17 +75,14 @@ selection=$(
         --delimiter='\t' \
         --with-nth=1,2 \
         --prompt="open urls> " \
-        --preview='cat "'"$NOTES_DIR"'"/{2}' \
+        --preview='bat --style=numbers --color=always "'"$NOTES_DIR"'"/{2} 2>/dev/null || cat "'"$NOTES_DIR"'"/{2}' \
         --height=80% \
         --reverse
 )
 
 [[ -z "$selection" ]] && exit 0
 
-# tmp
-#printf '%q\n' "$selection"
-
-# --- open selected ---
+# --- open selected urls ---
 mapfile -t selected <<< "$selection"
 
 for line in "${selected[@]}"; do
