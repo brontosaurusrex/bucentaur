@@ -83,16 +83,12 @@ selection=$(
 [[ -z "$selection" ]] && exit 0
 
 # --- open selected urls ---
-mapfile -t selected <<< "$selection"
-
-for line in "${selected[@]}"; do
-  IFS=$'\t' read -r url file <<< "$line"
-
+while IFS=$'\t' read -r url file; do
   [[ -z "$url" ]] && continue
 
   echo "Opening: $url ($file)"
   open_url "$url" &
   sleep 0.1
-done
+done <<< "$selection"
 
 wait
