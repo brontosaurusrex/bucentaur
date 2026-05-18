@@ -277,7 +277,9 @@ remove_note() {
 }
 
 usage() {
-  cat <<'EOF'
+  local help_text
+
+  help_text="$(cat <<'EOF'
 Usage:
 
   note n "title"          → new note with explicit title
@@ -292,8 +294,15 @@ Usage:
   note --longhelp | less  → full help
   note h                  → this help
 
+Storage: $NOTES_DIR
 EOF
-  echo "Storage: $NOTES_DIR"
+)"
+
+  if command -v roundbox >/dev/null 2>&1; then
+    printf "%s\n" "$help_text" | roundbox
+  else
+    printf "%s\n" "$help_text"
+  fi
 }
 
 longhelp() {
