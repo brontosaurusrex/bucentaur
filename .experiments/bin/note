@@ -22,6 +22,7 @@ done
 # this should now also work with older versions of fzf, if not comment out next line:
 export FZF_DEFAULT_OPTS="--pointer='>' --color=fg:-1,bg:-1,hl:-1,fg+:-1,bg+:-1,hl+:-1,info:-1,prompt:-1,spinner:-1,pointer:-1,marker:-1,border:-1"
 
+
 # deps
 for cmd in fzf rg; do
   if ! command -v "$cmd" &>/dev/null; then
@@ -51,26 +52,50 @@ slugify() {
 }
 
 # shellcheck disable=SC2016
-open_note_fzf() {
-  local file
+# open_note_fzf() {
+#   local file
 
-  file=$(
+#   file=$(
+#     find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+#       -printf '%T@ %f\n' \
+#     | sort -nr \
+#     | cut -d' ' -f2- \
+#     | fzf --prompt="open> " \
+#           --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
+#           --height=80% \
+#           --reverse
+#   )
+
+#   [[ -z "$file" ]] && return
+#   "$EDITOR" "$NOTES_DIR/$file"
+# }
+
+open_note_fzf() {
+  local files
+
+  # Use --multi flag and read multiple lines into array
+  mapfile -t files < <(
     find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
       -printf '%T@ %f\n' \
     | sort -nr \
     | cut -d' ' -f2- \
     | fzf --prompt="open> " \
+          --multi \
+          --marker='*' \
+          --bind='tab:toggle' \
           --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
           --height=80% \
           --reverse
   )
 
-  [[ -z "$file" ]] && return
-  "$EDITOR" "$NOTES_DIR/$file"
+  [[ ${#files[@]} -eq 0 ]] && return
+
+  # Open all selected files with $EDITOR
+  # This will pass multiple files to editor (most editors can handle this)
+  "$EDITOR" "${files[@]/#/$NOTES_DIR/}"
 }
 
 # unlike open_note_fzf, search_notes is curently not limited to *.md files
-
 search_notes() {
   local query="${1:-}"
   local selection file line
@@ -286,7 +311,8 @@ Usage:
   note n "title"          → new note with explicit title
   note "text"             → create/reopen note
   note l                  → list
-  note o                  → open (fzf)
+  note                    → open (fzf) multiple (tab) 
+  note o                  → open (fzf) multiple (tab)
   note s                  → search (rg|fzf)
   note c                  → cat latest n notes
   note rm                 → move to .trash
