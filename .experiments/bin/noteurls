@@ -84,6 +84,7 @@ done
   exit 0
 }
 
+# shellcheck disable=SC2016
 # --- fzf selection ---
 # Use printf to output array elements with newlines
 selection=$(printf '%s\n' "${urls_array[@]}" | fzf --multi \
@@ -92,7 +93,7 @@ selection=$(printf '%s\n' "${urls_array[@]}" | fzf --multi \
           --delimiter='\t' \
           --with-nth=1,2 \
           --prompt="open urls> " \
-          --preview='bat --style=numbers --color=always "'"$NOTES_DIR"'"/{2} 2>/dev/null || cat "'"$NOTES_DIR"'"/{2}' \
+          --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{2} 2>/dev/null' \
           --height=80% \
           --reverse)
 

@@ -50,6 +50,7 @@ slugify() {
   echo "$input"
 }
 
+# shellcheck disable=SC2016
 open_note_fzf() {
   local file
 
@@ -59,7 +60,7 @@ open_note_fzf() {
     | sort -nr \
     | cut -d' ' -f2- \
     | fzf --prompt="open> " \
-          --preview='cat "'"$NOTES_DIR"'"/{}' \
+          --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
           --height=80% \
           --reverse
   )
@@ -74,12 +75,13 @@ search_notes() {
   local query="${1:-}"
   local selection file line
 
+  # shellcheck disable=SC2016
   selection=$(
     rg -i -m1 --no-heading --line-number --color=never "$query" "$NOTES_DIR" \
       | fzf \
           --delimiter : \
           --prompt="search> " \
-          --preview='cat {1}' \
+          --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" {1}' \
           --bind "change:reload:rg -i -m1 --no-heading --line-number --color=never {q} '$NOTES_DIR' || true" \
           --phony \
           --query "$query" \
@@ -236,6 +238,7 @@ open_note() {
   "$EDITOR" "$file"
 }
 
+# shellcheck disable=SC2016
 remove_note() {
   local file trash_dir target
 
@@ -250,7 +253,7 @@ remove_note() {
     | fzf --prompt="trash> " \
           --pointer=">" \
           --color="pointer:red" \
-          --preview='cat "'"$NOTES_DIR"'"/{}' \
+          --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
           --height=80% \
           --reverse
   )
