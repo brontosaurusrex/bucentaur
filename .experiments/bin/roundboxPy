@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+
+# similar to roundbox bash script, but
+# does softwrap, shall not break on unicode picture chars
+# requires: (already installed on this machine)
+# sudo apt install python3-wcwidth
+
+import sys
+import shutil
+from wcwidth import wcswidth
+
+def width(s: str) -> int:
+    return max(wcswidth(s), 0)
+
+def wrap_line(line, limit):
+    if not line:
+        return [""]
+
+    out = []
+    cur = ""
+
+    for word in line.split(" "):
+        test = word if not cur else cur + " " + word
+
+        if width(test) <= limit:
+            cur = test
+        else:
+            if cur:
+                out.append(cur)
+
+            # break long word
+            if width(word) > limit:
+                chunk = ""
+                for ch in word:
+                    if width(chunk + ch) > limit:
+                        out.append(chunk)
+                        chunk = ch
+                    else:
+                        chunk += ch
+                cur = chunk
+            else:
+                cur = word
+
+    if cur:
+        out.append(cur)
+
+    return out
+
+def main():
+    # input
+    if len(sys.argv) > 1:
+        text = " ".join(sys.argv[1:])
+    else:
+        text = sys.stdin.read()
+
+    text = text.expandtabs()
+
+    term_width = shutil.get_terminal_size((80, 20)).columns
+    wrap_width = max(term_width - 4, 10)
+
+    wrapped = []
+
+    for line in text.splitlines():
+        wrapped.extend(wrap_line(line, wrap_width))
+
+    if not wrapped:
+        wrapped = [""]
+
+    maxw = max(width(l) for l in wrapped)
+
+    top = "╭" + "─" * (maxw + 2) + "╮"
+    bot = "╰" + "─" * (maxw + 2) + "╯"
+
+    print(top)
+    for l in wrapped:
+        pad = maxw - width(l)
+        print(f"│ {l}{' ' * pad} │")
+    print(bot)
+
+if __name__ == "__main__":
+    main()
