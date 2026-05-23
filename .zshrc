@@ -99,6 +99,6 @@ export FZF_CTRL_T_OPTS="
       fold -s -w \$FZF_PREVIEW_COLUMNS {} 2>/dev/null
     fi
   '
-  --preview-window='right:50%'
+  --preview-window='right:50%:wrap:noinfo'
   --height=80%
   --reverse"
