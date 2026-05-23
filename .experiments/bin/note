@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-# note (clean + dedupe + git sync)
+# note 
 # needs: fzf, rg
 
-# written mostly by chatgpt (ai) in april 2026
-# brex production
+# written mostly by chatgpt and deepseek (ai) in april 2026
+# agentic engineer: brontosaurusrex
 
 set -euo pipefail
 # set -x
@@ -51,29 +51,11 @@ slugify() {
   echo "$input"
 }
 
-# shellcheck disable=SC2016
-# open_note_fzf() {
-#   local file
-
-#   file=$(
-#     find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
-#       -printf '%T@ %f\n' \
-#     | sort -nr \
-#     | cut -d' ' -f2- \
-#     | fzf --prompt="open> " \
-#           --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
-#           --height=80% \
-#           --reverse
-#   )
-
-#   [[ -z "$file" ]] && return
-#   "$EDITOR" "$NOTES_DIR/$file"
-# }
-
 open_note_fzf() {
   local files
 
   # Use --multi flag and read multiple lines into array
+  # shellcheck disable=SC2016
   mapfile -t files < <(
     find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
       -printf '%T@ %f\n' \
@@ -149,7 +131,7 @@ date: $(today)
 $title
 EOF
 
-  "$EDITOR" "$file"
+  #"$EDITOR" "$file"
 }
 
 new_note() {
