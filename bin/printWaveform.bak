@@ -103,14 +103,11 @@ while [ $# -gt 0 ]; do
     fi
 
     # maybe play
-    if "$play"; then
-        mpv --no-resume-playback \
-            -af=lavfi=[loudnorm=LRA=10:I=-17] \
-            --no-video "$1" \
-            --term-osd-bar \
-            --term-osd-bar-chars="··█ ·" \
-        || break
-    fi    
+    "$play" && \
+    mpv --no-resume-playback -af=lavfi=[loudnorm=LRA=10:I=-17] \
+    --msg-level=ao/alsa=error:cplayer=error:statusline=status:display-tags=error:ffmpeg/demuxer=error \
+    --no-video "$1" --term-osd-bar --term-osd-bar-chars="··█ ·"
+    
     
 shift
 done
