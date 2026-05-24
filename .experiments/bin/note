@@ -67,7 +67,7 @@ open_note_fzf() {
           --bind='tab:toggle' \
           --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
           --height=80% \
-          --preview-window=right:50%:noinfo \
+          --preview-window=right:50% \
           --reverse
   )
 
@@ -96,7 +96,7 @@ search_notes() {
           --phony \
           --query "$query" \
           --height=80% \
-          --preview-window=right:50%:noinfo \
+          --preview-window=right:50% \
           --reverse
   )
 
@@ -266,7 +266,7 @@ remove_note() {
           --color="pointer:red" \
           --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
           --height=80% \
-          --preview-window=right:50%:noinfo \
+          --preview-window=right:50% \
           --reverse
   )
 
