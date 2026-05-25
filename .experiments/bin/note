@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# note 
+# note
 # needs: fzf, rg
 
 # written mostly by chatgpt and deepseek (ai) in april 2026
@@ -10,8 +10,8 @@ set -euo pipefail
 # set -x
 
 NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
-#EDITOR="${EDITOR:-vim}" # disabled
-# try multiple
+
+# try multiple editors
 for ed in "${EDITOR:-}" hx vim nano; do
     if command -v "$ed" >/dev/null 2>&1; then
         EDITOR="$ed"
@@ -19,9 +19,7 @@ for ed in "${EDITOR:-}" hx vim nano; do
     fi
 done
 
-# this should now also work with older versions of fzf, if not comment out next line:
 export FZF_DEFAULT_OPTS="--pointer='>' --color=fg:-1,bg:-1,hl:-1,fg+:-1,bg+:-1,hl+:-1,info:-1,prompt:-1,spinner:-1,pointer:-1,marker:-1,border:-1"
-
 
 # deps
 for cmd in fzf rg; do
@@ -40,13 +38,15 @@ today() {
 slugify() {
   local input="${1:-}"
 
-  input="$(echo "$input" \
-    | tr '[:upper:]' '[:lower:]' \
-    | tr -cd 'a-z0-9 -' \
-    | tr ' ' '-' \
-    | sed 's/-\+/-/g' \
-    | sed 's/^-//' \
-    | sed 's/-$//')"
+  input="$(
+    echo "$input" \
+      | tr '[:upper:]' '[:lower:]' \
+      | tr -cd 'a-z0-9 -' \
+      | tr ' ' '-' \
+      | sed 's/-\+/-/g' \
+      | sed 's/^-//' \
+      | sed 's/-$//'
+  )"
 
   echo "$input"
 }
@@ -54,33 +54,28 @@ slugify() {
 open_note_fzf() {
   local files
 
-  # Use --multi flag and read multiple lines into array
   # shellcheck disable=SC2016
   mapfile -t files < <(
     find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
       -printf '%T@ %f\n' \
     | sort -nr \
     | cut -d' ' -f2- \
-    | fzf --prompt="open> " \
-          --multi \
-          --marker='*' \
-          --bind='tab:toggle' \
-          --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
-          --height=80% \
-          --preview-window=right:50% \
-          --reverse
+    | fzf \
+        --prompt="open> " \
+        --multi \
+        --marker='*' \
+        --bind='tab:toggle' \
+        --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
+        --preview-window=right:50% \
+        --height=80% \
+        --reverse
   )
-
-
 
   [[ ${#files[@]} -eq 0 ]] && return
 
-  # Open all selected files with $EDITOR
-  # This will pass multiple files to editor (most editors can handle this)
   "$EDITOR" "${files[@]/#/$NOTES_DIR/}"
 }
 
-# unlike open_note_fzf, search_notes is curently not limited to *.md files
 search_notes() {
   local query="${1:-}"
   local selection file line
@@ -95,8 +90,8 @@ search_notes() {
           --bind "change:reload:rg -i -m1 --no-heading --line-number --color=never {q} '$NOTES_DIR' || true" \
           --phony \
           --query "$query" \
-          --height=80% \
           --preview-window=right:50% \
+          --height=80% \
           --reverse
   )
 
@@ -110,14 +105,24 @@ search_notes() {
 }
 
 create_note() {
-  local text="$*"
+  local text="$1"
   local title slug file
 
   [[ -z "$text" ]] && return
 
-  title="$text"
+  # first line, max 6 words
+  title="$(
+    printf '%s\n' "$text" \
+      | head -n1 \
+      | awk '{
+          for(i=1;i<=6 && i<=NF;i++)
+            printf "%s%s",$i,(i<6 && i<NF?" ":"")
+        }'
+  )"
 
-  slug="$(slugify "$text" | cut -d- -f1-5)"
+  [[ -z "$title" ]] && title="note"
+
+  slug="$(slugify "$title" | cut -d- -f1-5)"
   [[ -z "$slug" ]] && slug="note"
 
   file="$NOTES_DIR/$(today)-$slug.md"
@@ -132,10 +137,10 @@ create_note() {
 title: $title
 date: $(today)
 ---
-$title
+$text
 EOF
 
-  #"$EDITOR" "$file"
+  "$EDITOR" "$file"
 }
 
 new_note() {
@@ -174,9 +179,10 @@ latest_note() {
   local file
 
   file=$(
-    find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' -printf '%T@|%p\n' \
+    find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+      -printf '%T@|%p\n' \
     | sort -nr \
-    | head -n 1 \
+    | head -n1 \
     | cut -d'|' -f2-
   )
 
@@ -190,7 +196,6 @@ cat_note() {
   local file=""
   local count
 
-  # note c 10  -> cat latest 10 notes
   if [[ "$query" =~ ^[0-9]+$ ]]; then
     count="$query"
 
@@ -208,7 +213,6 @@ cat_note() {
     return
   fi
 
-  # existing behavior
   if [[ -z "$query" ]]; then
     if ! file="$(latest_note)"; then
       echo "No notes found"
@@ -220,10 +224,15 @@ cat_note() {
         file="$f"
         break
       fi
-    done < <(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md')
+    done < <(
+      find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md'
+    )
   fi
 
-  [[ -z "$file" ]] && { echo "No match found"; exit 1; }
+  [[ -z "$file" ]] && {
+    echo "No match found"
+    exit 1
+  }
 
   cat "$file"
 }
@@ -242,32 +251,38 @@ open_note() {
       file="$f"
       break
     fi
-  done < <(find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md')
+  done < <(
+    find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md'
+  )
 
-  [[ -z "$file" ]] && { echo "No match found"; exit 1; }
+  [[ -z "$file" ]] && {
+    echo "No match found"
+    exit 1
+  }
 
   "$EDITOR" "$file"
 }
 
-# shellcheck disable=SC2016
 remove_note() {
   local file trash_dir target
 
   trash_dir="$NOTES_DIR/.trash"
   mkdir -p "$trash_dir"
 
+  # shellcheck disable=SC2016
   file=$(
     find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
       -printf '%T@ %f\n' \
     | sort -nr \
     | cut -d' ' -f2- \
-    | fzf --prompt="trash> " \
-          --pointer=">" \
-          --color="pointer:red" \
-          --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
-          --height=80% \
-          --preview-window=right:50% \
-          --reverse
+    | fzf \
+        --prompt="trash> " \
+        --pointer=">" \
+        --color="pointer:red" \
+        --preview='fold -s -w "$FZF_PREVIEW_COLUMNS" "'"$NOTES_DIR"'"/{}' \
+        --preview-window=right:50% \
+        --height=80% \
+        --reverse
   )
 
   [[ -z "$file" ]] && return
@@ -282,23 +297,24 @@ remove_note() {
 
   target="$trash_dir/$file"
 
-  # handle name collisions in trash
   if [[ -e "$target" ]]; then
     target="$trash_dir/$(date +%s)-$file"
   fi
 
   mv -- "$NOTES_DIR/$file" "$target"
+
   echo "Moved to trash: $file"
 }
 
 usage() {
-  cat <<'EOF'
+  cat <<EOF
 Usage:
 
   note n "title"          → new note with explicit title
   note "text"             → create/reopen note
+  note < file.txt         → create note from stdin
   note l                  → list
-  note                    → open (fzf) multiple (tab) 
+  note                    → open (fzf) multiple (tab)
   note o                  → open (fzf) multiple (tab)
   note s                  → search (rg|fzf)
   note c                  → cat latest n notes
@@ -308,196 +324,79 @@ Usage:
   note --longhelp | less  → full help
   note h                  → this help
 
+Storage: $NOTES_DIR
 EOF
-  echo "Storage: $NOTES_DIR"
 }
 
 longhelp() {
   cat <<'EOF'
 NAME
     note - simple note manager
-
-SYNOPSIS
-    note [command] [arguments]
-
-DESCRIPTION
-    note is a fast, minimal note-taking tool that stores notes as plain
-    text/markdown files in $NOTES_DIR (default: ~/notes).
-
-    It provides:
-      - fast fuzzy navigation (fzf)
-      - full-text search (ripgrep)
-      - quick note creation
-      - optional git sync
-
-    Notes are stored as:
-        YYYY-MM-DD-slug.md
-
-COMMANDS
-
-    (default)
-        note [text]
-        Create or reopen a note using the given text.
-
-    new, n, +
-        Create a new note with explicit title.
-
-    open, o
-        Open a note:
-          no args → fzf picker
-          query   → first filename match
-
-    list, l
-        List notes (sorted by modification time).
-
-    search, s, g, grep
-        Full-text search (rg + fzf).
-        Opens file at matching line.
-
-    cat, c
-        Print note contents:
-          no args → latest note
-          number  → latest N notes
-          query   → first filename match
-
-    remove, rm
-        Move a note to .trash (interactive).
-
-    pull
-        git pull (inside NOTES_DIR)
-
-    push
-        git add + commit + push
-
-    help, h
-        Short help
-
-    --longhelp
-        This page
-
-
-FILES
-
-    $NOTES_DIR/*.md
-        Notes
-
-    $NOTES_DIR/.trash/
-        Deleted notes
-
-
-ENVIRONMENT
-
-    NOTES_DIR
-        Notes location (default: ~/notes)
-
-    EDITOR
-        Editor to use (fallback: hx → vim → nano)
-
-
-EXAMPLES
-
-    note "fix audio bug"
-        Create a quick note
-
-    note n "Project ideas"
-        Create structured note
-
-    note o
-        Open via fzf
-
-    note o mpv
-        Open matching note
-
-    note s audio
-        Search inside notes
-
-    note c
-        Print latest note
-
-    note c 10
-        Print latest 10 notes
-
-    note rm
-        Delete note (to trash)
-
-    note push
-    note pull
-        Sync with git
-
-
-BEHAVIOR
-
-    • Titles are slugified:
-        "My Idea!!!" → my-idea
-
-    • Slugs are truncated (~5 words)
-
-    • Duplicate note (same day/title):
-        → reopened instead of recreated
-
-
-DEPENDENCIES
-
-    Required:
-        fzf
-        rg
-
-    Optional:
-        git
-
-
-EXIT STATUS
-
-    0  success
-    1  failure
-
-
-AUTHORS
-
-    chatgpt, deepseek (2026)
-
 EOF
 }
 
 cmd="${1:-}"
+
+# capture stdin once
+stdin_data=""
+if [[ ! -t 0 ]]; then
+  stdin_data="$(cat)"
+fi
 
 case "$cmd" in
   new|+|n)
     shift
     new_note "$@"
     ;;
+
   list|l)
     list_notes
     ;;
+
   ""|open|o)
     shift || true
-    open_note "$@"
+
+    if [[ -n "$stdin_data" ]]; then
+      create_note "$stdin_data"
+    else
+      open_note "$@"
+    fi
     ;;
-  remove|rm) 
+
+  remove|rm)
     shift || true
     remove_note "$@"
     ;;
+
   cat|c)
     shift || true
     cat_note "$@"
     ;;
+
   grep|search|g|s)
     shift || true
     search_notes "$@"
     ;;
+
   h|-h|--help)
     usage
     ;;
-  --longhelp)
-    longhelp
-    ;;
+
   pull)
-  git -C "$NOTES_DIR" pull
+    git -C "$NOTES_DIR" pull
     ;;
+
   push)
-  git -C "$NOTES_DIR" add . && git -C "$NOTES_DIR" commit -m "note commit" &&  git -C "$NOTES_DIR" push
+    git -C "$NOTES_DIR" add . \
+      && git -C "$NOTES_DIR" commit -m "note commit" \
+      && git -C "$NOTES_DIR" push
     ;;
+
   *)
-  create_note "$@"
+    if [[ -n "$stdin_data" ]]; then
+      create_note "$stdin_data"
+    else
+      create_note "$*"
+    fi
     ;;
 esac
