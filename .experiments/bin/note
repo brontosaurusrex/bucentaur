@@ -237,6 +237,54 @@ cat_note() {
   cat "$file"
 }
 
+# this is called with cr (cat round) instead of c (cat), needs roundboxPy on path
+# https://raw.githubusercontent.com/brontosaurusrex/bucentaur/refs/heads/master/.experiments/bin/roundboxPy
+cat_note_roundbox() {
+  local query="${1:-}"
+  local file=""
+  local count
+
+  if [[ "$query" =~ ^[0-9]+$ ]]; then
+    count="$query"
+
+    find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+      -printf '%T@|%p\n' \
+    | sort -nr \
+    | head -n "$count" \
+    | cut -d'|' -f2- \
+    | while IFS= read -r f; do
+
+        roundboxPy < "$f"
+
+      done
+
+    return
+  fi
+
+  if [[ -z "$query" ]]; then
+    if ! file="$(latest_note)"; then
+      echo "No notes found"
+      return 1
+    fi
+  else
+    while IFS= read -r f; do
+      if [[ "${f,,}" == *"${query,,}"* ]]; then
+        file="$f"
+        break
+      fi
+    done < <(
+      find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md'
+    )
+  fi
+
+  [[ -z "$file" ]] && {
+    echo "No match found"
+    exit 1
+  }
+
+  roundboxPy < "$file"
+}
+
 open_note() {
   local query="${1:-}"
   local file=""
@@ -372,6 +420,11 @@ case "$cmd" in
     shift || true
     cat_note "$@"
     ;;
+
+  cr)
+   shift || true
+   cat_note_roundbox "$@"
+   ;;
 
   grep|search|g|s)
     shift || true
