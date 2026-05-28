@@ -254,7 +254,7 @@ cat_note_roundbox() {
     | cut -d'|' -f2- \
     | while IFS= read -r f; do
 
-        roundboxPy < "$f"
+        roundboxPy < "$f" | sinesthesia
 
       done
 
@@ -282,7 +282,7 @@ cat_note_roundbox() {
     exit 1
   }
 
-  roundboxPy < "$file"
+  roundboxPy < "$file" |  sinesthesia
 }
 
 open_note() {
