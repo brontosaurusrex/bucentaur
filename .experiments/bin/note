@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# ███        ███        ███        ███
+# █ █        █ █         █         ██
+# █ █        ███         █         ███
+
 # note
 # needs: fzf, rg
 
@@ -254,8 +258,8 @@ cat_note_roundbox() {
     | cut -d'|' -f2- \
     | while IFS= read -r f; do
 
-        roundboxPy < "$f" | sinesthesia
-
+        roundboxPy < "$f"
+      
       done
 
     return
@@ -282,7 +286,8 @@ cat_note_roundbox() {
     exit 1
   }
 
-  roundboxPy < "$file" |  sinesthesia
+  roundboxPy < "$file"
+
 }
 
 open_note() {
