@@ -209,7 +209,7 @@ cat_note() {
     | head -n "$count" \
     | cut -d'|' -f2- \
     | while IFS= read -r f; do
-        printf '\n===== %s =====\n\n' "$(basename "$f")"
+        #printf '\n===== %s =====\n\n' "$(basename "$f")"
         cat "$f"
         printf '\n'
       done
