@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# notepan
+#
+# Convert notes to a single HTML document using pandoc.
+#
+# Usage:
+#   notepan        # all notes
+#   notepan 10     # newest 10 notes by mtime
+
+set -euo pipefail
+
+NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
+OUTFILE="$NOTES_DIR/notes.htm"
+
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR"' EXIT
+
+cat > "$TMPDIR/style.css" <<'EOF'
+<style type="text/css">
+p, ul, li {
+    font-family: "Noto Serif", serif;
+    font-size: large;
+}
+
+a {
+    font-family: "Noto Serif", serif;
+    font-size: large;
+}
+
+pre {
+    font-size: large;
+    color: #f5f5f5;
+    background-color: #464876;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+blockquote {
+    margin: 0;
+    color: #111111;
+    border-left: 1px solid #999999;
+}
+
+h1 {
+    text-align: center;
+    font-family: 'Noto Sans', sans;
+    font-size: xxx-large;
+}
+
+h2, h3, h4 {
+    font-family: "Noto Sans", sans;
+}
+
+hr {
+    border-top: 1px solid black;
+    visibility: hidden;
+}
+
+a:link {
+    text-decoration: none;
+    color: #111155;
+}
+
+a:visited {
+    text-decoration: none;
+    color: #111155;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:active {
+    text-decoration: underline;
+}
+
+body, html {
+    background-color: #F5F5F5;
+    color: #111111;
+    line-height: 1.6;
+}
+</style>
+EOF
+
+if [[ $# -eq 1 ]]; then
+    count="$1"
+
+    mapfile -t files < <(
+        find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+            -printf '%T@ %p\n' \
+        | sort -nr \
+        | head -n "$count" \
+        | cut -d' ' -f2-
+    )
+else
+    mapfile -t files < <(
+        find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
+            -printf '%T@ %p\n' \
+        | sort -nr \
+        | cut -d' ' -f2-
+    )
+fi
+
+(( ${#files[@]} )) || {
+    echo "No notes found."
+    exit 1
+}
+
+htmls=()
+i=1
+
+for f in "${files[@]}"; do
+    html="$TMPDIR/$(printf "%04d" "$i").html"
+
+    pandoc \
+        -s \
+        -f markdown \
+        -t html5 \
+        "$f" \
+        -o "$html"
+
+    htmls+=("$html")
+    ((i++))
+done
+
+printf '%s\n' "${files[@]}"
+
+pandoc \
+    "${htmls[@]}" \
+    -o "$OUTFILE" \
+    -H "$TMPDIR/style.css" \
+    --metadata=title="Notes" \
+    -V title=""
+
+echo "$OUTFILE"
