@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+# fzf_preview_mine
+
+file="$1"
+mime=$(file --mime-type -b "$file" 2>/dev/null)
+debug="0"
+
+tmp=$(mktemp -d)
+cleanup() {
+    pkill -P $$
+    sleep 0.1
+    rm -rf "$tmp"
+}
+trap cleanup EXIT
+
+if [[ $mime == image/* ]]; then
+    width_px="$((FZF_PREVIEW_COLUMNS))"
+    height_px="$((FZF_PREVIEW_LINES))"
+    chafa -f sixels -s "${width_px}x${height_px}" "$file" 2>/dev/null
+
+elif [[ $mime == audio/* ]] || [[ "${file,,}" == *.m4a ]] || [[ "${file,,}" == *.mp3 ]]; then
+    mediainfo "$file" 2> /dev/null
+    mpv --no-video --quiet "$file" 2> /dev/null
+
+elif [[ $mime == video/* ]]; then
+    (( debug )) && echo "video"
+    dur=$(ffprobe -v panic -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file")
+    [[ -z "$dur" || "$dur" == "N/A" ]] && dur=50
+    halfdur=$(bc -l <<< "$dur / 2.00")
+
+    ffmpeg -hide_banner -loglevel panic -ss "$halfdur" -i "$file" -frames:v 1 "$tmp/middle.png" -y
+    width_px="$((FZF_PREVIEW_COLUMNS))"
+    height_px="$((FZF_PREVIEW_LINES))"
+    chafa -f sixels -s "${width_px}"x"${height_px}" "$tmp/middle.png" 2>/dev/null
+
+elif [[ $mime == binary/* ]]; then
+    echo "[BINARY: $(basename "$file")]"
+
+elif [[ "$file" == *.epub ]]; then
+    {
+        epub2txt -a -n "$file" 2>/dev/null ||
+        pandoc "$file" -t plain 2>/dev/null
+    } | fold -s -w "$FZF_PREVIEW_COLUMNS"
+
+elif [[ "$mime" == application/pdf ]]; then
+    pdftotext -f 1 -l 2 -layout "$file" - 2>/dev/null \
+    | fold -s -w "$FZF_PREVIEW_COLUMNS"
+
+else
+    fold -s -w "$FZF_PREVIEW_COLUMNS" "$file"
+
+fi
