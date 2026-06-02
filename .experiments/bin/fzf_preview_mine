@@ -15,6 +15,12 @@ cleanup() {
 trap cleanup EXIT
 
 if [[ $mime == image/* ]]; then
+    (( debug )) && echo "image"
+
+    if [[ "$file" == *.psd ]]; then
+        convert "$file" -flatten "$tmp/tmp.png"
+        file="$tmp/tmp.png"
+    fi
     width_px="$((FZF_PREVIEW_COLUMNS))"
     height_px="$((FZF_PREVIEW_LINES))"
     chafa -f sixels -s "${width_px}x${height_px}" "$file" 2>/dev/null
