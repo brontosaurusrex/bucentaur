@@ -21,6 +21,11 @@ if [[ $mime == image/* ]]; then
         convert "$file" -flatten "$tmp/tmp.png"
         file="$tmp/tmp.png"
     fi
+    if [[ "$file" == *.svg ]]; then
+        #inkscape "$file" --export-type=png --export-filename="$tmp/tmp.png"
+        inkscape "$file" --actions="export-filename:$tmp/tmp.png; export-do" 2>/dev/null
+        file="$tmp/tmp.png"
+    fi
     width_px="$((FZF_PREVIEW_COLUMNS))"
     height_px="$((FZF_PREVIEW_LINES))"
     chafa -f sixels -s "${width_px}x${height_px}" "$file" 2>/dev/null
