@@ -62,6 +62,10 @@ elif [[ "$mime" == application/pdf ]]; then
     pdftotext -f 1 -l 2 -layout "$file" - 2>/dev/null \
     | fold -s -w "$FZF_PREVIEW_COLUMNS"
 
+# atool for compressed stuff
+elif [[ "$file" == *.zip ]] || [[ "$file" == *.tar* ]] || [[ "$file" == *.7z ]] || [[ "$file" == *.rar ]]; then
+    als -l "$file" 2>/dev/null | head -n 50
+
 else
     #echo "else"
     fold -s -w "$FZF_PREVIEW_COLUMNS" "$file" | head -n 500
