@@ -23,7 +23,7 @@ elif [[ $mime == audio/* ]] || [[ "${file,,}" == *.m4a ]] || [[ "${file,,}" == *
     mediainfo "$file" 2> /dev/null
     mpv --no-video --quiet "$file" 2> /dev/null
 
-elif [[ $mime == video/* ]]; then
+elif [[ $mime == video/* ]] || [[ "${file,,}" == *.mxf ]]; then
     (( debug )) && echo "video"
     dur=$(ffprobe -v panic -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file")
     [[ -z "$dur" || "$dur" == "N/A" ]] && dur=50
@@ -33,6 +33,10 @@ elif [[ $mime == video/* ]]; then
     width_px="$((FZF_PREVIEW_COLUMNS))"
     height_px="$((FZF_PREVIEW_LINES))"
     chafa -f sixels -s "${width_px}"x"${height_px}" "$tmp/middle.png" 2>/dev/null
+
+    # not working
+    #mpv --vo=sixel "$file" 2>/dev/null
+
 
 elif [[ $mime == binary/* ]]; then
     echo "[BINARY: $(basename "$file")]"
@@ -48,6 +52,7 @@ elif [[ "$mime" == application/pdf ]]; then
     | fold -s -w "$FZF_PREVIEW_COLUMNS"
 
 else
-    fold -s -w "$FZF_PREVIEW_COLUMNS" "$file"
+    #echo "else"
+    fold -s -w "$FZF_PREVIEW_COLUMNS" "$file" | head -n 500
 
 fi
