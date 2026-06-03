@@ -50,7 +50,8 @@ elif [[ $mime == video/* ]] || [[ "${file,,}" == *.mxf ]]; then
     halfdur=$(bc -l <<< "$dur / 2.00")
 
     ffmpeg -hide_banner -loglevel panic -ss "$halfdur" -i "$file" -frames:v 1 "$tmp/middle.png" -y
-    chafaView "$tmp/middle.ong"
+
+    chafaView "$tmp/middle.png"
 
 
 elif [[ $mime == binary/* ]]; then
