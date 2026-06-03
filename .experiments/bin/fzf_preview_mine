@@ -79,7 +79,7 @@ elif [[ "$file" == *.mobi ]]; then
     fold -s -w "$FZF_PREVIEW_COLUMNS" "$tmp/tmp.txt"
 
 elif [[ "$mime" == application/pdf ]]; then
-    pdftotext -f 1 -l 2 -layout "$file" - 2>/dev/null \
+    pdftotext -layout "$file" - 2>/dev/null \
     | fold -s -w "$FZF_PREVIEW_COLUMNS"
 
 # atool for compressed stuff
@@ -90,7 +90,7 @@ elif [[ "$file" == *.deb ]]; then
     dpkg-deb --contents "$file"
 
 # fonts
-elif [[ "$file" == *.otf ]] || [[ "$file" == *.ttf ]]; then
+elif [[ "$file" == *.otf ]] || [[ "$file" == *.ttf ]] || [[ "$file" == *.woff ]]; then
     convert -size 1920x400 xc:none \
       -font "$file" \
       -fill white \
