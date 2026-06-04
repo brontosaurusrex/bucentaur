@@ -79,9 +79,7 @@ elif [[ "$file" == *.mobi ]]; then
     fold -s -w "$FZF_PREVIEW_COLUMNS" "$tmp/tmp.txt"
 
 elif [[ "$file" == *.html ]] || [[ "$file" == *.htm ]]; then
-    #w3m -dump -cols "$FZF_PREVIEW_COLUMNS" "$file"
     w3m -o display_link_number=1 -dump -cols "$FZF_PREVIEW_COLUMNS" "$file"
-    #w3m "$file"
 
 elif [[ "$mime" == application/pdf ]]; then
     pdftotext -layout "$file" - 2>/dev/null \
@@ -96,14 +94,25 @@ elif [[ "$file" == *.deb ]]; then
 
 # fonts
 elif [[ "$file" == *.otf ]] || [[ "$file" == *.ttf ]] || [[ "$file" == *.woff ]]; then
-    convert -size 1920x400 xc:none \
-      -font "$file" \
-      -fill white \
-      -pointsize 100 \
-      -gravity west \
-      -annotate 0 "The quick brown čšž jumps over the lazy dog" \
-      "$tmp/font.png"
 
+    name="${file##*/}"      # fira.ttf
+    name="${name%.*}"       # fira
+    name="${name^^}"        # FIRA
+
+convert -size 1600x800 xc:black \
+  -font "$file" \
+  -fill white \
+  -gravity northwest \
+  \
+  -pointsize 120 \
+  -annotate +40+80 "${name}" \
+  \
+  -pointsize 60 \
+  -annotate +40+320 "The quick brown čšž ČŠŽ\njumps over the lazy dog\n\nIN RHONCUS NULLA VEL ANTE,\nQUIS BLANDIT TURPIS SAGITTIS.\nSED SODALES, JUSTO AC PLACERAT." \
+  \
+  "$tmp/font.png"
+
+    #open "$tmp/font.png"
     chafaView "$tmp/font.png"
 
 elif [[ $encoding == binary ]]; then
