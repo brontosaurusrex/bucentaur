@@ -78,6 +78,11 @@ elif [[ "$file" == *.mobi ]]; then
     clear
     fold -s -w "$FZF_PREVIEW_COLUMNS" "$tmp/tmp.txt"
 
+elif [[ "$file" == *.html ]] || [[ "$file" == *.htm ]]; then
+    #w3m -dump -cols "$FZF_PREVIEW_COLUMNS" "$file"
+    w3m -o display_link_number=1 -dump -cols "$FZF_PREVIEW_COLUMNS" "$file"
+    #w3m "$file"
+
 elif [[ "$mime" == application/pdf ]]; then
     pdftotext -layout "$file" - 2>/dev/null \
     | fold -s -w "$FZF_PREVIEW_COLUMNS"
