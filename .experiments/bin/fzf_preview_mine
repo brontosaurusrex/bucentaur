@@ -36,7 +36,7 @@ chafaView () {
     width_px="$((FZF_PREVIEW_COLUMNS))"
     height_px="$((FZF_PREVIEW_LINES))"
     file="$1"
-    chafa -f sixels -s "${width_px}x${height_px}" "$file" 2>/dev/null
+    chafa --dither=diffusion -f sixels -s "${width_px}x${height_px}" "$file" 2>/dev/null
     echo
 }
 
