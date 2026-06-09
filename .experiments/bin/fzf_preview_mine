@@ -13,6 +13,10 @@ center() {
     printf "%*s%s\n" "$pad" "" "$text"
 }
 
+generic() {
+    fold -s -w "$FZF_PREVIEW_COLUMNS" "$1" | head -n 500
+} 
+
 # echo underlined extension
 ext="${file##*.}"
 center "$ext"
@@ -79,11 +83,18 @@ elif [[ "$file" == *.mobi ]]; then
     fold -s -w "$FZF_PREVIEW_COLUMNS" "$tmp/tmp.txt"
 
 elif [[ "$file" == *.html ]] || [[ "$file" == *.htm ]]; then
-    w3m -o display_link_number=1 -dump -cols "$FZF_PREVIEW_COLUMNS" "$file"
+    w3m -o display_link_number=1 -dump -cols "$FZF_PREVIEW_COLUMNS" "$file" || generic "$file"
 
 elif [[ "$mime" == application/pdf ]]; then
+    # graphical, show 1st page only
+    pdftocairo -png -scale-to 1200 -singlefile "$file" "$tmp/out"
+    chafaView "$tmp/out.png"  
+
+    # textual, extract all text
     pdftotext -layout "$file" - 2>/dev/null \
     | fold -s -w "$FZF_PREVIEW_COLUMNS"
+
+    # use shift + up/down to switch between two previews
 
 # atool for compressed stuff
 elif [[ "$file" == *.zip ]] || [[ "$file" == *.tar* ]] || [[ "$file" == *.7z ]] || [[ "$file" == *.rar ]]; then
@@ -117,10 +128,10 @@ convert -size 1600x800 xc:black \
 
 elif [[ $encoding == binary ]]; then
     echo "[BINARY: $(basename "$file")]"
-    xxd "$file" | head -100
+    xxd "$file" | head -100 || strings "$file" | head -300
 
 else
 
-    fold -s -w "$FZF_PREVIEW_COLUMNS" "$file" | head -n 500
+    generic "$file"
 
 fi
