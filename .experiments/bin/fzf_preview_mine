@@ -14,12 +14,18 @@ center() {
 }
 
 generic() {
-    fold -s -w "$FZF_PREVIEW_COLUMNS" "$1" | head -n 500
+    fold -s -w "$FZF_PREVIEW_COLUMNS" "$1" | head -n 2500
 } 
 
-# echo underlined extension
-ext="${file##*.}"
+# echo centered extension or filename (if there is no extension)
+base="${file##*/}"
+if [[ "$base" == *.* && "$base" != .* ]]; then
+    ext="${base##*.}"
+else
+    ext="$base"
+fi
 center "$ext"
+
 
 mime=$(file --mime-type -b "$file" 2>/dev/null)
 encoding=$(file --mime-encoding -b "$file" 2>/dev/null)
@@ -47,7 +53,7 @@ chafaView () {
 if [[ $mime == image/* ]]; then
     (( debug )) && echo "image"
 
-    if [[ "$file" == *.psd ]]; then
+    if [[ "$file" == *.psd ]] || [[ "$file" = *.avif ]]; then
         convert "$file" -flatten "$tmp/tmp.png"
         file="$tmp/tmp.png"
     fi
@@ -55,7 +61,7 @@ if [[ $mime == image/* ]]; then
         inkscape "$file" --actions="export-filename:$tmp/tmp.png; export-do" 2> /dev/null
         file="$tmp/tmp.png"
     fi
-    chafaView "$file"
+    chafaView "$file" || generic "$file"
 
 elif [[ $mime == audio/* ]] || [[ "${file,,}" == *.m4a ]] || [[ "${file,,}" == *.mp3 ]]; then
     mediainfo "$file" 2> /dev/null
