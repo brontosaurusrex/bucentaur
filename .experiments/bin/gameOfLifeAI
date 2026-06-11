@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+
+# ---------------- HELP ----------------
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+cat <<EOF
+Examples:
+
+gameOfLife +           # 10x10
+gameOfLife ++          # 20x20
+gameOfLife +++         # 30x30
+gameOfLife ++++        # full term screen
+
+gen="200" gameOfLife   # generations
+seed="123" gameOfLife  # deterministic
+sleep="0.1" gameOfLife # speed control
+gameOfLife --noscroll
+
+EOF
+exit 0
+fi
+
+# ---------------- SETTINGS ----------------
+width=5
+height=5
+gen=${gen:-100}
+sleep=${sleep:-0}
+
+case "${1:-}" in
+  "+") width=10; height=10 ;;
+  "++") width=20; height=20 ;;
+  "+++") width=30; height=30 ;;
+  "++++") width=$(( $(tput cols) / 2 )); height=$(( $(tput lines) -1 )) ;;
+esac
+
+scroll=1
+if [[ "${*:-}" == *"--noscroll"* ]]; then
+  scroll=0
+  tput civis
+  clear
+else
+  tput cnorm
+fi
+
+trap 'tput cnorm' EXIT
+
+# ---------------- SEED ----------------
+seed=${seed:-$RANDOM$RANDOM}
+RANDOM="$seed"
+
+# ---------------- GRID ----------------
+size=$((width * height))
+declare -a grid next tmp
+
+for ((i=0; i<size; i++)); do
+  grid[i]=$((RANDOM & 1))
+done
+
+# ---------------- DRAW ----------------
+draw() {
+  local i=0
+  for ((y=0; y<height; y++)); do
+    for ((x=0; x<width; x++)); do
+      (( grid[i] )) && printf "⬜" || printf "  "
+      ((i++))
+    done
+    printf "\n"
+  done
+}
+
+# ---------------- MAIN LOOP ----------------
+for ((g=0; g<gen; g++)); do
+
+  alive_any=0
+  i=0
+
+  for ((y=0; y<height; y++)); do
+    for ((x=0; x<width; x++)); do
+
+      count=0
+
+      # ---- 8 neighbors (unrolled loops, Bash-safe) ----
+      # dx/dy combinations manually expanded for speed
+      nx=$(( (x - 1 + width) % width ))
+      ny=$(( (y - 1 + height) % height ))
+      (( grid[nx + ny * width] )) && ((count++))
+
+      nx=$(( (x + width) % width ))
+      ny=$(( (y - 1 + height) % height ))
+      (( grid[nx + ny * width] )) && ((count++))
+
+      nx=$(( (x + 1 + width) % width ))
+      ny=$(( (y - 1 + height) % height ))
+      (( grid[nx + ny * width] )) && ((count++))
+
+      nx=$(( (x - 1 + width) % width ))
+      ny=$(( (y + height) % height ))
+      (( grid[nx + ny * width] )) && ((count++))
+
+      nx=$(( (x + 1 + width) % width ))
+      ny=$(( (y + height) % height ))
+      (( grid[nx + ny * width] )) && ((count++))
+
+      nx=$(( (x - 1 + width) % width ))
+      ny=$(( (y + 1 + height) % height ))
+      (( grid[nx + ny * width] )) && ((count++))
+
+      nx=$(( (x + width) % width ))
+      ny=$(( (y + 1 + height) % height ))
+      (( grid[nx + ny * width] )) && ((count++))
+
+      nx=$(( (x + 1 + width) % width ))
+      ny=$(( (y + 1 + height) % height ))
+      (( grid[nx + ny * width] )) && ((count++))
+
+      # ---- Game rules ----
+      if (( grid[i] )); then
+        (( count == 2 || count == 3 )) && next[i]=1 || next[i]=0
+      else
+        (( count == 3 )) && next[i]=1 || next[i]=0
+      fi
+
+      (( next[i] )) && alive_any=1
+      ((i++))
+
+    done
+  done
+
+  # ---------------- EXIT CONDITIONS ----------------
+  (( alive_any )) || break
+
+  # ---------------- SAFE ARRAY SWAP (FIXED) ----------------
+  tmp=("${grid[@]}")
+  grid=("${next[@]}")
+  next=("${tmp[@]}")
+
+  # ---------------- DRAW FRAME ----------------
+  if (( scroll == 0 )); then
+    #clear
+    tput cup 0 0
+  else
+    printf "\n"
+  fi
+
+  draw
+  sleep "$sleep"
+
+done
+
