@@ -352,7 +352,10 @@ remove_note() {
 
 usage() {
   cat <<EOF
-Usage:
+
+  ███     ███     ███     ███
+  █ █     █ █      █      ██
+  █ █     ███      █      ███
 
   note n (or note +)      > will ask for input
   note n "title"          > new note with explicit title
@@ -369,14 +372,7 @@ Usage:
   note push               > git push
   note h                  > this help
 
-Storage: $NOTES_DIR
-EOF
-}
-
-longhelp() {
-  cat <<'EOF'
-NAME
-    note - simple note manager
+  storage: $NOTES_DIR
 EOF
 }
 
