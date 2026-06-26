@@ -14,6 +14,14 @@ cache_key() {
     stat -c '%n-%Y' "$f" 2>/dev/null | md5sum | cut -d' ' -f1
 }
 
+# need command
+need_cmd() {
+    command -v "$1" >/dev/null 2>&1 || {
+        echo "Error: missing dependency: $1" >&2
+        return 1
+    }
+}
+
 center() {
     local text="$1"
     local width="$FZF_PREVIEW_COLUMNS"
@@ -56,6 +64,7 @@ chafaView () {
     width_px="$((FZF_PREVIEW_COLUMNS))"
     height_px="$((FZF_PREVIEW_LINES))"
     file="$1"
+    need_cmd chafa || exit 1
     chafa --dither=diffusion -f sixels -s "${width_px}x${height_px}" "$file" 2>/dev/null
     echo
 }
@@ -64,10 +73,12 @@ if [[ $mime == image/* ]]; then
     (( debug )) && echo "image"
 
     if [[ "$file" == *.psd ]] || [[ "$file" = *.avif ]]; then
+        need_cmd convert || exit 1
         convert "$file" -flatten "$tmp/tmp.png"
         file="$tmp/tmp.png"
     fi
     if [[ "$file" == *.svg ]]; then
+        need_cmd inkscape || exit 1
         inkscape "$file" --actions="export-filename:$tmp/tmp.png; export-do" 2> /dev/null
         file="$tmp/tmp.png"
     fi
@@ -88,6 +99,7 @@ if [[ $mime == image/* ]]; then
         if [[ -f "$cached" ]]; then
             file="$cached"
         else
+            need_cmd oiiotool || exit 1
             oiiotool "$file" --resize 1200x0 --colorconvert linear sRGB -o "$cached" 2>/dev/null
             file="$cached"
         fi
@@ -96,7 +108,9 @@ if [[ $mime == image/* ]]; then
     chafaView "$file" || generic "$file"
 
 elif [[ $mime == audio/* ]] || [[ "${file,,}" == *.m4a ]] || [[ "${file,,}" == *.mp3 ]]; then
+    need_cmd mediainfo || exit 1
     mediainfo "$file" 2> /dev/null
+    need_cmd mpv || exit 1
     mpv --no-video --quiet "$file" 2> /dev/null
 
 elif [[ $mime == video/* ]] || [[ "${file,,}" == *.mxf ]]; then
@@ -105,6 +119,7 @@ elif [[ $mime == video/* ]] || [[ "${file,,}" == *.mxf ]]; then
     [[ -z "$dur" || "$dur" == "N/A" ]] && dur=50
     halfdur=$(bc -l <<< "$dur / 2.00")
 
+    need_cmd ffmpeg || exit 1
     ffmpeg -hide_banner -loglevel panic -ss "$halfdur" -i "$file" -frames:v 1 "$tmp/middle.png" -y
 
     chafaView "$tmp/middle.png"
@@ -116,19 +131,23 @@ elif [[ "$file" == *.epub ]]; then
     } | fold -s -w "$FZF_PREVIEW_COLUMNS"
 
 elif [[ "$file" == *.mobi ]]; then
+    need_cmd ebook-convert || exit 1
     ebook-convert "$file" "$tmp/tmp.txt" 2>/dev/null
     clear
     fold -s -w "$FZF_PREVIEW_COLUMNS" "$tmp/tmp.txt"
 
 elif [[ "$file" == *.html ]] || [[ "$file" == *.htm ]]; then
+    need_cmd w3m || exit 1
     w3m -o display_link_number=1 -dump -cols "$FZF_PREVIEW_COLUMNS" "$file" || generic "$file"
 
 elif [[ "$mime" == application/pdf ]]; then
     # graphical, show 1st page only
+    need_cmd pdftocairo || exit 1
     pdftocairo -png -scale-to 1200 -singlefile "$file" "$tmp/out"
     chafaView "$tmp/out.png"  
 
     # textual, extract all text
+    need_cmd pdftotext || exit 1
     pdftotext -layout "$file" - 2>/dev/null \
     | fold -s -w "$FZF_PREVIEW_COLUMNS"
 
@@ -136,6 +155,7 @@ elif [[ "$mime" == application/pdf ]]; then
 
 # atool for compressed stuff
 elif [[ "$file" == *.zip ]] || [[ "$file" == *.tar* ]] || [[ "$file" == *.7z ]] || [[ "$file" == *.rar ]]; then
+    need_cmd als || exit 1
     als -l "$file" 2>/dev/null | head -n 500
 
 elif [[ "$file" == *.deb ]]; then
@@ -148,6 +168,7 @@ elif [[ "$file" == *.otf ]] || [[ "$file" == *.ttf ]] || [[ "$file" == *.woff ]]
     name="${name%.*}"       # fira
     name="${name^^}"        # FIRA
 
+    need_cmd convert || exit 1
 convert -size 1600x800 xc:black \
   -font "$file" \
   -fill white \
@@ -166,6 +187,7 @@ convert -size 1600x800 xc:black \
 
 elif [[ $encoding == binary ]]; then
     echo "[BINARY: $(basename "$file")]"
+    need_cmd xxd || exit 1
     xxd "$file" | head -100 || strings "$file" | head -300
 
 else
