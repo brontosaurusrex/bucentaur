@@ -148,20 +148,29 @@ EOF
 }
 
 new_note() {
-  local input="$*"
+  local title slug file
 
-  # If no args after "n", prompt user
-  if [[ -z "$input" ]]; then
-    printf "> "
-    IFS= read -r input
+  title="${*:-note}"
+
+  slug="$(slugify "$title" | cut -d- -f1-5)"
+  [[ -z "$slug" ]] && slug="note"
+
+  file="$NOTES_DIR/$(today)-$slug.md"
+
+  if [[ -f "$file" ]]; then
+    "$EDITOR" "$file"
+    return
   fi
 
-  # If still empty, do nothing
-  [[ -z "$input" ]] && return
+  cat > "$file" <<EOF
+---
+title: $title
+date: $(today)
+---
+EOF
 
-  create_note "$input"
+  "$EDITOR" "$file"
 }
-
 
 list_notes() {
   find "$NOTES_DIR" -maxdepth 1 -type f -name '*.md' \
@@ -354,20 +363,19 @@ usage() {
   cat <<EOF
 Usage:
 
-  note n (or note +)      > will ask for input
-  note n "title"          > new note with explicit title
-  note "text"             > create/reopen note
-  note < file.txt         > create note from stdin
-  note l                  > list
-  note                    > open (fzf) multiple (tab)
-  note o                  > open (fzf) multiple (tab)
-  note s                  > search (rg|fzf)
-  note c                  > cat latest n notes
-  note cr                 > cat latest n notes (with roundboxPy)
-  note rm                 > move to .trash
-  note pull               > git pull
-  note push               > git push
-  note h                  > this help
+  note n "title"          → new note with explicit title
+  note "text"             → create/reopen note
+  note < file.txt         → create note from stdin
+  note l                  → list
+  note                    → open (fzf) multiple (tab)
+  note o                  → open (fzf) multiple (tab)
+  note s                  → search (rg|fzf)
+  note c                  → cat latest n notes
+  note rm                 → move to .trash
+  note pull               → git pull
+  note push               → git push
+  note --longhelp | less  → full help
+  note h                  → this help
 
 Storage: $NOTES_DIR
 EOF
@@ -391,15 +399,9 @@ fi
 case "$cmd" in
   new|+|n)
     shift
-
-    if [[ $# -eq 0 ]]; then
-        printf "> "
-        IFS= read -r input
-        create_note "$input"
-    else
-        create_note "$*"
-    fi
+    new_note "$@"
     ;;
+
   list|l)
     list_notes
     ;;
