@@ -154,12 +154,16 @@ elif [[ "$mime" == application/pdf ]]; then
     # use shift + up/down to switch between two previews
 
 # atool for compressed stuff
-elif [[ "$file" == *.zip ]] || [[ "$file" == *.tar* ]] || [[ "$file" == *.7z ]] || [[ "$file" == *.rar ]]; then
+elif [[ "$file" == *.zip || "$file" == *.tar || "$file" == *.tar.* || "$file" == *.7z || "$file" == *.rar || "$file" == *.gz || "$file" == *.bz2 || "$file" == *.xz ]]; then
     need_cmd als || exit 1
     als -l "$file" 2>/dev/null | head -n 500
 
 elif [[ "$file" == *.deb ]]; then
     dpkg-deb --contents "$file"
+    
+elif [[ "$file" == *.docx ]]; then
+    need_cmd pandoc || exit 1
+    pandoc -s "$file" -t plain
 
 # fonts
 elif [[ "$file" == *.otf ]] || [[ "$file" == *.ttf ]] || [[ "$file" == *.woff ]]; then
@@ -169,18 +173,18 @@ elif [[ "$file" == *.otf ]] || [[ "$file" == *.ttf ]] || [[ "$file" == *.woff ]]
     name="${name^^}"        # FIRA
 
     need_cmd convert || exit 1
-convert -size 1600x800 xc:black \
-  -font "$file" \
-  -fill white \
-  -gravity northwest \
-  \
-  -pointsize 120 \
-  -annotate +40+80 "${name}" \
-  \
-  -pointsize 60 \
-  -annotate +40+320 "The quick brown čšž ČŠŽ\njumps over the lazy dog\n\nIN RHONCUS NULLA VEL ANTE,\nQUIS BLANDIT TURPIS SAGITTIS.\nSED SODALES, JUSTO AC PLACERAT." \
-  \
-  "$tmp/font.png"
+    convert -size 1600x800 xc:black \
+      -font "$file" \
+      -fill white \
+      -gravity northwest \
+      \
+      -pointsize 120 \
+      -annotate +40+80 "${name}" \
+      \
+      -pointsize 60 \
+      -annotate +40+320 "The quick brown čšž ČŠŽ\njumps over the lazy dog\n\nIN RHONCUS NULLA VEL ANTE,\nQUIS BLANDIT TURPIS SAGITTIS.\nSED SODALES, JUSTO AC PLACERAT." \
+      \
+      "$tmp/font.png"
 
     #open "$tmp/font.png"
     chafaView "$tmp/font.png"
