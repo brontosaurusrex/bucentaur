@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MODEL="${MODEL:-deepseek-r1}"
+MODEL="${MODEL:-gemma4}"
 NOTES_DIR="${NOTES_DIR:-$HOME/notes}"
 
 COUNT=10
@@ -110,11 +110,12 @@ tmp="$(mktemp)"
 
 for file in "${files[@]}"; do
   printf '\n\n===== NOTE: %s =====\n\n' "$(basename "$file")"
-  cat "$file"
+    head -c 3000 "$file" # limit the note size
 done > "$tmp"
 
 # debug
 cat "$tmp"
+
 
 PROMPT='You are analyzing a collection of personal markdown notes.
 
@@ -142,16 +143,14 @@ Possible ongoing projects:
 Best-effort interpretation:
 ...
 
-Build static interconnected wiki using zettekasten, single file in html/css/javascript
-...
-
+Notes are incoming bellow:
 '
 
-{
-  printf '%s\n\n' "$PROMPT"
-  cat "$tmp"
-} | ollama run "$MODEL"
 
+PROMPT_FULL="$(printf '%s\n\n' "$PROMPT"; cat "$tmp")"
 
+echo "$PROMPT_FULL"
+
+ollama run "$MODEL" "$PROMPT_FULL"
 
 rm -f "$tmp"
