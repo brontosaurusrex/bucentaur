@@ -61,6 +61,10 @@ if [[ $mime == image/* ]]; then
         inkscape "$file" --actions="export-filename:$tmp/tmp.png; export-do" 2> /dev/null
         file="$tmp/tmp.png"
     fi
+    if [[ "$file" == *.exr ]]; then
+        convert "$file" -colorspace sRGB -auto-gamma -auto-level "$tmp/tmp.png"
+        file="$tmp/tmp.png"
+    fi
     chafaView "$file" || generic "$file"
 
 elif [[ $mime == audio/* ]] || [[ "${file,,}" == *.m4a ]] || [[ "${file,,}" == *.mp3 ]]; then
