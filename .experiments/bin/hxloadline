@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+FILE="$(realpath "$1")"
+STATE="$HOME/.local/state/hx-pos"
+KEY=$(printf "%s" "$FILE" | sha1sum | cut -d' ' -f1)
+
+if [ -f "$STATE/$KEY" ]; then
+    cat "$STATE/$KEY"
+else
+    # fallback – if no saved position, jump to line 1
+    echo "1"
+fi
