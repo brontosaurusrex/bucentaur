@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+FILE="$(realpath "$1")"
+LINE="$2"
+
+STATE="$HOME/.local/state/hx-pos"
+mkdir -p "$STATE"
+
+KEY=$(printf "%s" "$FILE" | sha1sum | cut -d' ' -f1)
+
+echo "$LINE" > "$STATE/$KEY"

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+STATE="$HOME/.local/state/hx-pos"
+
+FILE="$(realpath "$1")"
+KEY=$(printf "%s" "$FILE" | sha1sum | cut -d' ' -f1)
+
+FILEPOS="$STATE/$KEY"
+
+if [[ -f "$FILEPOS" ]]; then
+  LINE=$(cat "$FILEPOS")
+  exec hx "$FILE:$LINE"
+else
+  exec hx "$FILE"
+fi
