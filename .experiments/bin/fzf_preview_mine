@@ -132,6 +132,76 @@ elif [[ $mime == video/* ]] || [[ "${file,,}" == *.mxf ]]; then
 
     chafaView "$tmp/middle.png"
 
+elif [[ "$file" == *.blend ]] || [[ "$file" == *.blend1 ]]; then
+    # need_cmd blender-thumbnailer || exit 1
+    # blender-thumbnailer "$file" "$tmp/blend.png"
+    # file="$tmp/blend.png"
+    # chafaView "$file" || generic "$file"
+
+    # need_cmd blender || exit 1
+
+    blender="$HOME/blender_unpacked/blender-5.1.2-linux-x64/blender"
+
+    if [[ ! -x "$blender" ]]; then
+        blender="blender"
+    fi
+    
+    info="$tmp/blend_info.txt"
+
+    cat > "$tmp/blend_info.py" <<EOF
+import bpy
+
+scene = bpy.context.scene
+cam_obj = scene.camera
+
+with open(r"$info", "w") as f:
+
+    # --- OBJECTS ---
+    f.write("Objects:\n")
+
+    for obj in sorted(bpy.data.objects, key=lambda o: o.type):
+        f.write(f"{obj.type:<10} {obj.name}\n")
+
+    # --- CAMERA ---
+    f.write("\nCamera:\n")
+
+    if cam_obj and cam_obj.data:
+        cam = cam_obj.data
+
+        cam_type_map = {
+            'PERSP': 'Perspective',
+            'ORTHO': 'Orthographic',
+            'PANO': 'Panoramic'
+        }
+
+        f.write(f"Active camera: {cam_obj.name}\n")
+        f.write(f"Type: {cam_type_map.get(cam.type, cam.type)}\n")
+        f.write(f"Focal length: {cam.lens}mm\n")
+
+        if cam.type == 'ORTHO':
+            f.write(f"Ortho scale: {cam.ortho_scale}\n")
+
+        dof = cam.dof
+        f.write(f"DOF enabled: {dof.use_dof}\n")
+
+        if dof.use_dof:
+            f.write(f"Focus distance: {dof.focus_distance}\n")
+            f.write(f"Aperture f-stop: {dof.aperture_fstop}\n")
+
+    else:
+        f.write("No active camera\n")
+EOF
+    $blender -b "$file" -P "$tmp/blend_info.py" >/dev/null 2>&1
+    if [[ -f "$info" ]]; then
+        cat "$info"
+        echo
+    else
+        echo "No blend metadata"
+        echo "or no blender found on path"
+        echo "or blender is too old"
+        echo
+    fi
+    
 elif [[ "$file" == *.epub ]]; then
     {
         epub2txt -a -n "$file" 2>/dev/null ||
