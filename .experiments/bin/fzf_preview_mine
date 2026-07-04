@@ -31,6 +31,14 @@ center() {
     printf "%*s%s\n" "$pad" "" "$text"
 }
 
+# handle directories first
+if [[ -d "$file" ]]; then
+    center "[DIR] $file"
+    # or better:
+    tree -C -L 2 "$file"
+    exit 0
+fi
+
 generic() {
     fold -s -w "$FZF_PREVIEW_COLUMNS" "$1" | head -n 2500
 } 
