@@ -10,8 +10,8 @@ Usage: bman [OPTIONS] [MAN_PAGE...]
 Display man pages in your web browser with custom CSS styling.
 
 Options:
-  --dark          Use dark theme
-  --modern        Use modern theme
+  --dark          Use dark theme (default style)
+  --modern        Use modern light theme (Latin Modern font)
   -h, --help      Show this help message
 
 If no MAN_PAGE is given, displays help.
@@ -70,10 +70,13 @@ if [ $# -eq 0 ]; then
     exit 0
 fi
 
-# Create temporary directory securely with mktemp
-tmpdir=$(mktemp -d -t bman-XXXXXX) || { echo "Error: failed to create temporary directory" >&2; exit 1; }
-# Ensure cleanup on exit (signals and normal)
-trap 'rm -rf "$tmpdir"' EXIT
+# Persistent cache directory for HTML files
+CACHE_DIR="$HOME/.cache/bman"
+mkdir -p "$CACHE_DIR" || { echo "Error: failed to create cache directory" >&2; exit 1; }
+chmod 700 "$CACHE_DIR"
+
+# Clean up HTML files older than 1 minute
+find "$CACHE_DIR" -name "*.html" -type f -mmin +1 -delete 2>/dev/null
 
 # Build CSS based on theme (collapse newlines to one line for sed substitution)
 case "$theme" in
@@ -81,6 +84,17 @@ case "$theme" in
         css_raw=$(cat <<'CSS'
 <!-- Bronto custom css -->
 <style type="text/css">
+    /* centered, 85‑character‑wide container */
+    body {
+        max-width: 85ch;
+        margin: 0 auto;
+        padding: 0 1em;
+        background-color: #333D4D;
+        background-color: #13181B;
+        background-image: url(https://brontosaurusrex.github.io/public/mozillaGrain.png);
+        color: #96b0bf;
+        line-height: 1.6;
+    }
     p       { margin-top: 0; margin-bottom: 0; vertical-align: top; font-family: 'Noto Serif light', serif; font-size: large }
     a       { font-family: 'Noto Serif light', serif; font-size: large }
     pre     { margin-top: 0; margin-bottom: 0; vertical-align: top; font-size: large }
@@ -104,16 +118,6 @@ case "$theme" in
         text-decoration: underline;
         color: #4BB2C9;
     }
-    body {
-        background-color: #333D4D;
-        background-color: #13181B;
-        background-image: url(https://brontosaurusrex.github.io/public/mozillaGrain.png);
-        color: #96b0bf;
-        line-height: 1.6;
-        max-width: 85ch;
-        margin: 0 auto;
-        padding: 1em;
-    }
     b {
         color: #4BB2C9;
     }
@@ -125,9 +129,18 @@ CSS
         css_raw=$(cat <<'CSS'
 <!-- Bronto custom css -->
 <style type="text/css">
+    /* centered, 85‑character‑wide container */
+    body {
+        max-width: 85ch;
+        margin: 0 auto;
+        padding: 0 1em;
+        background-color: #F5F5F5;
+        color: #111111;
+        line-height: 1.6;
+    }
     p       { margin-top: 0; margin-bottom: 0; vertical-align: top; font-family: 'Latin Modern Roman Unslanted', serif; font-size: large }
-    a       { font-family: 'Latin Modern Roman', serif; font-size: x-large }
-    pre     { margin-top: 0; margin-bottom: 0; vertical-align: top; font-size: x-large }
+    a       { font-family: 'Latin Modern Roman', serif; font-size: large }
+    pre     { margin-top: 0; margin-bottom: 0; vertical-align: top; font-size: large }
     table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
     h1      { text-align: center; font-family: 'Latin Modern Roman', serif; font-size: xx-large }
     h2      { text-align: center; font-family: 'Latin Modern Roman', sans; }
@@ -144,14 +157,6 @@ CSS
     a:active {
         text-decoration: underline;
     }
-    body {
-        background-color: #F5F5F5;
-        color: #111111;
-        line-height: 1.6;
-        max-width: 85ch;
-        margin: 0 auto;
-        padding: 1em;
-    }
 </style>
 CSS
 )
@@ -160,12 +165,21 @@ CSS
         css_raw=$(cat <<'CSS'
 <!-- Bronto custom css -->
 <style type="text/css">
+    /* centered, 85‑character‑wide container */
+    body {
+        max-width: 85ch;
+        margin: 0 auto;
+        padding: 0 1em;
+        background-color: #F5F5F5;
+        color: #111111;
+        line-height: 1.6;
+    }
     p       { margin-top: 0; margin-bottom: 0; vertical-align: top; font-family: 'Noto Serif', serif; font-size: large }
-    a       { font-family: 'Noto Sans', sans; font-size: x-large }
-    pre     { margin-top: 0; margin-bottom: 0; vertical-align: top; font-size: x-large }
+    a       { font-family: 'Noto Sans', sans; font-size: large }
+    pre     { margin-top: 0; margin-bottom: 0; vertical-align: top; font-size: large }
     table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
-    h1      { text-align: center; font-family: 'Noto Serif', serif; font-size: xx-large }
-    h2      { font-family: 'Noto Sans', sans; }
+    h1      { text-align: center; font-family: 'Noto Serif', serif; font-size: xxx-large }
+    h2      { font-family: 'Noto Sans', sans; font-size: xx-large }
     hr      { border-top: 1px solid black; visibility: hidden; }
     a:link {
         text-decoration: none;
@@ -179,14 +193,6 @@ CSS
     a:active {
         text-decoration: underline;
     }
-    body {
-        background-color: #F5F5F5;
-        color: #111111;
-        line-height: 1.6;
-        max-width: 85ch;
-        margin: 0 auto;
-        padding: 1em;
-        }
 </style>
 CSS
 )
@@ -198,23 +204,23 @@ css="$(echo "$css_raw" | tr '\n' ' ')"
 
 # Process each man page
 for man in "$@"; do
+    # Create a temporary file in the cache directory
+    html_file=$(mktemp -p "$CACHE_DIR" --suffix=".html" 2>/dev/null) || {
+        echo "Warning: failed to create temporary file for '$man', skipping." >&2
+        continue
+    }
+
     # Generate HTML version of the man page
-    if ! man -Thtml "$man" > "$tmpdir/${man}.tmp" 2>/dev/null; then
+    if ! man -Thtml "$man" > "$html_file.tmp" 2>/dev/null; then
         echo "Warning: man page for '$man' not found, skipping." >&2
+        rm -f "$html_file" "$html_file.tmp" 2>/dev/null
         continue
     fi
 
     # Insert the custom CSS before </head>
-    sed "s|^</head>*|${css}</head>|g" < "$tmpdir/${man}.tmp" > "$tmpdir/${man}.html"
+    sed "s|^</head>*|${css}</head>|g" < "$html_file.tmp" > "$html_file"
+    rm -f "$html_file.tmp"
 
-    # Verify that the HTML file was created
-    if [ -f "$tmpdir/${man}.html" ]; then
-        # Open the HTML file in the default browser
-        xdg-open "$tmpdir/${man}.html" 2>/dev/null &
-    else
-        echo "Warning: failed to create HTML for '$man', skipping." >&2
-    fi
+    # Open the HTML file in the default browser
+    xdg-open "$html_file" 2>/dev/null &
 done
-
-# Wait a moment so the browser can read the temporary files before they are deleted
-sleep 1
