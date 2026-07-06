@@ -1,21 +1,84 @@
 #!/bin/bash
+# bman - view man pages in HTML with custom CSS styles
 
-# bman
+set -o pipefail
 
-# usage: bman geany
-#        bman --dark geany
+show_help() {
+    cat <<EOF
+Usage: bman [OPTIONS] [MAN_PAGE...]
 
-# tmp dir
-tmp="/tmp/$RANDOM-$$"
-#trap '[ -n "$tmp" ] && rm -fr "$tmp"' EXIT
-mkdir -m 700 "$tmp" || { echo '!! unable to create a tmpdir' >&2; tmp=; exit 1; }
+Display man pages in your web browser with custom CSS styling.
 
-if [[ "$1" == "--dark" ]]; then
-# Dark custom css (apt install fonts-noto)
+Options:
+  --dark          Use dark theme
+  --modern        Use modern theme
+  -h, --help      Show this help message
 
-shift
+If no MAN_PAGE is given, displays help.
 
-csstmp=$(cat <<CSS
+Examples:
+  bman geany
+  bman --dark ls
+  bman --modern bash
+
+Requires: man, xdg-open (or similar), sed.
+EOF
+}
+
+# Check dependencies
+for cmd in man xdg-open sed; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Error: required command '$cmd' not found." >&2
+        exit 1
+    fi
+done
+
+# Parse options
+theme="default"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dark)
+            theme="dark"
+            shift
+            ;;
+        --modern)
+            theme="modern"
+            shift
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        --) # end of options
+            shift
+            break
+            ;;
+        -*)
+            echo "Error: unknown option $1" >&2
+            show_help
+            exit 1
+            ;;
+        *)
+            break # non-option argument
+            ;;
+    esac
+done
+
+# If no man pages given, show help
+if [ $# -eq 0 ]; then
+    show_help
+    exit 0
+fi
+
+# Create temporary directory securely with mktemp
+tmpdir=$(mktemp -d -t bman-XXXXXX) || { echo "Error: failed to create temporary directory" >&2; exit 1; }
+# Ensure cleanup on exit (signals and normal)
+trap 'rm -rf "$tmpdir"' EXIT
+
+# Build CSS based on theme (collapse newlines to one line for sed substitution)
+case "$theme" in
+    dark)
+        css_raw=$(cat <<'CSS'
 <!-- Bronto custom css -->
 <style type="text/css">
     p       { margin-top: 0; margin-bottom: 0; vertical-align: top; font-family: 'Noto Serif light', serif; font-size: large }
@@ -47,6 +110,9 @@ csstmp=$(cat <<CSS
         background-image: url(https://brontosaurusrex.github.io/public/mozillaGrain.png);
         color: #96b0bf;
         line-height: 1.6;
+        max-width: 85ch;
+        margin: 0 auto;
+        padding: 1em;
     }
     b {
         color: #4BB2C9;
@@ -54,20 +120,14 @@ csstmp=$(cat <<CSS
 </style>
 CSS
 )
-css="$(echo "$csstmp" | tr '\n' ' ')" # remove newlines
-
-
-elif [[ "$1" == "--modern" ]]; then
-# Latin Modern Roman
-
-shift
-
-csstmp=$(cat <<CSS
+        ;;
+    modern)
+        css_raw=$(cat <<'CSS'
 <!-- Bronto custom css -->
 <style type="text/css">
     p       { margin-top: 0; margin-bottom: 0; vertical-align: top; font-family: 'Latin Modern Roman Unslanted', serif; font-size: large }
-    a       { font-family: 'Latin Modern Roman', serif; font-size: large }
-    pre     { margin-top: 0; margin-bottom: 0; vertical-align: top; font-size: large }
+    a       { font-family: 'Latin Modern Roman', serif; font-size: x-large }
+    pre     { margin-top: 0; margin-bottom: 0; vertical-align: top; font-size: x-large }
     table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
     h1      { text-align: center; font-family: 'Latin Modern Roman', serif; font-size: xx-large }
     h2      { text-align: center; font-family: 'Latin Modern Roman', sans; }
@@ -88,20 +148,21 @@ csstmp=$(cat <<CSS
         background-color: #F5F5F5;
         color: #111111;
         line-height: 1.6;
+        max-width: 85ch;
+        margin: 0 auto;
+        padding: 1em;
     }
 </style>
 CSS
 )
-css="$(echo "$csstmp" | tr '\n' ' ')" # remove newlines
-
-else 
-# Bright custom css (apt install fonts-noto)
-csstmp=$(cat <<CSS
+        ;;
+    default|*)
+        css_raw=$(cat <<'CSS'
 <!-- Bronto custom css -->
 <style type="text/css">
     p       { margin-top: 0; margin-bottom: 0; vertical-align: top; font-family: 'Noto Serif', serif; font-size: large }
-    a       { font-family: 'Noto Sans', sans; font-size: large }
-    pre     { margin-top: 0; margin-bottom: 0; vertical-align: top; font-size: large }
+    a       { font-family: 'Noto Sans', sans; font-size: x-large }
+    pre     { margin-top: 0; margin-bottom: 0; vertical-align: top; font-size: x-large }
     table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
     h1      { text-align: center; font-family: 'Noto Serif', serif; font-size: xx-large }
     h2      { font-family: 'Noto Sans', sans; }
@@ -122,25 +183,38 @@ csstmp=$(cat <<CSS
         background-color: #F5F5F5;
         color: #111111;
         line-height: 1.6;
+        max-width: 85ch;
+        margin: 0 auto;
+        padding: 1em;
         }
 </style>
 CSS
 )
-css="$(echo "$csstmp" | tr '\n' ' ')" # remove newlines
+        ;;
+esac
 
-fi
+# Collapse newlines to make the CSS a single line for sed substitution
+css="$(echo "$css_raw" | tr '\n' ' ')"
 
-set -e # Incompatible with ^ cat <<CSS stuff
+# Process each man page
+for man in "$@"; do
+    # Generate HTML version of the man page
+    if ! man -Thtml "$man" > "$tmpdir/${man}.tmp" 2>/dev/null; then
+        echo "Warning: man page for '$man' not found, skipping." >&2
+        continue
+    fi
 
-# action
-for man in "$@"
-do
+    # Insert the custom CSS before </head>
+    sed "s|^</head>*|${css}</head>|g" < "$tmpdir/${man}.tmp" > "$tmpdir/${man}.html"
 
-    man -Thtml "$man" > "${tmp}/${man}.tmp" 2> /dev/null
-    
-    sed "s|^</head>*|${css}</head>|g" <"${tmp}/${man}.tmp" >"${tmp}/${man}.html" # Insert my custom css before </head>
-    
-    xdg-open "${tmp}/${man}.html"           2> /dev/null
-    # xdg-settings set default-web-browser google-chrome.desktop
-
+    # Verify that the HTML file was created
+    if [ -f "$tmpdir/${man}.html" ]; then
+        # Open the HTML file in the default browser
+        xdg-open "$tmpdir/${man}.html" 2>/dev/null &
+    else
+        echo "Warning: failed to create HTML for '$man', skipping." >&2
+    fi
 done
+
+# Wait a moment so the browser can read the temporary files before they are deleted
+sleep 1
