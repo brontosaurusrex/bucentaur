@@ -1,5 +1,5 @@
 #!/bin/bash
-# bman - view man pages in HTML with custom CSS styles
+# bman - view man pages in browser
 
 set -o pipefail
 
@@ -11,18 +11,18 @@ Display man pages in your web browser with custom CSS styling.
 
 Options:
   --dark          Use dark theme
-  --modern        Use modern light theme
+  --modern        Use modern theme
   -h, --help      Show this help message
 
-If no MAN_PAGE is given and fzf is installed, opens an interactive fzf selection.
-Note: to force exact match in fzf mode, prepend search with ', like 'vim
+If no MAN_PAGE is given and fzf is installed, opens an interactive fzf selection
+where you can select multiple pages (TAB to toggle).
 
 Examples:
   bman geany
   bman --dark ls
   bman --modern bash
 
-Requires: man, xdg-open, sed, and fzf (for interactive mode).
+Requires: man, xdg-open (or similar), sed, and fzf (for interactive mode).
 EOF
 }
 
@@ -75,17 +75,22 @@ if [ $# -eq 0 ]; then
     fi
 
     # Generate list of all man page names (strip section numbers)
-    # "man -k ." lists all entries; extract first field, remove "(section)" suffix
-    selected=$(man -k . 2>/dev/null | awk '{print $1}' | sed 's/([0-9])//' | sort -u | fzf --height=80% --reverse --prompt="Select a man page: ")
+    mapfile -t pages < <(
+        man -k . 2>/dev/null |
+        awk '{print $1}' |
+        sed 's/([0-9])//' |
+        sort -u |
+        fzf --height=80% --marker="*" --multi --bind='tab:toggle' --reverse --prompt="Select man page(s) (TAB to toggle): "
+    )
 
     # If user cancels (no selection), exit gracefully
-    if [ -z "$selected" ]; then
+    if [ ${#pages[@]} -eq 0 ]; then
         echo "No selection made. Exiting."
         exit 0
     fi
 
-    # Set the positional parameters to the selected man page
-    set -- "$selected"
+    # Replace positional parameters with the selected pages
+    set -- "${pages[@]}"
 fi
 
 # Persistent cache directory for HTML files
