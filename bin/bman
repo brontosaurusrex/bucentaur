@@ -27,7 +27,7 @@ EOF
 }
 
 # Check core dependencies
-for cmd in man xdg-open sed; do
+for cmd in man xdg-open sed groff; do
     if ! command -v "$cmd" >/dev/null 2>&1; then
         echo "Error: required command '$cmd' not found." >&2
         exit 1
