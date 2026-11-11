@@ -1,0 +1,55 @@
+#!/bin/sh
+# SMPTE-style 75% color bars using fixed 24-bit RGB backgrounds.
+# Run in a truecolor terminal. No palette colors or external tools are used.
+# Layout reference: FFmpeg libavfilter/vsrc_testsrc.c, smptebars_fill_picture.
+# This is an RGB display approximation: below-black PLUGE is clipped to black.
+
+block() {
+    # red green blue width
+    printf '\033[48;2;%s;%s;%sm%*s' "$1" "$2" "$3" "$4" ''
+}
+
+repeat_row() {
+    count=$1
+    while [ "$count" -gt 0 ]; do
+        printf '           %s\033[0m\n' "$2"
+        count=$((count - 1))
+    done
+}
+
+upper=$(
+    block 191 191 191 8
+    block 191 191   0 8
+    block   0 191 191 8
+    block   0 191   0 8
+    block 191   0 191 8
+    block 191   0   0 8
+    block   0   0 191 8
+)
+
+middle=$(
+    block   0   0 191 8
+    block   0   0   0 8
+    block 191   0 191 8
+    block   0   0   0 8
+    block   0 191 191 8
+    block   0   0   0 8
+    block 191 191 191 8
+)
+
+lower=$(
+    block   0  61 104 10  # -I
+    block 255 255 255 10  # reference white
+    block  63   0 118 10  # +Q
+    block   0   0   0 10
+    block   0   0   0 3   # below black (clipped)
+    block   0   0   0 3   # black
+    block  10  10  10 2   # approximately +4 IRE
+    block   0   0   0 8
+)
+
+printf '\n'
+repeat_row 14 "$upper"
+repeat_row 2 "$middle"
+repeat_row 5 "$lower"
+printf '\n'
